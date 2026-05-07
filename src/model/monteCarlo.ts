@@ -62,6 +62,12 @@ export interface DrakeMCOutput {
   multiplierSamples: Float64Array;
   /** Median × GiveWell of multiplier samples (excluding non-finite). */
   medianMultiplier: number;
+  /** Median of multiplier samples conditional on a detection occurring (more honest
+   *  when most samples have no detection and the unconditional median collapses on 0). */
+  medianMultiplierGivenDetection: number;
+  /** Geometric mean of strictly-positive multipliers (a more stable headline than the
+   *  unconditional median when the zero-mass dominates). */
+  gmeanPositiveMultiplier: number;
   /** 5th and 95th percentile of multiplier samples. */
   p5Multiplier: number;
   p95Multiplier: number;
@@ -210,6 +216,30 @@ export function runDrakeMC({
     return sortedMultipliers[idx] ?? 0;
   };
 
+  // "Median conditional on detection" — drop samples where no detection occurred (multiplier
+  // exactly 0) and take the median of the rest. Far more honest than the unconditional
+  // median when the zero-mass dominates.
+  const positiveSorted: number[] = [];
+  for (const v of sortedMultipliers) {
+    if (v !== 0) positiveSorted.push(v);
+  }
+  const medianGivenDetection =
+    positiveSorted.length > 0
+      ? (positiveSorted[Math.floor(positiveSorted.length / 2)] ?? 0)
+      : 0;
+
+  // Geometric mean of strictly-positive multipliers — stable scale for the active worldview
+  // even when most mass is at 0. Uses log-domain accumulation for numerical stability.
+  let logSum = 0;
+  let logCount = 0;
+  for (const v of multiplierSamples) {
+    if (v > 0 && Number.isFinite(v)) {
+      logSum += Math.log(v);
+      logCount++;
+    }
+  }
+  const gmeanPositive = logCount > 0 ? Math.exp(logSum / logCount) : 0;
+
   return {
     pNZero: zero / n,
     pNExactlyOne: one / n,
@@ -222,6 +252,8 @@ export function runDrakeMC({
     pAboveGiveWell: totalCostUSD > 0 ? pAbove / n : 0,
     multiplierSamples,
     medianMultiplier: pickPctl(0.5),
+    medianMultiplierGivenDetection: medianGivenDetection,
+    gmeanPositiveMultiplier: gmeanPositive,
     p5Multiplier: pickPctl(0.05),
     p95Multiplier: pickPctl(0.95),
     samples,

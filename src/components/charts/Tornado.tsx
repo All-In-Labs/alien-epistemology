@@ -18,7 +18,7 @@ interface TornadoProps {
 export function Tornado({ items }: TornadoProps) {
   const w = 1120;
   const rowH = 38;
-  const padL = 280;
+  const padL = 360;
   const padR = 48;
   const h = items.length * rowH + 56;
   const innerW = w - padL - padR;
@@ -63,7 +63,7 @@ export function Tornado({ items }: TornadoProps) {
         fontFamily="IBM Plex Mono, monospace"
         letterSpacing="0.14em"
       >
-        MEDIAN × GW (active worldview)
+        GEOM. MEAN × GW (active worldview)
       </text>
       {items.map((it, i) => {
         const y = 36 + i * rowH;
@@ -85,7 +85,7 @@ export function Tornado({ items }: TornadoProps) {
               {it.symbol}
             </text>
             <text
-              x={padL - 46}
+              x={padL - 60}
               y={y + 5}
               textAnchor="end"
               fontSize="12"
@@ -134,7 +134,7 @@ export function Tornado({ items }: TornadoProps) {
         );
       })}
       <text
-        x={padL - 46}
+        x={padL - 60}
         y={20}
         textAnchor="end"
         fontSize="10"

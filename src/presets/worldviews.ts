@@ -97,8 +97,13 @@ export const PRESETS: Preset[] = [
       riskAversion: 'difference-making',
       grabbyCredence: 0.1,
     },
+    // Dark Forest premises: detection chiefly tells us the lightcone is claimed (B's
+    // tech-viability evidence is faint, lightcone-claim evidence is strong) and that
+    // hostile attention is materially likely. With these channel overrides the preset
+    // produces non-trivial P(EV<0) per spec §10 #3.
     channels: {
-      D: { pHostile: 0.3 },
+      B: { techViabilityShift: 0.05, lightconeClaimShift: -0.3 },
+      D: { pHostile: 0.5 },
     },
   },
   {

@@ -47,6 +47,11 @@ export default function App() {
         togglePresenter();
         return;
       }
+      if (presenter && e.key === 'Escape') {
+        e.preventDefault();
+        setPresenter(false);
+        return;
+      }
       if (!presenter) return;
       const scrollTo = (idx: number): void => {
         const anchor = ANCHORS[idx];
@@ -110,15 +115,15 @@ export default function App() {
       <div id="ch-04">
         <Ch04Worldview />
       </div>
+      <section id="prior-overrides" className="px-20 py-10 border-t border-ink">
+        <PriorOverridePanel />
+      </section>
       <div id="ch-05">
         <Ch05Verdict />
       </div>
       <div id="ch-06">
         <Ch06Tornado />
       </div>
-      <section className="px-20 py-10 border-t border-ink">
-        <PriorOverridePanel />
-      </section>
       <footer className="px-20 py-12 border-t border-ink font-mono text-[11px] text-muted tracking-chip uppercase flex justify-between">
         <span>Sources · SDO 2018 · Bostrom 2003 · Hanson 2021 · Ord 2020 · Azad 2026</span>
         <span>

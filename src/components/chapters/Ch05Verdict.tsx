@@ -5,14 +5,20 @@ import { useStore } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
 import { COMPARATORS } from '../../constants/comparators';
 
-function fmtX(v: number): string {
+// Number-only formatter (no trailing × — caller decides whether to add one).
+function fmtMul(v: number): string {
   if (!Number.isFinite(v)) return '—';
-  if (v === 0) return '0×';
+  if (v === 0) return '0';
   const abs = Math.abs(v);
-  if (abs < 0.001) return `${(v * 1000).toFixed(3)}×10⁻³`;
-  if (abs < 1) return `${v.toFixed(3)}×`;
-  if (abs < 100) return `${v.toFixed(2)}×`;
-  return `${v.toFixed(0)}×`;
+  if (abs < 0.001) return v.toExponential(1);
+  if (abs < 1) return v.toFixed(3).replace(/\.?0+$/, '');
+  if (abs < 100) return v.toFixed(2);
+  if (abs < 1e6) return v.toFixed(0);
+  return v.toExponential(1);
+}
+
+function fmtX(v: number): string {
+  return `${fmtMul(v)}×`;
 }
 
 function fmtPct(p: number): string {
@@ -28,10 +34,17 @@ export function Ch05Verdict() {
     : 'Custom';
 
   const median = out?.medianMultiplier ?? 0;
+  const medianGivenDetection = out?.medianMultiplierGivenDetection ?? 0;
+  const gmean = out?.gmeanPositiveMultiplier ?? 0;
   const p5 = out?.p5Multiplier ?? 0;
   const p95 = out?.p95Multiplier ?? 0;
   const pAbove = out?.pAboveGiveWell ?? 0;
   const pNeg = out?.pNegativeEV ?? 0;
+  // Use the conditional median as the headline when the unconditional one collapses
+  // to 0 (or very close); otherwise the unconditional value is honest.
+  const headlineValue = Math.abs(median) < 1e-12 ? medianGivenDetection : median;
+  const headlineLabel =
+    Math.abs(median) < 1e-12 ? '× GiveWell · median given detection' : '× GiveWell · median';
 
   // For the histogram, use only positive log-finite multipliers.
   const positives = (() => {
@@ -63,8 +76,12 @@ export function Ch05Verdict() {
               className="font-display text-5xl leading-none mt-1.5"
               style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
             >
+              {fmtMul(headlineValue)}
+              <span className="font-mono text-lg text-muted ml-1.5">{headlineLabel}</span>
+            </div>
+            <div className="font-mono text-[11px] text-muted mt-1">
+              geom. mean of positive multipliers: {fmtX(gmean)} · unconditional median:{' '}
               {fmtX(median)}
-              <span className="font-mono text-lg text-muted ml-1.5">× GiveWell · median</span>
             </div>
           </div>
           <div className="flex gap-6 font-mono text-[11.5px] text-muted">
@@ -109,13 +126,19 @@ export function Ch05Verdict() {
         <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
           vs reference cause areas — ranges, not points
         </div>
+        {/* Use the conditional-on-detection stats for the user's row when the
+            unconditional median collapses to 0; otherwise the plotted whisker is
+            squashed against the y-axis and the label appears struck-through against
+            the GiveWell reference line. */}
         <ComparatorBars
           items={[
             {
-              label: `This tool — ${presetName}`,
-              lo: Math.max(p5, 1e-9),
-              mid: Math.max(median, 1e-9),
-              hi: Math.max(p95, 1e-9),
+              label: `This tool — ${presetName}${
+                Math.abs(median) < 1e-12 ? ' (given detection)' : ''
+              }`,
+              lo: Math.max(Math.abs(median) < 1e-12 ? gmean / 100 : p5, 1e-9),
+              mid: Math.max(headlineValue, 1e-9),
+              hi: Math.max(Math.abs(median) < 1e-12 ? gmean * 100 : p95, 1e-9),
               main: true,
             },
             ...COMPARATORS.map((c) => ({

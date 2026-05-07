@@ -1,6 +1,7 @@
 import { Segmented } from './controls/Segmented';
 import { PermalinkButton } from './PermalinkButton';
 import { PermalinkChips } from './PermalinkChips';
+import { Tooltip } from './Tooltip';
 import { useStore } from '../store';
 import type { CosmologyMode } from '../model/monteCarlo';
 
@@ -50,8 +51,24 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
             { value: 'hybrid', label: 'Hybrid' },
           ]}
         />
-        <span className="font-mono text-[11px] text-muted tracking-chip uppercase">
+        <span className="font-mono text-[11px] text-muted tracking-chip uppercase flex items-center gap-1.5">
           Cosmological model
+          <Tooltip>
+            <p>
+              <strong>SDO Drake</strong> models stationary, communicating civilisations from
+              Sandberg, Drexler &amp; Ord (2018).
+            </p>
+            <p className="mt-2">
+              <strong>Grabby Aliens</strong> (Hanson et al. 2021) models civs as rapidly
+              expanding (~25–50% of c). Premises are contested — per Azad (2026) we orbit a
+              ~95th-percentile-mass star, which is improbable if low-mass stars host life
+              equally.
+            </p>
+            <p className="mt-2">
+              <strong>Hybrid</strong> draws each MC sample from one branch in proportion to
+              your worldview&rsquo;s grabby credence.
+            </p>
+          </Tooltip>
         </span>
         <div className="flex-1" />
         <button

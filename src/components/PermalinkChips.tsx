@@ -3,12 +3,6 @@
 // without dragging sliders.
 
 import { useStore } from '../store';
-import { buildHash } from '../lib/permalink';
-import { applyPreset, PRESETS } from '../presets/worldviews';
-import { defaultDrakeRanges } from '../model/drake';
-import { defaultDetectionState } from '../model/detection';
-import { defaultGrabbyState } from '../model/grabby';
-import type { SerializedState } from '../lib/permalink';
 
 interface ChipDef {
   presetId: 'bostrom' | 'near' | 'hanson';
@@ -22,23 +16,6 @@ const CHIPS: ChipDef[] = [
   { presetId: 'hanson', label: 'Hanson Filter view', desc: 'filter likely ahead' },
 ];
 
-function previewHash(presetId: ChipDef['presetId']): string {
-  const preset = PRESETS.find((p) => p.id === presetId);
-  if (!preset) return '';
-  const { worldview, channels } = applyPreset(preset);
-  const state: SerializedState = {
-    v: 1,
-    drakeRanges: defaultDrakeRanges(),
-    methods: defaultDetectionState(),
-    channels,
-    worldview,
-    cosmology: 'sdo',
-    grabby: defaultGrabbyState(),
-    overrides: {},
-  };
-  return buildHash(state);
-}
-
 export function PermalinkChips() {
   const activePreset = useStore((s) => s.activePreset);
   const loadPreset = useStore((s) => s.loadPreset);
@@ -50,7 +27,6 @@ export function PermalinkChips() {
       </span>
       {CHIPS.map((c) => {
         const active = activePreset === c.presetId;
-        const hash = previewHash(c.presetId);
         return (
           <button
             key={c.presetId}
@@ -65,7 +41,7 @@ export function PermalinkChips() {
             }}
           >
             <span style={{ fontWeight: 600 }}>{c.label}</span>
-            <span className="font-mono text-[10px] opacity-75">{hash.slice(0, 16)}…</span>
+            <span className="font-serif italic text-[11.5px] opacity-75">{c.desc}</span>
           </button>
         );
       })}

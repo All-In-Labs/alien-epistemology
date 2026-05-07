@@ -43,7 +43,11 @@ function runSweep(state: ReturnType<typeof captureState>, seed: string): number 
     n: SWEEP_N,
     seed,
   });
-  return out.medianMultiplier;
+  // Use the geometric mean of positive multipliers as the aggregate. The unconditional
+  // median collapses to 0 whenever P(N=0) > 0.5, which is most of the parameter space —
+  // making the tornado uninformative if we used it. Geometric mean is the natural
+  // log-axis aggregate and stays meaningful as long as ≥1 sample produced detection.
+  return out.gmeanPositiveMultiplier;
 }
 
 const SWEEPS: SweepDef[] = [
@@ -214,7 +218,7 @@ export function Ch06Tornado() {
       num="06"
       eyebrow="What changes the answer most?"
       title="The tornado plot."
-      kicker="Each bar shows how the median × GW multiplier shifts when a single input is moved to the bottom or top of its plausible range, with all others held at the active configuration. Order is by total spread. The longer the bar, the more the result is at the mercy of that input."
+      kicker="Each bar shows how the geometric mean of positive cost-effectiveness multipliers shifts when a single input is moved to the bottom or top of its plausible range, with all others held at the active configuration. (Geom. mean is used because the unconditional median collapses to 0 whenever P(N=0) > 0.5.) Order is by total spread."
     >
       <div className="bg-paper border border-ink px-7 py-7">
         {items ? (

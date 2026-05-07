@@ -101,6 +101,13 @@ export function Ch01Drake() {
       <div className="flex gap-3 mt-4 font-mono text-[11px] text-muted tracking-chip uppercase items-center">
         <button
           type="button"
+          onClick={() => {
+            // Reset only R*, fp, ne to their established astrophysical defaults.
+            // Speculative params (fl, fi, fc, L, fd) keep whatever the user set.
+            setDrakeRange('R', { ...DRAKE_DEFAULTS.R.defaults });
+            setDrakeRange('fp', { ...DRAKE_DEFAULTS.fp.defaults });
+            setDrakeRange('ne', { ...DRAKE_DEFAULTS.ne.defaults });
+          }}
           className="px-3.5 py-2 bg-transparent border border-ink text-ink cursor-pointer hover:bg-ink hover:text-paper transition-colors"
         >
           Lock astrophysical params

@@ -27,31 +27,17 @@ describe('preset acceptance — spec §10 #2', () => {
     expect(Math.abs(out.evDALYs)).toBeLessThan(1e15);
   });
 
-  it('Dark Forest worldview can produce negative EV when channel B is excluded', () => {
-    // Spec §10 #3 acceptance: P(negative EV) should be non-trivial under SOME worldview.
-    // The Dark Forest preset alone doesn't cross zero because channel B (cosmic endowment)
-    // typically dominates in DALY magnitude; but a Dark Forest user who also adopts
-    // a person-affecting view (B=0) should see negative EV from channel D whenever
-    // detection happens via radio/technosig/probe. This is the maximally honest check.
-    const preset = PRESETS.find((p) => p.id === 'dark');
-    if (!preset) throw new Error('dark preset missing');
-    const { worldview, channels } = applyPreset(preset);
-    worldview.personAffecting = true; // turn off B
-    channels.A = { ...channels.A, on: false }; // turn off A as well (filter signal goes both ways)
-    channels.C = { ...channels.C, on: false }; // alien moral weight already 0
-    const out = runDrakeMC({
-      ranges: defaultDrakeRanges(),
-      methods: defaultDetectionState(),
-      channels,
-      worldview,
-      n: N,
-      seed: 'dark-amped',
-    });
+  it('Dark Forest preset by itself produces non-trivial P(EV<0) (spec §10 #3)', () => {
+    // The preset's channel overrides flip channel B net negative (lightcone-claim
+    // evidence dominates tech-viability evidence) and bump channel D hostile prob to 0.5.
+    // Together that should make negative-EV samples occur with non-trivial frequency.
+    const out = runWithPreset('dark', 'preset-dark-fixed');
     let neg = 0;
     for (const v of out.evSamples) {
       if (v < 0) neg++;
     }
-    expect(neg).toBeGreaterThan(0);
+    // At least 0.1% of samples should be negative under Dark Forest defaults.
+    expect(neg).toBeGreaterThan(N * 0.001);
   });
 
   it('Bostrom and Neartermist presets produce different EV magnitudes', () => {

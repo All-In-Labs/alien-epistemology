@@ -1,4 +1,4 @@
-import { binLog10, percentile } from '../../lib/binning';
+import { binLog10WithOverflow, percentile } from '../../lib/binning';
 
 interface HistogramProps {
   /** Raw samples; will be log10-binned. */
@@ -40,7 +40,7 @@ export function Histogram({
   const innerW = w - padL - padR;
   const innerH = h - padT - padB;
 
-  const bins = binLog10(samples, logMin, logMax, nBins);
+  const { bins, belowCount, aboveCount } = binLog10WithOverflow(samples, logMin, logMax, nBins);
   const binMax = Math.max(...bins, 1);
   const bw = innerW / bins.length;
 
@@ -153,6 +153,30 @@ export function Histogram({
       >
         {xLabel}
       </text>
+      {belowCount > 0 && (
+        <text
+          x={padL - 6}
+          y={padT + 14}
+          textAnchor="end"
+          fontSize="10"
+          fill="#7a7368"
+          fontFamily="IBM Plex Mono, monospace"
+        >
+          ←{belowCount.toString()} below
+        </text>
+      )}
+      {aboveCount > 0 && (
+        <text
+          x={w - padR + 6}
+          y={padT + 14}
+          textAnchor="start"
+          fontSize="10"
+          fill="#7a7368"
+          fontFamily="IBM Plex Mono, monospace"
+        >
+          {aboveCount.toString()} above→
+        </text>
+      )}
     </svg>
   );
 }
