@@ -12,6 +12,7 @@ import { logUniform, linearUniform } from '../../lib/sampling';
 import { binLog10 } from '../../lib/binning';
 import type { DrakeRanges } from '../../model/drake';
 import type { ReactNode } from 'react';
+import { CitationLink } from '../CitationLink';
 
 const PREVIEW_SAMPLES = 1000;
 const PREVIEW_BINS = 32;
@@ -70,50 +71,52 @@ function buildPreviews(ranges: DrakeRanges): Record<DrakeParamId, number[]> {
 const TOOLTIPS: Record<DrakeParamId, ReactNode> = {
   R: (
     <p>
-      Milky Way star formation rate. Modern observations centre 1.5–3 stars/yr (Robitaille &amp;
-      Whitney 2010, Licquia &amp; Newman 2015). SDO 2018 §3.1.
+      Milky Way star formation rate. Modern observations centre 1.5–3 stars/yr.{' '}
+      <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />.
     </p>
   ),
   fp: (
     <p>
       Fraction of stars hosting planets. Kepler &amp; microlensing strongly favour values near 1
-      (Cassan et al. 2012, Petigura et al. 2013). SDO 2018 §3.2.
+      (<CitationLink cite="cassan2012" text="Cassan et al. 2012" />,{' '}
+      <CitationLink cite="petigura2013" text="Petigura et al. 2013" />).
     </p>
   ),
   ne: (
     <p>
-      Habitable planets per system. Kepler implies fₚ × nₑ ≈ 0.4 for sun-like stars (Petigura
-      2013). SDO 2018 §3.3.
+      Habitable planets per system. Kepler implies fₚ × nₑ ≈ 0.4 for sun-like stars (
+      <CitationLink cite="petigura2013" text="Petigura 2013" />).
     </p>
   ),
   fl: (
     <p>
       Fraction of habitable planets where life arises. Genuine wide uncertainty — this is the
-      single biggest spread in the model. SDO 2018 §3.4 (the headline range).
+      single biggest spread in the model. <CitationLink cite="sdo2018" text="SDO 2018 §3.4" />.
     </p>
   ),
   fi: (
     <p>
-      Fraction of life-bearing planets where intelligence emerges. Wide and contested. SDO 2018
-      §3.5.
+      Fraction of life-bearing planets where intelligence emerges. Wide and contested.{' '}
+      <CitationLink cite="sdo2018" text="SDO 2018 §3.5" />.
     </p>
   ),
   fc: (
     <p>
-      Fraction of intelligent species that emit detectable signals. Wide. SDO 2018 §3.6.
+      Fraction of intelligent species that emit detectable signals. Wide.{' '}
+      <CitationLink cite="sdo2018" text="SDO 2018 §3.6" />.
     </p>
   ),
   L: (
     <p>
       Average lifetime of a communicating civilisation. Bounds span "short-lived" (decades) to
-      "galactic-timescale" (10¹⁰ yr). SDO 2018 §3.7.
+      "galactic-timescale" (10¹⁰ yr). <CitationLink cite="sdo2018" text="SDO 2018 §3.7" />.
     </p>
   ),
   fd: (
     <p>
       Detection-readiness multiplier — fraction of existing civs whose signals/biosignatures are
       detectable in principle by current human technology. Folds detectability into Drake. Spec
-      §5.1 (added per Spicer 2026).
+      §5.1.
     </p>
   ),
 };

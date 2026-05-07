@@ -28,6 +28,26 @@ function fmtPct(p: number): string {
   return `${(p * 100).toFixed(0)}%`;
 }
 
+function supScript(n: number): string {
+  const map: Record<string, string> = {
+    '-': '⁻',
+    '0': '⁰',
+    '1': '¹',
+    '2': '²',
+    '3': '³',
+    '4': '⁴',
+    '5': '⁵',
+    '6': '⁶',
+    '7': '⁷',
+    '8': '⁸',
+    '9': '⁹',
+  };
+  return String(n)
+    .split('')
+    .map((c) => map[c] ?? c)
+    .join('');
+}
+
 export function Ch05Verdict() {
   const out = useStore((s) => s.drakeOutput);
   const activePreset = useStore((s) => s.activePreset);
@@ -72,12 +92,39 @@ export function Ch05Verdict() {
     return buf.slice(0, k);
   })();
 
+  // Pick histogram x-range dynamically from the sample distribution so we don't
+  // waste chart space on empty extremes. Always include the GiveWell line at 0.
+  const xRange = (() => {
+    if (positives.length === 0) return { logMin: -3, logMax: 3 };
+    const sorted = Array.from(positives).sort((a, b) => a - b);
+    const lo = sorted[Math.floor(sorted.length * 0.02)] ?? 1e-6;
+    const hi = sorted[Math.floor(sorted.length * 0.98)] ?? 1e6;
+    let logMin = Math.floor(Math.log10(lo));
+    let logMax = Math.ceil(Math.log10(hi));
+    // Always show the GiveWell line.
+    logMin = Math.min(logMin, -1);
+    logMax = Math.max(logMax, 1);
+    // Reasonable bounds.
+    logMin = Math.max(logMin, -12);
+    logMax = Math.min(logMax, 12);
+    return { logMin, logMax };
+  })();
+  const xTicks = (() => {
+    const step = Math.ceil((xRange.logMax - xRange.logMin) / 6);
+    const ticks: string[] = [];
+    for (let l = xRange.logMin; l <= xRange.logMax; l += step) {
+      if (l === 0) ticks.push('1');
+      else ticks.push(`10${supScript(l)}`);
+    }
+    return ticks;
+  })();
+
   return (
     <ChapterShell
       num="05"
       eyebrow="The verdict"
       title="A distribution, not a number."
-      kicker="Cost-effectiveness expressed as a multiplier of the GiveWell top-charity bar (~$100 per DALY averted). Log x-axis. Vertical line marks the bar."
+      kicker="Cost-effectiveness expressed as a multiplier of the GiveWell top-charity bar (~$100 per DALY averted). Log x-axis. Vertical line marks the bar. The 95th percentile reflects rare scenarios where N is very large; the typical case is the median given detection."
     >
       <div className="bg-paper border border-ink px-7 py-6">
         <div className="flex justify-between items-end mb-3.5">
@@ -137,10 +184,10 @@ export function Ch05Verdict() {
           h={300}
           refLine={0}
           refLabel="GiveWell bar (1×)"
-          logMin={-9}
-          logMax={9}
-          nBins={90}
-          xTicks={['10⁻⁹', '10⁻⁶', '10⁻³', '1', '10³', '10⁶', '10⁹']}
+          logMin={xRange.logMin}
+          logMax={xRange.logMax}
+          nBins={Math.max(40, (xRange.logMax - xRange.logMin) * 6)}
+          xTicks={xTicks}
         />
         {pNeg > 0 && (
           <div className="font-mono text-[11px] text-accent mt-3">
@@ -154,10 +201,6 @@ export function Ch05Verdict() {
         <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
           vs reference cause areas — ranges, not points
         </div>
-        {/* Use the conditional-on-detection stats for the user's row when the
-            unconditional median collapses to 0; otherwise the plotted whisker is
-            squashed against the y-axis and the label appears struck-through against
-            the GiveWell reference line. */}
         <ComparatorBars
           items={[
             {
@@ -175,6 +218,18 @@ export function Ch05Verdict() {
             })),
           ]}
         />
+        <div
+          className="mt-5 pt-4 grid grid-cols-2 gap-x-8 gap-y-1.5 font-mono text-[11px] text-muted"
+          style={{ borderTop: '1px dashed #d8d3c8' }}
+        >
+          <div className="col-span-2 tracking-chip uppercase mb-1">Sources</div>
+          {COMPARATORS.map((c) => (
+            <div key={c.label} className="flex justify-between gap-3">
+              <span className="text-ink">{c.label}</span>
+              <span className="text-right">{c.source}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </ChapterShell>
   );

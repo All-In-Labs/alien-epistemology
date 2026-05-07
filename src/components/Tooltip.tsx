@@ -52,7 +52,8 @@ export function Tooltip({ children, triggerLabel = 'i' }: TooltipProps) {
         ref={triggerRef}
         type="button"
         aria-describedby={id}
-        className="w-4 h-4 rounded-full border border-muted text-muted text-[9px] font-mono leading-none flex items-center justify-center cursor-help bg-transparent hover:bg-ink hover:text-paper hover:border-ink transition-colors"
+        className="w-[18px] h-[18px] rounded-full border text-[10px] font-mono leading-none flex items-center justify-center cursor-help bg-transparent transition-colors"
+        style={{ borderColor: '#c2410c', color: '#c2410c' }}
       >
         {triggerLabel}
       </button>

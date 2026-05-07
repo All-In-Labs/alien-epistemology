@@ -1,4 +1,6 @@
 import { Toggle } from './controls/Toggle';
+import { Tooltip } from './Tooltip';
+import { CitationLink } from './CitationLink';
 import { useStore } from '../store';
 
 export function PriorOverridePanel() {
@@ -13,8 +15,23 @@ export function PriorOverridePanel() {
 
   return (
     <div className="bg-paper border border-ink px-7 py-6">
-      <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
-        Advanced · Bayesian-shortcut prior overrides
+      <div className="flex items-center gap-2 mb-3">
+        <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
+          Advanced · Bayesian-shortcut prior overrides
+        </div>
+        <Tooltip>
+          <p>
+            A &ldquo;Bayesian shortcut&rdquo; lets you set the posterior directly rather than
+            asking the model to derive it from Drake / Grabby parameters. Useful if you weight
+            evidence (UAP reports, theological arguments, anthropic considerations) the model
+            doesn&rsquo;t cover.
+          </p>
+          <p className="mt-2">
+            Per <CitationLink cite="azad2026" text="Azad 2026" /> on directional reasoning:
+            conditional probabilities have direction. The tool computes EV <em>given</em> a
+            prior; the prior is yours.
+          </p>
+        </Tooltip>
       </div>
       <p className="font-serif italic text-[13.5px] text-muted mt-1 max-w-[780px] mb-3">
         For users who weight evidence outside the Drake / Grabby parameters &mdash; e.g. those who

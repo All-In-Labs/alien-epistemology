@@ -184,15 +184,32 @@ export function Ch06Tornado() {
   const overrides = useStore((s) => s.overrides);
 
   const [items, setItems] = useState<TornadoItem[] | null>(null);
-  const computingRef = useRef(false);
+  const generationRef = useRef(0);
 
   useEffect(() => {
-    if (computingRef.current) return;
-    computingRef.current = true;
+    // Each input change bumps the generation token. In-flight sweeps check it
+    // before scheduling the next chunk; if a newer change has happened, they
+    // bail out so we don't waste work or stomp on fresher results.
+    const myGeneration = ++generationRef.current;
     const baselineState = captureState();
     const baseline = runSweep(baselineState, 'tornado-baseline');
     const out: TornadoItem[] = [];
-    for (const sweep of SWEEPS) {
+
+    let i = 0;
+    const isStale = (): boolean => myGeneration !== generationRef.current;
+    const runOne = (): void => {
+      if (isStale()) return;
+      if (i >= SWEEPS.length) {
+        out.sort((a, b) => Math.abs(b.high - b.low) - Math.abs(a.high - a.low));
+        if (!isStale()) setItems(out);
+        return;
+      }
+      const sweep = SWEEPS[i];
+      i++;
+      if (!sweep) {
+        runOne();
+        return;
+      }
       const lowState = captureState();
       sweep.setLow(lowState);
       const lowMed = runSweep(lowState, `tornado-${sweep.symbol}-low`);
@@ -207,10 +224,23 @@ export function Ch06Tornado() {
         lowLabel: fmtMultiplier(lowMed),
         highLabel: fmtMultiplier(highMed),
       });
-    }
-    out.sort((a, b) => Math.abs(b.high - b.low) - Math.abs(a.high - a.low));
-    setItems(out);
-    computingRef.current = false;
+      // Yield to the main thread between sweeps so input/scroll/repaint stay
+      // responsive even though MC is running synchronously.
+      window.setTimeout(runOne, 0);
+    };
+    // Yield once before the very first sweep so the React commit can flush.
+    window.setTimeout(runOne, 0);
+
+    const myGen = myGeneration;
+    return () => {
+      // Mark this run stale so any pending callbacks bail. Reading `current`
+      // here is intentional — we want to know if this run is still the latest,
+      // and if so, advance the token. The exhaustive-deps rule's concern about
+      // stale refs in cleanup doesn't apply: we use the captured `myGen` to
+      // gate the increment, not to read DOM state.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      if (generationRef.current === myGen) generationRef.current++;
+    };
   }, [drakeRanges, methods, channels, worldview, cosmology, grabby, overrides]);
 
   return (

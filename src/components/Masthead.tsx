@@ -2,6 +2,7 @@ import { Segmented } from './controls/Segmented';
 import { PermalinkButton } from './PermalinkButton';
 import { PermalinkChips } from './PermalinkChips';
 import { Tooltip } from './Tooltip';
+import { CitationLink } from './CitationLink';
 import { useStore } from '../store';
 import type { CosmologyMode } from '../model/monteCarlo';
 
@@ -33,8 +34,18 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
         <span>a worldview-sensitive analysis</span>
       </div>
 
-      <div className="font-mono text-[11px] text-accent mt-[18px] tracking-eyebrow uppercase">
-        An interactive essay in seven parts
+      <div className="font-mono text-[11px] text-accent mt-[18px] tracking-eyebrow uppercase flex items-center gap-3 flex-wrap">
+        <span>An interactive essay in seven parts</span>
+        <span className="text-muted normal-case tracking-normal flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="inline-flex w-[18px] h-[18px] rounded-full border items-center justify-center text-[10px] font-mono"
+            style={{ borderColor: '#c2410c', color: '#c2410c' }}
+          >
+            i
+          </span>
+          hover any of these for a primary-source citation
+        </span>
       </div>
       <h1
         className="font-display text-[96px] leading-[0.94] mt-3.5 max-w-[1100px]"
@@ -67,12 +78,13 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           Cosmological model
           <Tooltip>
             <p>
-              <strong>SDO Drake</strong> models stationary, communicating civilisations from
-              Sandberg, Drexler &amp; Ord (2018).
+              <strong>SDO Drake</strong> models stationary, communicating civilisations.{' '}
+              <CitationLink cite="sdo2018" text="SDO 2018" />.
             </p>
             <p className="mt-2">
-              <strong>Grabby Aliens</strong> (Hanson et al. 2021) models civs as rapidly
-              expanding (~25–50% of c). Premises are contested — per Azad (2026) we orbit a
+              <strong>Grabby Aliens</strong> models civs as rapidly expanding (~25–50% of c).{' '}
+              <CitationLink cite="hansonGrabby" text="Hanson et al. 2021" />. Premises are
+              contested — per <CitationLink cite="azad2026" text="Azad 2026" /> we orbit a
               ~95th-percentile-mass star, which is improbable if low-mass stars host life
               equally.
             </p>

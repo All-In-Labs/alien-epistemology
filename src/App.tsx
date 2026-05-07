@@ -10,6 +10,7 @@ import { Ch05Verdict } from './components/chapters/Ch05Verdict';
 import { Ch06Tornado } from './components/chapters/Ch06Tornado';
 import { PriorOverridePanel } from './components/PriorOverridePanel';
 import { PresenterBar } from './components/PresenterBar';
+import { CitationLink } from './components/CitationLink';
 import { useDrakeMCRunner } from './hooks/useDrakeMCRunner';
 import { usePermalink } from './hooks/usePermalink';
 
@@ -124,8 +125,16 @@ export default function App() {
       <div id="ch-06">
         <Ch06Tornado />
       </div>
-      <footer className="px-20 py-12 border-t border-ink font-mono text-[11px] text-muted tracking-chip uppercase flex justify-between">
-        <span>Sources · SDO 2018 · Bostrom 2003 · Hanson 2021 · Ord 2020 · Azad 2026</span>
+      <footer className="px-20 py-12 border-t border-ink font-mono text-[11px] text-muted tracking-chip uppercase flex justify-between flex-wrap gap-4">
+        <span className="normal-case tracking-normal">
+          Sources ·{' '}
+          <CitationLink cite="sdo2018" text="SDO 2018" /> ·{' '}
+          <CitationLink cite="bostromAstroWaste" text="Bostrom 2003" /> ·{' '}
+          <CitationLink cite="hansonGrabby" text="Hanson 2021" /> ·{' '}
+          <CitationLink cite="ordPrecipice" text="Ord 2020" /> ·{' '}
+          <CitationLink cite="azad2026" text="Azad 2026" /> ·{' '}
+          <CitationLink cite="giveWell" text="GiveWell" />
+        </span>
         <span>
           Worldview-diversified · no worldview privileged · no defaults flatter the conclusion
         </span>

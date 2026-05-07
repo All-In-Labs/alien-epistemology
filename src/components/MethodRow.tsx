@@ -3,6 +3,7 @@ import { Toggle } from './controls/Toggle';
 import { DualLogTrack } from './controls/DualLogTrack';
 import { Sparkline } from './charts/Sparkline';
 import { Tooltip } from './Tooltip';
+import { CitationLink } from './CitationLink';
 import { useStore } from '../store';
 import type { DetectionMethodState } from '../model/detection';
 import { DETECTION_DEFAULTS, type DetectionMethodId } from '../constants/detectionDefaults';
@@ -14,26 +15,24 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         <strong>SETI radio.</strong> Breakthrough Listen + Allen Telescope Array; narrow-band
         radio surveys of nearby stars and the galactic plane.
       </p>
-      <p className="mt-2">
-        Cost band reflects BL annual reports (~$10M/yr ATA + BL operations).
-      </p>
+      <p className="mt-2">Cost band reflects BL annual reports (~$10M/yr ATA + BL operations).</p>
     </>
   ),
   tech: (
     <>
       <p>
-        <strong>Technosignature search.</strong> Optical SETI (Wright et al. 2014), Dyson-sphere
-        infrared anomalies (Dyson 1960), NIR transit anomalies. Wider net than radio but at
-        different sensitivity.
+        <strong>Technosignature search.</strong> Optical SETI, Dyson-sphere infrared anomalies,
+        NIR transit anomalies. Wider net than radio but at different sensitivity. See{' '}
+        <CitationLink cite="wright2014" text="Wright et al. 2014 (G-HAT)" />.
       </p>
     </>
   ),
   bio: (
     <>
       <p>
-        <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now;
-        Habitable Worlds Observatory in the 2030s. Detects microbial life via O₂/CH₄ disequilibria.
-        Channel C and D do not fire under biosig detection (per spec §5.3).
+        <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now; Habitable
+        Worlds Observatory in the 2030s. Detects microbial life via O₂/CH₄ disequilibria. Channel
+        C and D do not fire under biosig detection (per spec §5.3).
       </p>
     </>
   ),
@@ -41,7 +40,9 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
     <>
       <p>
         <strong>Interstellar probe R&amp;D.</strong> Breakthrough Starshot-style; multi-decade
-        payoff. Decadal R&amp;D spend. Sandberg &amp; Armstrong 2013 on probe-feasibility.
+        payoff. Decadal R&amp;D spend.{' '}
+        <CitationLink cite="sandbergArmstrong" text="Sandberg & Armstrong 2013" /> on
+        probe-feasibility.
       </p>
     </>
   ),

@@ -4,6 +4,7 @@ import { RangeSlider } from '../controls/RangeSlider';
 import { Segmented } from '../controls/Segmented';
 import { Toggle } from '../controls/Toggle';
 import { Tooltip } from '../Tooltip';
+import { CitationLink } from '../CitationLink';
 import { useStore } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
 import type { RiskAversion } from '../../model/worldview';
@@ -11,7 +12,9 @@ import type { RiskAversion } from '../../model/worldview';
 const TT_LONGTERMISM = (
   <p>
     Multiplier on channels A and B. 0 = pure neartermist (only persons-now matter); 1 = total-view
-    longtermism (all future persons matter equally). Ord 2020 §10; MacAskill 2022.
+    longtermism (all future persons matter equally).{' '}
+    <CitationLink cite="ordPrecipice" text="Ord 2020 §10" />;{' '}
+    <CitationLink cite="macAskill2022" text="MacAskill 2022" />.
   </p>
 );
 const TT_DISCOUNT = (
@@ -23,33 +26,35 @@ const TT_DISCOUNT = (
 const TT_ALIEN_WEIGHT = (
   <p>
     Multiplier on channel C (direct-contact value). 0 = alien welfare doesn&rsquo;t count; 1 =
-    counts equally to humans. Schwitzgebel &amp; Garza 2015 on AI/alien moral status; Sebo 2023.
+    counts equally to humans.{' '}
+    <CitationLink cite="schwitzgebelGarza" text="Schwitzgebel & Garza 2015" />.
   </p>
 );
 const TT_HINGEYNESS = (
   <p>
-    Probability our actions today materially shift the cosmic endowment trajectory. MacAskill
-    2020 on the &ldquo;hinge of history&rdquo; hypothesis. High hingeyness amplifies channel B.
+    Probability our actions today materially shift the cosmic endowment trajectory.{' '}
+    <CitationLink cite="macAskill2020" text="MacAskill 2020" /> on the &ldquo;hinge of
+    history&rdquo; hypothesis. High hingeyness amplifies channel B.
   </p>
 );
 const TT_FILTER_PRIOR = (
   <p>
     P(the Great Filter is behind us). Sets the sign of channel A: when prior &gt; 0.5, finding
-    life is bad news (the filter is ahead); when prior &lt; 0.5, finding life is good news.
-    Hanson 1998.
+    life is bad news (the filter is ahead); when prior &lt; 0.5, finding life is good news.{' '}
+    <CitationLink cite="hansonFilter" text="Hanson 1998" />.
   </p>
 );
 const TT_PERSON_AFFECTING = (
   <p>
     When on, channel B (astronomical waste) is zeroed entirely — non-existent future persons have
-    no welfare to weigh. Parfit 1984; Narveson 1973.
+    no welfare to weigh. <CitationLink cite="parfit1984" text="Parfit 1984" />.
   </p>
 );
 const TT_RISK = (
   <p>
     Decision-theoretic summary stat. EV-max takes the mean (risk-neutral); log-utility takes the
     geometric mean (risk-averse); difference-making takes the 25th percentile (downside-averse).
-    Rethink Priorities CRAFT/CURVE sequence.
+    See <CitationLink cite="rethinkPrioritiesCRAFT" text="Rethink Priorities CRAFT/CURVE" />.
   </p>
 );
 

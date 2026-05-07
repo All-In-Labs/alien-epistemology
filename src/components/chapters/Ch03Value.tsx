@@ -1,20 +1,22 @@
 import { ChapterShell } from '../ChapterShell';
 import { ChannelCard } from '../ChannelCard';
 import { RangeSlider } from '../controls/RangeSlider';
+import { CitationLink } from '../CitationLink';
 import { useStore } from '../../store';
 
 const CHANNEL_A_TOOLTIP = (
   <p>
-    The Great Filter (Hanson 1998). Detection updates whether the filter sits behind us
-    (life is hard, we passed the gauntlet) or ahead (life is easy, civilisations rarely survive).
-    By default finding life is bad news. Sign flips when you set ϕ &lt; 0.5.
+    The Great Filter (<CitationLink cite="hansonFilter" text="Hanson 1998" />). Detection updates
+    whether the filter sits behind us (life is hard, we passed the gauntlet) or ahead (life is
+    easy, civilisations rarely survive). By default finding life is bad news. Sign flips when
+    you set ϕ &lt; 0.5.
   </p>
 );
 const CHANNEL_B_TOOLTIP = (
   <p>
-    Astronomical Waste (Bostrom 2003). Two-sided: detection raises P(tech-viability) but
-    lowers P(unclaimed lightcone). Default magnitudes target ~10¹⁶ DALYs of cosmic endowment;
-    move the two shifts independently.
+    Astronomical Waste (<CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />). Two-sided:
+    detection raises P(tech-viability) but lowers P(unclaimed lightcone). Default magnitudes
+    target ~10¹⁶ DALYs of cosmic endowment; move the two shifts independently.
   </p>
 );
 const CHANNEL_C_TOOLTIP = (
@@ -26,9 +28,9 @@ const CHANNEL_C_TOOLTIP = (
 );
 const CHANNEL_D_TOOLTIP = (
   <p>
-    Dark Forest disvalue (Liu 2008; METI debate). Detection alerts hostile attention or
-    commits us to METI. Fires for radio, technosignature, and probe — biosig and passive
-    radar do not draw fire.
+    Dark Forest disvalue (Liu 2008; METI debate). Detection alerts hostile attention or commits
+    us to METI. Fires for radio, technosignature, and probe — biosig and passive radar do not
+    draw fire.
   </p>
 );
 

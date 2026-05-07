@@ -1,6 +1,7 @@
 // Permalink encoding/decoding per spec §6.5.
 // State is serialised to JSON, deflate-compressed via pako, then base64url-encoded
-// and placed in the URL hash. v=1; future schema changes get migrations.
+// and placed in the URL hash. Schema is versioned; older hashes flow through migrations
+// before being applied.
 
 import pako from 'pako';
 
@@ -11,7 +12,8 @@ import type { WorldviewDials } from '../model/worldview';
 import type { GrabbyState } from '../model/grabby';
 import type { CosmologyMode, PriorOverrides } from '../model/monteCarlo';
 
-export interface SerializedState {
+/** v=1: original shape (no astroLocked). Used for migration only. */
+interface SerializedStateV1 {
   v: 1;
   drakeRanges: DrakeRanges;
   methods: DetectionMethodState[];
@@ -20,6 +22,19 @@ export interface SerializedState {
   cosmology: CosmologyMode;
   grabby: GrabbyState;
   overrides: PriorOverrides;
+}
+
+/** v=2: adds astroLocked so the lock state survives URL share. */
+export interface SerializedState {
+  v: 2;
+  drakeRanges: DrakeRanges;
+  methods: DetectionMethodState[];
+  channels: ChannelsState;
+  worldview: WorldviewDials;
+  cosmology: CosmologyMode;
+  grabby: GrabbyState;
+  overrides: PriorOverrides;
+  astroLocked: boolean;
 }
 
 function base64urlEncode(bytes: Uint8Array): string {
@@ -42,14 +57,22 @@ export function encodeState(state: SerializedState): string {
   return base64urlEncode(compressed);
 }
 
+/**
+ * Decode and migrate a permalink payload. Older versions are upgraded to the
+ * current shape; future versions throw.
+ */
 export function decodeState(s: string): SerializedState {
   const compressed = base64urlDecode(s);
   const json = pako.inflate(compressed, { to: 'string' });
   const obj = JSON.parse(json) as { v?: number };
-  if (obj.v !== 1) {
-    throw new Error(`Unknown permalink version: ${String(obj.v)}`);
+  if (obj.v === 1) {
+    const v1 = obj as unknown as SerializedStateV1;
+    return { ...v1, v: 2, astroLocked: false };
   }
-  return obj as unknown as SerializedState;
+  if (obj.v === 2) {
+    return obj as unknown as SerializedState;
+  }
+  throw new Error(`Unknown permalink version: ${String(obj.v)}`);
 }
 
 export function buildHash(state: SerializedState): string {

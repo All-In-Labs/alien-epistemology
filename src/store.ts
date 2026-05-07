@@ -170,7 +170,7 @@ export const useStore = create<AppState>()((set) => ({
 export function getSerializedState(): SerializedState {
   const s = useStore.getState();
   return {
-    v: 1,
+    v: 2,
     drakeRanges: s.drakeRanges,
     methods: s.methods,
     channels: s.channels,
@@ -178,6 +178,7 @@ export function getSerializedState(): SerializedState {
     cosmology: s.cosmology,
     grabby: s.grabby,
     overrides: s.overrides,
+    astroLocked: s.astroLocked,
   };
 }
 
@@ -190,6 +191,7 @@ export function applySerializedState(state: SerializedState): void {
     cosmology: state.cosmology,
     grabby: state.grabby,
     overrides: state.overrides,
+    astroLocked: state.astroLocked,
     activePreset: null,
   });
 }
