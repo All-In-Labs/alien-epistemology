@@ -1,8 +1,15 @@
 import { Segmented } from './controls/Segmented';
+import { PermalinkButton } from './PermalinkButton';
+import { PermalinkChips } from './PermalinkChips';
 import { useStore } from '../store';
 import type { CosmologyMode } from '../model/monteCarlo';
 
-export function Masthead() {
+interface MastheadProps {
+  presenter: boolean;
+  onTogglePresenter: () => void;
+}
+
+export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
   const cosmology = useStore((s) => s.cosmology);
   const setCosmology = useStore((s) => s.setCosmology);
 
@@ -49,18 +56,26 @@ export function Masthead() {
         <div className="flex-1" />
         <button
           type="button"
-          disabled
-          className="font-mono text-[11px] tracking-chip uppercase px-4 py-2.5 border border-ink bg-transparent text-ink cursor-not-allowed opacity-50"
+          onClick={onTogglePresenter}
+          className="font-mono text-[11px] tracking-chip uppercase px-4 py-2.5 border border-ink bg-transparent text-ink cursor-pointer transition-colors hover:bg-ink hover:text-paper"
+          style={{
+            background: presenter ? '#c2410c' : 'transparent',
+            color: presenter ? '#faf6ec' : '#1f1d18',
+            borderColor: presenter ? '#c2410c' : '#1f1d18',
+          }}
         >
-          Presenter mode (P)
+          {presenter ? 'Exit presenter' : 'Presenter mode (P)'}
         </button>
-        <button
-          type="button"
-          disabled
-          className="font-mono text-[11px] tracking-chip uppercase px-4 py-2.5 bg-ink text-paper border-0 cursor-not-allowed opacity-50"
-        >
-          Copy permalink ↗
-        </button>
+        <PermalinkButton />
+      </div>
+
+      <div className="mt-5 pt-5" style={{ borderTop: '1px dashed #d8d3c8' }}>
+        <PermalinkChips />
+        <p className="font-serif italic text-[13px] text-muted mt-2.5 max-w-[780px]">
+          Pre-loaded permalinks: each loads a fully-configured worldview (Drake bounds, channels,
+          dials) and updates the URL hash. For walking an audience between configurations without
+          dragging sliders.
+        </p>
       </div>
     </header>
   );

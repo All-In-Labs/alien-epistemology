@@ -13,6 +13,7 @@ import type {
   DrakeMCOutput,
   PriorOverrides,
 } from './model/monteCarlo';
+import type { SerializedState } from './lib/permalink';
 import type { DrakeBound, DrakeParamId } from './constants/defaults';
 import type { DetectionMethodId } from './constants/detectionDefaults';
 import type { ValueChannelId } from './constants/valueDefaults';
@@ -125,3 +126,30 @@ export const useStore = create<AppState>()((set) => ({
     set((s) => ({ overrides: { ...s.overrides, ...patch } }));
   },
 }));
+
+export function getSerializedState(): SerializedState {
+  const s = useStore.getState();
+  return {
+    v: 1,
+    drakeRanges: s.drakeRanges,
+    methods: s.methods,
+    channels: s.channels,
+    worldview: s.worldview,
+    cosmology: s.cosmology,
+    grabby: s.grabby,
+    overrides: s.overrides,
+  };
+}
+
+export function applySerializedState(state: SerializedState): void {
+  useStore.setState({
+    drakeRanges: state.drakeRanges,
+    methods: state.methods,
+    channels: state.channels,
+    worldview: state.worldview,
+    cosmology: state.cosmology,
+    grabby: state.grabby,
+    overrides: state.overrides,
+    activePreset: null,
+  });
+}
