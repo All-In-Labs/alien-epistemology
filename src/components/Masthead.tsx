@@ -13,12 +13,24 @@ interface MastheadProps {
 export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
   const cosmology = useStore((s) => s.cosmology);
   const setCosmology = useStore((s) => s.setCosmology);
+  const worldview = useStore((s) => s.worldview);
+  const patchWorldview = useStore((s) => s.patchWorldview);
+  const resetAll = useStore((s) => s.resetAll);
 
   return (
     <header className="px-20 pt-14 pb-9 border-b border-ink relative">
       <div className="flex justify-between items-center font-mono text-[11px] text-muted tracking-eyebrow uppercase">
         <span>aliens.allinlabs.io · v0.1 draft</span>
-        <span>a worldview-sensitive analysis</span>
+        <span className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={resetAll}
+            className="font-mono text-[11px] tracking-eyebrow uppercase text-muted hover:text-accent transition-colors cursor-pointer bg-transparent border-0 p-0"
+          >
+            Reset all to defaults ↺
+          </button>
+          <span>a worldview-sensitive analysis</span>
+        </span>
       </div>
 
       <div className="font-mono text-[11px] text-accent mt-[18px] tracking-eyebrow uppercase">
@@ -70,6 +82,27 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
             </p>
           </Tooltip>
         </span>
+        {cosmology === 'hybrid' && (
+          <span className="flex items-center gap-2 font-mono text-[11px] text-muted tracking-chip uppercase">
+            Mix
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={worldview.grabbyCredence}
+              onChange={(e) => {
+                patchWorldview({ grabbyCredence: Number(e.target.value) });
+              }}
+              className="w-[100px]"
+              style={{ accentColor: '#c2410c' }}
+              aria-label="Grabby credence (hybrid mix)"
+            />
+            <span className="text-ink normal-case tracking-normal">
+              {Math.round(worldview.grabbyCredence * 100)}% grabby
+            </span>
+          </span>
+        )}
         <div className="flex-1" />
         <button
           type="button"

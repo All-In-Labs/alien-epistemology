@@ -20,6 +20,11 @@ export function Ch04Worldview() {
       title="Six dials and one of six presets."
       kicker="Worldview dials act as transforms on the value channels before EV is computed. No preset is privileged — Bostrom and Neartermist sit in the same dropdown."
     >
+      <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
+        {activePreset === null
+          ? 'Active configuration · Custom (no preset selected)'
+          : 'Active configuration · click another preset to switch, or tweak any dial below'}
+      </div>
       <div className="grid grid-cols-3 gap-3.5">
         {PRESETS.map((p) => (
           <PresetTile

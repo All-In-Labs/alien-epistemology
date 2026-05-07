@@ -42,8 +42,19 @@ export function Ch05Verdict() {
   const p95 = out?.p95Multiplier ?? 0;
   const pAbove = out?.pAboveGiveWell ?? 0;
   const pNeg = out?.pNegativeEV ?? 0;
-  // Use the conditional median as the headline when the unconditional one collapses
-  // to 0 (or very close); otherwise the unconditional value is honest.
+  const pAnyDetection = out?.pAnyDetection ?? 0;
+
+  // Three regimes, each with its own headline:
+  //   1. No detections at all — conditional median is undefined.
+  //   2. Detections happen but every value is 0 (no channels enabled) — multipliers
+  //      are exactly 0; "median given detection" is technically 0 but conveys nothing.
+  //   3. Normal — show the unconditional median when it's non-zero, otherwise fall
+  //      back to the conditional median (which doesn't collapse on the no-detection
+  //      mass when P(N=0) > 0.5).
+  const noDetections = pAnyDetection === 0;
+  const allZeroValue = !noDetections && gmean === 0 && pNeg === 0;
+  const hideHeadlineNumber = noDetections || allZeroValue;
+
   const headlineValue = Math.abs(median) < 1e-12 ? medianGivenDetection : median;
   const headlineLabel =
     Math.abs(median) < 1e-12 ? '× GiveWell · median given detection' : '× GiveWell · median';
@@ -78,24 +89,28 @@ export function Ch05Verdict() {
               className="font-display text-5xl leading-none mt-1.5"
               style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
             >
-              {fmtMul(headlineValue)}
-              <span className="font-mono text-lg text-muted ml-1.5">{headlineLabel}</span>
+              {hideHeadlineNumber ? (
+                <span className="text-muted">n/a</span>
+              ) : (
+                <>
+                  {fmtMul(headlineValue)}
+                  <span className="font-mono text-lg text-muted ml-1.5">{headlineLabel}</span>
+                </>
+              )}
             </div>
-            {gmean > 0 || median !== 0 ? (
-              <div className="font-mono text-[11px] text-muted mt-1">
-                {gmean > 0 && (
-                  <>
-                    geom. mean of positive multipliers: {fmtX(gmean)}
-                    {median !== 0 ? ' · ' : ''}
-                  </>
-                )}
-                {median !== 0 && <>unconditional median: {fmtX(median)}</>}
-              </div>
-            ) : (
-              <div className="font-mono text-[11px] text-muted mt-1">
-                no positive multipliers under this worldview — every detection is net negative
-              </div>
-            )}
+            <div className="font-mono text-[11px] text-muted mt-1">
+              {noDetections
+                ? 'no detections in any sample — enable at least one method or raise the detection-floor override'
+                : allZeroValue
+                  ? 'every detection has zero value — enable at least one channel to see EV'
+                  : gmean > 0 && median !== 0
+                    ? `geom. mean of positive multipliers: ${fmtX(gmean)} · unconditional median: ${fmtX(median)}`
+                    : gmean > 0
+                      ? `geom. mean of positive multipliers: ${fmtX(gmean)}`
+                      : median !== 0
+                        ? `unconditional median: ${fmtX(median)}`
+                        : 'no positive multipliers under this worldview — every detection is net negative'}
+            </div>
           </div>
           <div className="flex gap-6 font-mono text-[11.5px] text-muted">
             <div>

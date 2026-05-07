@@ -16,11 +16,18 @@ export function PriorOverridePanel() {
       <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
         Advanced · Bayesian-shortcut prior overrides
       </div>
-      <p className="font-serif italic text-[13.5px] text-muted mt-1 max-w-[780px] mb-5">
+      <p className="font-serif italic text-[13.5px] text-muted mt-1 max-w-[780px] mb-3">
         For users who weight evidence outside the Drake / Grabby parameters &mdash; e.g. those who
         take UAP observations as evidence of alien presence. The tool computes EV{' '}
         <em>given</em> a prior; the prior is yours to pick. (Cf. Azad 2026 on directional
         reasoning.)
+      </p>
+      <p className="font-serif italic text-[12.5px] text-muted mt-1 max-w-[780px] mb-5">
+        For the &ldquo;they&rsquo;re already here&rdquo; scenario, combine both: set{' '}
+        <span className="text-ink not-italic">P(≥1 alien civ)</span> high <em>and</em> raise the{' '}
+        <span className="text-ink not-italic">detection sensitivity floor</span>. The first
+        decides whether they exist; the second decides how visible they are. One alone barely
+        moves the verdict.
       </p>
 
       {cosmology !== 'sdo' && (

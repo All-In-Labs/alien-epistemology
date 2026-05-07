@@ -47,6 +47,7 @@ interface AppState {
   resetMethods: () => void;
   resetChannels: () => void;
   resetWorldview: () => void;
+  resetAll: () => void;
 }
 
 export const useStore = create<AppState>()((set) => ({
@@ -124,6 +125,21 @@ export const useStore = create<AppState>()((set) => ({
   },
   patchOverrides: (patch) => {
     set((s) => ({ overrides: { ...s.overrides, ...patch } }));
+  },
+  resetAll: () => {
+    set({
+      drakeRanges: defaultDrakeRanges(),
+      methods: defaultDetectionState(),
+      channels: defaultChannelState(),
+      worldview: defaultWorldview(),
+      cosmology: 'sdo',
+      grabby: defaultGrabbyState(),
+      overrides: {},
+      activePreset: null,
+    });
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   },
 }));
 

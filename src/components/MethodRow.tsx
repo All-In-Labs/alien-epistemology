@@ -1,8 +1,9 @@
 import { Toggle } from './controls/Toggle';
+import { DualLogTrack } from './controls/DualLogTrack';
 import { Sparkline } from './charts/Sparkline';
 import { useStore } from '../store';
 import type { DetectionMethodState } from '../model/detection';
-import type { DetectionMethodId } from '../constants/detectionDefaults';
+import { DETECTION_DEFAULTS, type DetectionMethodId } from '../constants/detectionDefaults';
 
 interface MethodRowProps {
   method: DetectionMethodState;
@@ -11,12 +12,6 @@ interface MethodRowProps {
 function fmtCost(costM: number): string {
   if (costM >= 1000) return `$${(costM / 1000).toFixed(costM % 1000 === 0 ? 0 : 1)}B`;
   return `$${costM.toFixed(0)}M`;
-}
-
-function logSensitivityFraction(sens: number): number {
-  // map log10(s) ∈ [-6, 0] → [0, 1]
-  const log = Math.log10(Math.max(sens, 1e-12));
-  return Math.max(0, Math.min(1, (log + 6) / 6));
 }
 
 function fakePreview(seedKey: string, on: boolean): number[] {
@@ -38,12 +33,15 @@ function fakePreview(seedKey: string, on: boolean): number[] {
 export function MethodRow({ method }: MethodRowProps) {
   const setMethodOn = useStore((s) => s.setMethodOn);
   const setMethodCost = useStore((s) => s.setMethodCost);
+  const setMethodSensitivity = useStore((s) => s.setMethodSensitivity);
   const cfg = method;
 
-  // log sensitivity bar shows the *default* sensitivity for now (mid-bound)
-  const sensMid = Math.sqrt(cfg.sensMin * cfg.sensMax);
-  const sensFrac = logSensitivityFraction(sensMid);
-  const sensExp = Math.round(Math.log10(sensMid));
+  // Slider bounds extend an order of magnitude beyond spec defaults so users can
+  // explore. Spec §10 #7 calls these "the most uncertain numbers in the model" —
+  // they need to be tuneable, not display-only.
+  const specBounds = DETECTION_DEFAULTS[cfg.id].sensitivity;
+  const sliderMin = specBounds.min / 10;
+  const sliderMax = specBounds.max * 10;
 
   return (
     <div className="grid grid-cols-[40px_1fr_140px_200px_120px] gap-5 items-center py-4.5 border-b border-edge last:border-b-0">
@@ -80,21 +78,28 @@ export function MethodRow({ method }: MethodRowProps) {
         />
       </div>
       <div>
-        <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em]">
-          log sensitivity
+        <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em] flex justify-between">
+          <span>log sensitivity</span>
+          <span className="opacity-70">
+            10{supScript(Math.round(Math.log10(cfg.sensMin)))}–10
+            {supScript(Math.round(Math.log10(cfg.sensMax)))}
+          </span>
         </div>
-        <div className="h-1.5 mt-2 relative" style={{ background: '#ece6d3' }}>
-          <div
-            className="absolute h-full"
-            style={{
-              width: `${(sensFrac * 100).toFixed(2)}%`,
-              background: cfg.on ? '#c2410c' : '#c8c4bc',
+        <div className="mt-2">
+          <DualLogTrack
+            rangeMin={sliderMin}
+            rangeMax={sliderMax}
+            loValue={cfg.sensMin}
+            hiValue={cfg.sensMax}
+            onChange={(lo, hi) => {
+              setMethodSensitivity(cfg.id, lo, hi);
             }}
+            ariaLabelLo={`${cfg.id} sensitivity minimum`}
+            ariaLabelHi={`${cfg.id} sensitivity maximum`}
+            fillColor={cfg.on ? '#c2410c' : '#c8c4bc'}
           />
         </div>
-        <div className="font-mono text-[11px] text-muted mt-0.5">
-          10{supScript(sensExp)} per civ · per $1B-decade
-        </div>
+        <div className="font-mono text-[11px] text-muted mt-1">per civ · per $1B-decade</div>
       </div>
       <Sparkline
         values={fakePreview(`A-m-${cfg.id}`, cfg.on)}
