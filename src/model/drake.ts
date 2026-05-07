@@ -43,10 +43,23 @@ export function sampleDrake(rng: Rng, ranges: DrakeRanges): DrakeSample {
   const fc = sampleParam(rng, 'fc', ranges.fc);
   const L = sampleParam(rng, 'L', ranges.L);
   const fd = sampleParam(rng, 'fd', ranges.fd);
-  const N = R * fp * ne * fl * fi * fc * L;
+  // Sum logs rather than multiply to avoid mantissa-bit loss across factors
+  // that span 30+ orders of magnitude. The product N = R*fp*ne*fl*fi*fc*L
+  // can lose precision when several factors are tiny — log-space accumulates
+  // with full Float64 precision and exp's only the final result.
+  const logN =
+    Math.log(R) +
+    Math.log(fp) +
+    Math.log(ne) +
+    Math.log(fl) +
+    Math.log(fi) +
+    Math.log(fc) +
+    Math.log(L);
+  const N = Math.exp(logN);
+  const N_detectable = Math.exp(logN + Math.log(fd));
   return {
     N,
-    N_detectable: N * fd,
+    N_detectable,
     components: { R, fp, ne, fl, fi, fc, L, fd },
   };
 }

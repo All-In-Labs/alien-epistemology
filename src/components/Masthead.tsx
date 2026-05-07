@@ -17,6 +17,8 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
   const worldview = useStore((s) => s.worldview);
   const patchWorldview = useStore((s) => s.patchWorldview);
   const resetAll = useStore((s) => s.resetAll);
+  const seedMode = useStore((s) => s.seedMode);
+  const setSeedMode = useStore((s) => s.setSeedMode);
 
   return (
     <header className="px-20 pt-14 pb-9 border-b border-ink relative">
@@ -29,6 +31,17 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
             className="font-mono text-[11px] tracking-eyebrow uppercase text-muted hover:text-accent transition-colors cursor-pointer bg-transparent border-0 p-0"
           >
             Reset all to defaults ↺
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSeedMode(seedMode === 'deterministic' ? 'rotating' : 'deterministic');
+            }}
+            aria-pressed={seedMode === 'rotating'}
+            title="Deterministic = identical results when revisiting a config. Rotating = small MC variance visible per re-run."
+            className="font-mono text-[11px] tracking-eyebrow uppercase text-muted hover:text-accent transition-colors cursor-pointer bg-transparent border-0 p-0"
+          >
+            {seedMode === 'deterministic' ? 'Seed: deterministic' : 'Seed: rotating 🎲'}
           </button>
         </span>
         <span>a worldview-sensitive analysis</span>

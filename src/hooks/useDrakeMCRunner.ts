@@ -5,6 +5,33 @@ import { useStore } from '../store';
 const MC_SAMPLES = 100_000;
 const DEBOUNCE_MS = 150;
 
+/**
+ * Build a stable seed from the state slices that affect the MC. Used when
+ * seedMode === 'deterministic' so identical configs produce identical results
+ * across re-runs (the lightning-talk demo benefits from this — wiggling a slider
+ * shouldn't add visible bouncing noise).
+ */
+function deterministicSeed(state: {
+  drakeRanges: unknown;
+  methods: unknown;
+  channels: unknown;
+  worldview: unknown;
+  cosmology: unknown;
+  grabby: unknown;
+  overrides: unknown;
+  astroLocked: unknown;
+}): string {
+  // JSON.stringify is good enough; we hash to keep the seed compact.
+  const payload = JSON.stringify(state);
+  // Tiny FNV-1a hash — not cryptographic, just a stable mapping.
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < payload.length; i++) {
+    h = (h ^ payload.charCodeAt(i)) >>> 0;
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return `det-${h.toString(16)}`;
+}
+
 export function useDrakeMCRunner(): void {
   const drakeRanges = useStore((s) => s.drakeRanges);
   const methods = useStore((s) => s.methods);
@@ -13,6 +40,7 @@ export function useDrakeMCRunner(): void {
   const cosmology = useStore((s) => s.cosmology);
   const grabby = useStore((s) => s.grabby);
   const overrides = useStore((s) => s.overrides);
+  const seedMode = useStore((s) => s.seedMode);
   const setDrakeOutput = useStore((s) => s.setDrakeOutput);
 
   const timer = useRef<number | undefined>(undefined);
@@ -31,9 +59,21 @@ export function useDrakeMCRunner(): void {
   useEffect(() => {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
-      seedRef.current += 1;
       const client = clientRef.current;
       if (!client) return;
+      const seed =
+        seedMode === 'deterministic'
+          ? deterministicSeed({
+              drakeRanges,
+              methods,
+              channels,
+              worldview,
+              cosmology,
+              grabby,
+              overrides,
+              astroLocked: false, // not part of MC math; excluded from seed for stability
+            })
+          : `drake-${(++seedRef.current).toString()}`;
       void client
         .run({
           ranges: drakeRanges,
@@ -44,7 +84,7 @@ export function useDrakeMCRunner(): void {
           grabby,
           overrides,
           n: MC_SAMPLES,
-          seed: `drake-${seedRef.current.toString()}`,
+          seed,
         })
         .then((out) => {
           setDrakeOutput(out);
@@ -53,5 +93,5 @@ export function useDrakeMCRunner(): void {
     return () => {
       window.clearTimeout(timer.current);
     };
-  }, [drakeRanges, methods, channels, worldview, cosmology, grabby, overrides, setDrakeOutput]);
+  }, [drakeRanges, methods, channels, worldview, cosmology, grabby, overrides, seedMode, setDrakeOutput]);
 }

@@ -57,6 +57,10 @@ export function totalDecadalCostMillions(methods: DetectionMethodState[]): numbe
  * Return P(at least one method detects at least one civ in the decade), given
  * a sample of N_detectable. Sensitivities are sampled per call from the user's
  * bounds.
+ *
+ * Numerics: uses Math.log1p(-p_m) for the log(1-p_m) term — purpose-built for
+ * precision near 1, where Math.log(1-p_m) loses several mantissa bits when
+ * p_m is small.
  */
 export function pDetectGivenN(
   rng: Rng,
@@ -74,9 +78,9 @@ export function pDetectGivenN(
     const c_B = m.costM / 1000; // convert M$ to $B-decade
     const p_m = 1 - Math.exp(-s * c_B); // per civ per decade
     if (p_m <= 0) continue;
-    // P_m = 1 - (1 - p_m)^N_detectable. log(1 - P_m) = N * log(1 - p_m)
-    const log1mp = Math.log(Math.max(1 - p_m, Number.MIN_VALUE));
-    logProdMiss += N_detectable * log1mp;
+    if (p_m >= 1) return 1; // saturated — at least one civ guaranteed detected
+    // P_m = 1 - (1 - p_m)^N_detectable. log(1 - P_m) = N * log1p(-p_m).
+    logProdMiss += N_detectable * Math.log1p(-p_m);
   }
   if (!anyOn) return 0;
   return 1 - Math.exp(logProdMiss);
@@ -109,13 +113,19 @@ export function pDetectPerMethod(
     const s = logUniform(rng, m.sensMin, m.sensMax);
     const c_B = m.costM / 1000;
     const p_m = 1 - Math.exp(-s * c_B);
-    const P_m = 1 - Math.pow(1 - p_m, N_detectable);
-    byMethod[m.id] = P_m;
-    const log1mp = Math.log(Math.max(1 - p_m, Number.MIN_VALUE));
-    logProdMiss += N_detectable * log1mp;
+    if (p_m <= 0) continue;
+    if (p_m >= 1) {
+      byMethod[m.id] = 1;
+      // Saturated: this method alone gives combined=1.
+      return { byMethod, combined: 1 };
+    }
+    // P_m = 1 - (1 - p_m)^N. Compute via expm1+log1p for full precision.
+    const logProdMissThis = N_detectable * Math.log1p(-p_m);
+    byMethod[m.id] = -Math.expm1(logProdMissThis); // == 1 - exp(logProdMissThis)
+    logProdMiss += logProdMissThis;
   }
   return {
     byMethod,
-    combined: anyOn ? 1 - Math.exp(logProdMiss) : 0,
+    combined: anyOn ? -Math.expm1(logProdMiss) : 0,
   };
 }

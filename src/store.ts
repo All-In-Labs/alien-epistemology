@@ -30,6 +30,11 @@ interface AppState {
   /** When true, the R*, fp, ne sliders are disabled (locked at default values).
    *  Lets users isolate the speculative-parameter sensitivity per spec §6.3. */
   astroLocked: boolean;
+  /** 'deterministic' = MC seed derived from state hash → identical results when
+   *  revisiting a config. 'rotating' = fresh seed per re-run → small visible
+   *  noise that helps users feel MC variance. Default deterministic so the talk
+   *  demo is stable. */
+  seedMode: 'deterministic' | 'rotating';
   drakeOutput: DrakeMCOutput | null;
   setDrakeRange: (id: DrakeParamId, bound: DrakeBound) => void;
   setMethodOn: (id: DetectionMethodId, on: boolean) => void;
@@ -52,6 +57,7 @@ interface AppState {
   resetWorldview: () => void;
   resetAll: () => void;
   toggleAstroLock: () => void;
+  setSeedMode: (m: 'deterministic' | 'rotating') => void;
 }
 
 export const useStore = create<AppState>()((set) => ({
@@ -64,6 +70,7 @@ export const useStore = create<AppState>()((set) => ({
   overrides: {},
   activePreset: null,
   astroLocked: false,
+  seedMode: 'deterministic',
   drakeOutput: null,
   setDrakeRange: (id, bound) => {
     set((s) => ({ drakeRanges: { ...s.drakeRanges, [id]: bound } }));
@@ -149,8 +156,6 @@ export const useStore = create<AppState>()((set) => ({
   },
   toggleAstroLock: () => {
     set((s) => {
-      // When turning ON, snap R/fp/ne back to defaults (they're being declared
-      // "well-supported" and the slider becomes disabled).
       if (!s.astroLocked) {
         return {
           astroLocked: true,
@@ -164,6 +169,9 @@ export const useStore = create<AppState>()((set) => ({
       }
       return { astroLocked: false };
     });
+  },
+  setSeedMode: (m) => {
+    set({ seedMode: m });
   },
 }));
 

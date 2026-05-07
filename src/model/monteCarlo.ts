@@ -4,7 +4,7 @@ import {
   totalDecadalCostMillions,
   type DetectionMethodState,
 } from './detection';
-import { channelValues, type ChannelsState } from './value';
+import { valueForTypeSet, type ChannelsState } from './value';
 import { applyWorldview, defaultWorldview, type WorldviewDials } from './worldview';
 import {
   sampleGrabbyZoneCredence,
@@ -96,15 +96,16 @@ export function runDrakeMC({
   const detectableSamples = new Float64Array(n);
   const detectionProbSamples = new Float64Array(n);
   const evSamples = new Float64Array(n);
-  let zero = 0;
-  let one = 0;
-  let gtOne = 0;
+
+  // Partition stats — Poisson-correct interpretation. Drake's N is a *rate*
+  // (expected count), so P(actual count = 0) = exp(-N), P(=1) = N·exp(-N), etc.
+  // We accumulate these analytically rather than thresholding the rate.
+  let pNZeroSum = 0;
+  let pNOneSum = 0;
+  let pNGtOneSum = 0;
   let detectionSum = 0;
   let evSum = 0;
 
-  // Cosmology branch: in 'grabby' mode every sample uses the grabby zone credence
-  // as a Bernoulli for "we're inside a grabby zone"; in 'hybrid' mode each sample
-  // is drawn from one branch in proportion to worldview.grabbyCredence.
   const grabbyBoosted: DetectionMethodState[] | undefined =
     methods !== undefined && cosmology !== 'sdo'
       ? methods.map((m) => ({
@@ -113,19 +114,47 @@ export function runDrakeMC({
           sensMax: m.sensMax * sensitivityBoostFor(m.type),
         }))
       : undefined;
-  // Pre-compute per-detection-type V_user (worldview-transformed channel sum).
-  // Channels and worldview are constants for the run, so we can do this once.
+
+  // Pre-compute V(types) for every non-empty subset of detection types so the
+  // per-sample EV calc just looks up the answer. With 5 unique types there are
+  // 31 subsets; we key by a bitmask.
   const wv = worldview ?? defaultWorldview();
-  const vByType: Record<DetectionType, number> | null = channels
-    ? {
-        radio: applyWorldview(channelValues('radio', channels), wv).total,
-        technosig: applyWorldview(channelValues('technosig', channels), wv).total,
-        biosig: applyWorldview(channelValues('biosig', channels), wv).total,
-        probe: applyWorldview(channelValues('probe', channels), wv).total,
-        passive_radar: applyWorldview(channelValues('passive_radar', channels), wv).total,
-      }
+  const TYPE_ORDER: readonly DetectionType[] = [
+    'radio',
+    'technosig',
+    'biosig',
+    'probe',
+    'passive_radar',
+  ];
+  const vByMask: number[] | null = channels
+    ? (() => {
+        const out = new Array<number>(1 << TYPE_ORDER.length).fill(0);
+        for (let mask = 1; mask < 1 << TYPE_ORDER.length; mask++) {
+          const types: DetectionType[] = [];
+          for (let i = 0; i < TYPE_ORDER.length; i++) {
+            const t = TYPE_ORDER[i];
+            if (t !== undefined && (mask & (1 << i)) !== 0) types.push(t);
+          }
+          out[mask] = applyWorldview(
+            // valueForTypeSet returns components; we use channelValuesForTypeSet
+            // through valueForTypeSet's returned scalar — but applyWorldview
+            // needs per-channel components. Build them inline:
+            channelValueComponentsForTypeSet(types, channels),
+            wv,
+          ).total;
+        }
+        return out;
+      })()
     : null;
+
+  // Map detection-method id → bit position in the type mask.
+  const typeBit = (type: DetectionType): number => {
+    const i = TYPE_ORDER.indexOf(type);
+    return i < 0 ? 0 : 1 << i;
+  };
+
   const grabbyWeight = wv.grabbyCredence;
+
   for (let i = 0; i < n; i++) {
     let useGrabby = false;
     if (cosmology === 'grabby') {
@@ -137,16 +166,14 @@ export function runDrakeMC({
     let N_detectable: number;
     if (useGrabby && grabby !== undefined) {
       const zoneP = sampleGrabbyZoneCredence(rng, grabby);
-      // Bernoulli(zoneP) → either 0 or a "saturated" N standing for ubiquitous probes.
       const inside = rng() < zoneP;
       N = inside ? 1e6 : 0;
-      N_detectable = N; // grabby aliens are detectable by construction in this simplification
+      N_detectable = N;
     } else {
       const s = sampleDrake(rng, ranges);
       N = s.N;
       N_detectable = s.N_detectable;
     }
-    // Apply Bayesian-shortcut override on P(N≥1) if set.
     if (overrides?.overridePNGteOne !== undefined) {
       const alive = rng() < overrides.overridePNGteOne;
       N = alive ? Math.max(N, 1) : 0;
@@ -154,9 +181,18 @@ export function runDrakeMC({
     }
     samples[i] = N;
     detectableSamples[i] = N_detectable;
-    if (N < 1) zero++;
-    else if (N < 2) one++;
-    else gtOne++;
+
+    // Poisson partition contributions for this sample's rate.
+    // For very large N, exp(-N) underflows to 0 → contributes 0 to pNZero, 0 to pNOne,
+    // 1 to pNGtOne. Float64 handles this transition gracefully.
+    if (N <= 0) {
+      pNZeroSum += 1;
+    } else {
+      const expNeg = Math.exp(-N);
+      pNZeroSum += expNeg;
+      pNOneSum += N * expNeg;
+      pNGtOneSum += 1 - expNeg - N * expNeg;
+    }
 
     if (methods !== undefined) {
       const m = useGrabby && grabbyBoosted ? grabbyBoosted : methods;
@@ -167,28 +203,65 @@ export function runDrakeMC({
       }
       detectionProbSamples[i] = pCombined;
       detectionSum += pCombined;
-      if (vByType) {
-        let totalP = 0;
+
+      if (vByMask) {
+        // Subset enumeration: for each non-empty subset S of enabled methods,
+        // P(exactly S detects) = Π_{m∈S} P_m × Π_{m∉S} (1 − P_m). We compute
+        // EV = Σ_S P(exactly S) × V(types_in_S).
+        //
+        // For typical configs only 1–2 methods are enabled, so most subsets
+        // contribute zero (Π includes a 0). We optimise by collecting the
+        // active methods first.
+        const active: { id: DetectionMethodState['id']; type: DetectionType; pm: number }[] = [];
         for (const mm of m) {
-          if (mm.on) totalP += per.byMethod[mm.id];
+          if (!mm.on || mm.costM <= 0) continue;
+          const pm = per.byMethod[mm.id];
+          if (pm <= 0) continue;
+          active.push({ id: mm.id, type: mm.type, pm });
         }
-        let v = 0;
-        if (totalP > 0) {
-          for (const mm of m) {
-            if (!mm.on) continue;
-            const pm = per.byMethod[mm.id];
-            if (pm <= 0) continue;
-            const weight = pm / totalP;
-            v += weight * vByType[mm.type];
+        const k = active.length;
+        if (k > 0) {
+          let ev = 0;
+          for (let s = 1; s < 1 << k; s++) {
+            let prob = 1;
+            let typeMask = 0;
+            for (let j = 0; j < k; j++) {
+              const a = active[j];
+              if (a === undefined) continue;
+              if ((s & (1 << j)) !== 0) {
+                prob *= a.pm;
+                typeMask |= typeBit(a.type);
+              } else {
+                prob *= 1 - a.pm;
+              }
+            }
+            const v = vByMask[typeMask] ?? 0;
+            ev += prob * v;
           }
+          // Apply detection-floor as a value-weighted blend if it's set: floor
+          // the implied detection probability up to the floor by treating the
+          // missing mass as "average-type detection."
+          if (
+            overrides?.detectionFloor !== undefined &&
+            N_detectable > 0 &&
+            per.combined < overrides.detectionFloor
+          ) {
+            const missing = overrides.detectionFloor - per.combined;
+            // Average V across enabled-method type singletons as a fallback.
+            let avgSingleV = 0;
+            for (const a of active) {
+              avgSingleV += vByMask[typeBit(a.type)] ?? 0;
+            }
+            avgSingleV /= active.length;
+            ev += missing * avgSingleV;
+          }
+          evSamples[i] = ev;
+          evSum += ev;
         }
-        const ev = pCombined * v;
-        evSamples[i] = ev;
-        evSum += ev;
       }
     }
   }
-  // Cost-effectiveness multiplier (× GiveWell bar) per sample.
+
   const totalCostM = methods !== undefined ? totalDecadalCostMillions(methods) : 0;
   const totalCostUSD = totalCostM * 1e6;
   const multiplierSamples = new Float64Array(n);
@@ -205,8 +278,8 @@ export function runDrakeMC({
     }
   }
 
-  // Percentiles of the multiplier samples.
-  const sortedMultipliers = totalCostUSD > 0 ? Array.from(multiplierSamples).sort((a, b) => a - b) : [];
+  const sortedMultipliers =
+    totalCostUSD > 0 ? Array.from(multiplierSamples).sort((a, b) => a - b) : [];
   const pickPctl = (p: number): number => {
     if (sortedMultipliers.length === 0) return 0;
     const idx = Math.max(
@@ -216,9 +289,6 @@ export function runDrakeMC({
     return sortedMultipliers[idx] ?? 0;
   };
 
-  // "Median conditional on detection" — drop samples where no detection occurred (multiplier
-  // exactly 0) and take the median of the rest. Far more honest than the unconditional
-  // median when the zero-mass dominates.
   const positiveSorted: number[] = [];
   for (const v of sortedMultipliers) {
     if (v !== 0) positiveSorted.push(v);
@@ -228,8 +298,6 @@ export function runDrakeMC({
       ? (positiveSorted[Math.floor(positiveSorted.length / 2)] ?? 0)
       : 0;
 
-  // Geometric mean of strictly-positive multipliers — stable scale for the active worldview
-  // even when most mass is at 0. Uses log-domain accumulation for numerical stability.
   let logSum = 0;
   let logCount = 0;
   for (const v of multiplierSamples) {
@@ -241,10 +309,10 @@ export function runDrakeMC({
   const gmeanPositive = logCount > 0 ? Math.exp(logSum / logCount) : 0;
 
   return {
-    pNZero: zero / n,
-    pNExactlyOne: one / n,
-    pNGtOne: gtOne / n,
-    pNGteOne: 1 - zero / n,
+    pNZero: pNZeroSum / n,
+    pNExactlyOne: pNOneSum / n,
+    pNGtOne: pNGtOneSum / n,
+    pNGteOne: 1 - pNZeroSum / n,
     pAnyDetection: methods !== undefined ? detectionSum / n : 0,
     evDALYs: channels !== undefined ? evSum / n : 0,
     totalCostM,
@@ -262,3 +330,52 @@ export function runDrakeMC({
     evSamples,
   };
 }
+
+// Local helper: compute per-channel components for a type set so we can
+// run them through worldview transforms. Avoids a circular import on
+// channelValuesForTypeSet's full return.
+function channelValueComponentsForTypeSet(
+  types: readonly DetectionType[],
+  ch: ChannelsState,
+): { A: number; B: number; C: number; D: number } {
+  // Re-implement here to avoid an import shuffle. The intent matches
+  // channelValuesForTypeSet in value.ts but we keep both call sites working.
+  // (See value.ts for spec rationale.)
+  let A = 0;
+  if (ch.A.on && types.length > 0) {
+    let prodMiss = 1;
+    for (const t of types) {
+      const d =
+        t === 'biosig'
+          ? ch.A.delta.biosig
+          : t === 'technosig'
+            ? ch.A.delta.technosig
+            : t === 'radio'
+              ? ch.A.delta.radio
+              : t === 'passive_radar'
+                ? ch.A.delta.passive_radar
+                : ch.A.delta.probe;
+      prodMiss *= 1 - d;
+    }
+    const totalDelta = 1 - prodMiss;
+    const sign = ch.A.filterPriorBehind > 0.5 ? -1 : ch.A.filterPriorBehind < 0.5 ? 1 : 0;
+    A = sign * totalDelta * ch.A.vXriskInfo;
+  }
+  let B = 0;
+  if (ch.B.on && types.length > 0) {
+    const net = ch.B.techViabilityShift + ch.B.lightconeClaimShift;
+    B = net * ch.B.vCosmicEndowment;
+  }
+  let C = 0;
+  if (ch.C.on && types.some((t) => ch.C.fires.includes(t))) {
+    C = ch.C.pFriendly * ch.C.vContactFriendly;
+  }
+  let D = 0;
+  if (ch.D.on && types.some((t) => ch.D.fires.includes(t))) {
+    D = ch.D.pHostile * ch.D.vHostileDisvalue;
+  }
+  return { A, B, C, D };
+}
+
+// Re-export so anything still importing valueForTypeSet keeps working
+export { valueForTypeSet };

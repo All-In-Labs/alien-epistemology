@@ -3,7 +3,7 @@ import { runDrakeMC } from '../../src/model/monteCarlo';
 import { defaultDrakeRanges } from '../../src/model/drake';
 
 describe('runDrakeMC', () => {
-  it('partition probabilities {N<1, 1≤N<2, N≥2} sum to 1', () => {
+  it('Poisson partition probabilities sum to 1', () => {
     const out = runDrakeMC({ ranges: defaultDrakeRanges(), n: 10000, seed: 'mc-1' });
     expect(out.pNZero + out.pNExactlyOne + out.pNGtOne).toBeCloseTo(1, 6);
   });
