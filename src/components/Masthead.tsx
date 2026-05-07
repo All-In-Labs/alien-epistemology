@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Segmented } from './controls/Segmented';
 import { PermalinkButton } from './PermalinkButton';
 import { PermalinkChips } from './PermalinkChips';
 import { Tooltip } from './Tooltip';
 import { CitationLink } from './CitationLink';
+import { AssumptionsModal } from './AssumptionsModal';
 import { useStore } from '../store';
 import type { CosmologyMode } from '../model/monteCarlo';
 
@@ -19,6 +21,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
   const resetAll = useStore((s) => s.resetAll);
   const seedMode = useStore((s) => s.seedMode);
   const setSeedMode = useStore((s) => s.setSeedMode);
+  const [assumptionsOpen, setAssumptionsOpen] = useState(false);
 
   return (
     <header className="px-20 pt-14 pb-9 border-b border-ink relative">
@@ -43,12 +46,21 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           >
             {seedMode === 'deterministic' ? 'Seed: deterministic' : 'Seed: rotating 🎲'}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAssumptionsOpen(true);
+            }}
+            className="font-mono text-[11px] tracking-eyebrow uppercase text-muted hover:text-accent transition-colors cursor-pointer bg-transparent border-0 p-0"
+          >
+            View assumptions ↗
+          </button>
         </span>
         <span>a worldview-sensitive analysis</span>
       </div>
 
       <div className="font-mono text-[11px] text-accent mt-[18px] tracking-eyebrow uppercase flex items-center gap-3 flex-wrap">
-        <span>An interactive essay in seven parts</span>
+        <span>An interactive essay in six parts</span>
         <span className="text-muted normal-case tracking-normal flex items-center gap-1.5">
           <span
             aria-hidden
@@ -152,6 +164,12 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           dragging sliders.
         </p>
       </div>
+      <AssumptionsModal
+        open={assumptionsOpen}
+        onClose={() => {
+          setAssumptionsOpen(false);
+        }}
+      />
     </header>
   );
 }

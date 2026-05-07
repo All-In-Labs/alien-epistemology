@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Masthead } from './components/Masthead';
 import { StatPair } from './components/StatPair';
-import { Ch00Contract } from './components/chapters/Ch00Contract';
 import { Ch01Drake } from './components/chapters/Ch01Drake';
 import { Ch02Detection } from './components/chapters/Ch02Detection';
 import { Ch03Value } from './components/chapters/Ch03Value';
@@ -18,7 +17,6 @@ import { usePermalink } from './hooks/usePermalink';
 // section with a matching id; the keyboard handler scrolls between them.
 const ANCHORS = [
   { id: 'masthead', title: 'Masthead' },
-  { id: 'ch-00', title: 'How to read this' },
   { id: 'ch-01', title: 'The equation' },
   { id: 'ch-02', title: 'The instruments' },
   { id: 'ch-03', title: 'What detection is worth' },
@@ -101,9 +99,6 @@ export default function App() {
           valid framings of the same Monte Carlo result.
         </p>
       </section>
-      <div id="ch-00">
-        <Ch00Contract />
-      </div>
       <div id="ch-01">
         <Ch01Drake />
       </div>
