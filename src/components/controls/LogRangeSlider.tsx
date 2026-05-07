@@ -1,9 +1,12 @@
 // A two-thumb range slider for log-uniform Drake parameters.
-// Renders a track with two draggable thumbs (low and high bound), with the
-// active band highlighted between them. Accepts log-or-linear distribution and
-// formats endpoint labels with scientific notation when appropriate.
+//
+// Hit-testing: rather than stack two transparent native range inputs (where the
+// last-rendered always wins clicks at the centerpoint), the track div owns
+// pointer events and routes them to whichever thumb is closer to the click x.
+// The native range inputs remain in the DOM with `pointer-events: none` for
+// keyboard accessibility (Tab to focus, arrow keys to nudge).
 
-import { useCallback, useId } from 'react';
+import { useCallback, useId, useRef } from 'react';
 import { Sparkline } from '../charts/Sparkline';
 
 interface LogRangeSliderProps {
@@ -70,6 +73,8 @@ export function LogRangeSlider({
   onChange,
 }: LogRangeSliderProps) {
   const id = useId();
+  const trackRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef<'lo' | 'hi' | null>(null);
 
   // Map between user value space and the [0, 1] slider position.
   const valueToFrac = useCallback(
@@ -102,6 +107,9 @@ export function LogRangeSlider({
   const warn = floor !== undefined && loValue < floor;
 
   const stepSize = 0.001; // 0.1% of slider range
+
+  // Native-input change (keyboard arrows). Existing handlers; preserve order
+  // semantics — if user moves lo above hi or vice versa, push the other.
   const handleLoChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const f = Number(e.target.value);
     const newLo = fracToValue(f);
@@ -113,6 +121,41 @@ export function LogRangeSlider({
     const newHi = fracToValue(f);
     const newLo = newHi < loValue ? newHi : loValue;
     onChange(newLo, newHi);
+  };
+
+  // Pointer hit-testing on the track. Decides which thumb is closer to the
+  // click x and updates that thumb's value. Drag continues until pointerup.
+  const fracFromPointer = (clientX: number): number => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return 0;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  };
+
+  const updateFor = (which: 'lo' | 'hi', f: number): void => {
+    const v = fracToValue(f);
+    if (which === 'lo') {
+      onChange(v, Math.max(v, hiValue));
+    } else {
+      onChange(Math.min(loValue, v), v);
+    }
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
+    const f = fracFromPointer(e.clientX);
+    const which: 'lo' | 'hi' = Math.abs(f - loFrac) <= Math.abs(f - hiFrac) ? 'lo' : 'hi';
+    draggingRef.current = which;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    updateFor(which, f);
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>): void => {
+    if (draggingRef.current === null) return;
+    updateFor(draggingRef.current, fracFromPointer(e.clientX));
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>): void => {
+    draggingRef.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
   return (
@@ -127,15 +170,26 @@ export function LogRangeSlider({
         >
           {formatBound(loValue)}
         </span>
-        <div className="flex-1 h-2.5 relative" style={{ background: '#ece6d3' }}>
+        <div
+          ref={trackRef}
+          className="flex-1 h-2.5 relative cursor-pointer touch-none"
+          style={{ background: '#ece6d3' }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
           <div
-            className="absolute top-0 h-full"
+            className="absolute top-0 h-full pointer-events-none"
             style={{
               left: `${(loFrac * 100).toString()}%`,
               width: `${((hiFrac - loFrac) * 100).toString()}%`,
               background: '#1f1d18',
             }}
           />
+          {/* Native inputs sit on top with pointer-events: none — they stay in the DOM
+              for keyboard accessibility (tab + arrow keys), but mouse/touch clicks pass
+              through to the track's hit-testing handler above. */}
           <input
             id={`${id}-lo`}
             aria-label={`${label} minimum`}
@@ -145,8 +199,8 @@ export function LogRangeSlider({
             step={stepSize}
             value={loFrac}
             onChange={handleLoChange}
-            className="absolute inset-0 w-full opacity-0 cursor-pointer pointer-events-auto"
-            style={{ height: '24px', top: '-7px' }}
+            className="absolute inset-0 w-full opacity-0"
+            style={{ height: '24px', top: '-7px', pointerEvents: 'none' }}
           />
           <input
             id={`${id}-hi`}
@@ -157,8 +211,8 @@ export function LogRangeSlider({
             step={stepSize}
             value={hiFrac}
             onChange={handleHiChange}
-            className="absolute inset-0 w-full opacity-0 cursor-pointer pointer-events-auto"
-            style={{ height: '24px', top: '-7px' }}
+            className="absolute inset-0 w-full opacity-0"
+            style={{ height: '24px', top: '-7px', pointerEvents: 'none' }}
           />
           <div
             aria-hidden
@@ -168,7 +222,7 @@ export function LogRangeSlider({
               top: '-4px',
               width: '2px',
               height: '18px',
-              background: warn ? '#c2410c' : '#c2410c',
+              background: '#c2410c',
             }}
           />
           <div
