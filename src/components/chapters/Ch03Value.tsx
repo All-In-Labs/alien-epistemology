@@ -3,6 +3,35 @@ import { ChannelCard } from '../ChannelCard';
 import { RangeSlider } from '../controls/RangeSlider';
 import { useStore } from '../../store';
 
+const CHANNEL_A_TOOLTIP = (
+  <p>
+    The Great Filter (Hanson 1998). Detection updates whether the filter sits behind us
+    (life is hard, we passed the gauntlet) or ahead (life is easy, civilisations rarely survive).
+    By default finding life is bad news. Sign flips when you set ϕ &lt; 0.5.
+  </p>
+);
+const CHANNEL_B_TOOLTIP = (
+  <p>
+    Astronomical Waste (Bostrom 2003). Two-sided: detection raises P(tech-viability) but
+    lowers P(unclaimed lightcone). Default magnitudes target ~10¹⁶ DALYs of cosmic endowment;
+    move the two shifts independently.
+  </p>
+);
+const CHANNEL_C_TOOLTIP = (
+  <p>
+    Direct knowledge transfer (Drake/Sagan tradition). Only fires for detection types that
+    receive information — radio, technosignature, passive radar. Biosignature and probe
+    detections do not trigger contact value.
+  </p>
+);
+const CHANNEL_D_TOOLTIP = (
+  <p>
+    Dark Forest disvalue (Liu 2008; METI debate). Detection alerts hostile attention or
+    commits us to METI. Fires for radio, technosignature, and probe — biosig and passive
+    radar do not draw fire.
+  </p>
+);
+
 export function Ch03Value() {
   const channels = useStore((s) => s.channels);
   const setChannelOn = useStore((s) => s.setChannelOn);
@@ -30,6 +59,7 @@ export function Ch03Value() {
           onToggle={(v) => {
             setChannelOn('A', v);
           }}
+          tooltip={CHANNEL_A_TOOLTIP}
         >
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-3">
             <RangeSlider
@@ -58,6 +88,7 @@ export function Ch03Value() {
           onToggle={(v) => {
             setChannelOn('B', v);
           }}
+          tooltip={CHANNEL_B_TOOLTIP}
         >
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-3">
             <RangeSlider
@@ -96,6 +127,7 @@ export function Ch03Value() {
           onToggle={(v) => {
             setChannelOn('C', v);
           }}
+          tooltip={CHANNEL_C_TOOLTIP}
         >
           <div className="grid grid-cols-1 mt-3">
             <RangeSlider
@@ -122,6 +154,7 @@ export function Ch03Value() {
           onToggle={(v) => {
             setChannelOn('D', v);
           }}
+          tooltip={CHANNEL_D_TOOLTIP}
         >
           <div className="grid grid-cols-1 mt-3">
             <RangeSlider

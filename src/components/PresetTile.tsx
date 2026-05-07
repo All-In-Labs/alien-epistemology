@@ -1,16 +1,25 @@
+import { forwardRef } from 'react';
 import type { Preset } from '../presets/worldviews';
 
 interface PresetTileProps {
   preset: Preset;
   active: boolean;
   onClick: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLButtonElement>) => void;
 }
 
-export function PresetTile({ preset, active, onClick }: PresetTileProps) {
+export const PresetTile = forwardRef<HTMLButtonElement, PresetTileProps>(function PresetTile(
+  { preset, active, onClick, onKeyDown },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       type="button"
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
+      onKeyDown={onKeyDown}
       className="text-left px-4 py-3.5 border border-ink cursor-pointer transition-colors"
       style={{
         background: active ? '#1f1d18' : '#faf6ec',
@@ -24,4 +33,4 @@ export function PresetTile({ preset, active, onClick }: PresetTileProps) {
       <div className="font-serif italic text-[13px] opacity-80 mt-1.5">{preset.short}</div>
     </button>
   );
-}
+});

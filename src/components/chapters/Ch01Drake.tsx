@@ -11,6 +11,7 @@ import { makeRng } from '../../lib/rng';
 import { logUniform, linearUniform } from '../../lib/sampling';
 import { binLog10 } from '../../lib/binning';
 import type { DrakeRanges } from '../../model/drake';
+import type { ReactNode } from 'react';
 
 const PREVIEW_SAMPLES = 1000;
 const PREVIEW_BINS = 32;
@@ -64,10 +65,65 @@ function buildPreviews(ranges: DrakeRanges): Record<DrakeParamId, number[]> {
   };
 }
 
+// Per-parameter primary-source citations (spec §10 #8). Surfaced via Tooltip on
+// each parameter's symbol/label.
+const TOOLTIPS: Record<DrakeParamId, ReactNode> = {
+  R: (
+    <p>
+      Milky Way star formation rate. Modern observations centre 1.5–3 stars/yr (Robitaille &amp;
+      Whitney 2010, Licquia &amp; Newman 2015). SDO 2018 §3.1.
+    </p>
+  ),
+  fp: (
+    <p>
+      Fraction of stars hosting planets. Kepler &amp; microlensing strongly favour values near 1
+      (Cassan et al. 2012, Petigura et al. 2013). SDO 2018 §3.2.
+    </p>
+  ),
+  ne: (
+    <p>
+      Habitable planets per system. Kepler implies fₚ × nₑ ≈ 0.4 for sun-like stars (Petigura
+      2013). SDO 2018 §3.3.
+    </p>
+  ),
+  fl: (
+    <p>
+      Fraction of habitable planets where life arises. Genuine wide uncertainty — this is the
+      single biggest spread in the model. SDO 2018 §3.4 (the headline range).
+    </p>
+  ),
+  fi: (
+    <p>
+      Fraction of life-bearing planets where intelligence emerges. Wide and contested. SDO 2018
+      §3.5.
+    </p>
+  ),
+  fc: (
+    <p>
+      Fraction of intelligent species that emit detectable signals. Wide. SDO 2018 §3.6.
+    </p>
+  ),
+  L: (
+    <p>
+      Average lifetime of a communicating civilisation. Bounds span "short-lived" (decades) to
+      "galactic-timescale" (10¹⁰ yr). SDO 2018 §3.7.
+    </p>
+  ),
+  fd: (
+    <p>
+      Detection-readiness multiplier — fraction of existing civs whose signals/biosignatures are
+      detectable in principle by current human technology. Folds detectability into Drake. Spec
+      §5.1 (added per Spicer 2026).
+    </p>
+  ),
+};
+
 export function Ch01Drake() {
   const drakeRanges = useStore((s) => s.drakeRanges);
   const setDrakeRange = useStore((s) => s.setDrakeRange);
   const resetDrakeRanges = useStore((s) => s.resetDrakeRanges);
+  const astroLocked = useStore((s) => s.astroLocked);
+  const toggleAstroLock = useStore((s) => s.toggleAstroLock);
   const previews = useMemo(() => buildPreviews(drakeRanges), [drakeRanges]);
 
   return (
@@ -82,6 +138,8 @@ export function Ch01Drake() {
           const cfg = DRAKE_DEFAULTS[id];
           const range = drakeRanges[id];
           const [rangeMin, rangeMax] = sliderRange(id);
+          // Astrophysical params (R*, fp, ne) become read-only when locked.
+          const isAstro = id === 'R' || id === 'fp' || id === 'ne';
           return (
             <LogRangeSlider
               key={id}
@@ -97,6 +155,8 @@ export function Ch01Drake() {
               onChange={(lo, hi) => {
                 setDrakeRange(id, { min: lo, max: hi });
               }}
+              disabled={astroLocked && isAstro}
+              tooltip={TOOLTIPS[id]}
             />
           );
         })}
@@ -104,16 +164,16 @@ export function Ch01Drake() {
       <div className="flex gap-3 mt-4 font-mono text-[11px] text-muted tracking-chip uppercase items-center">
         <button
           type="button"
-          onClick={() => {
-            // Reset only R*, fp, ne to their established astrophysical defaults.
-            // Speculative params (fl, fi, fc, L, fd) keep whatever the user set.
-            setDrakeRange('R', { ...DRAKE_DEFAULTS.R.defaults });
-            setDrakeRange('fp', { ...DRAKE_DEFAULTS.fp.defaults });
-            setDrakeRange('ne', { ...DRAKE_DEFAULTS.ne.defaults });
+          onClick={toggleAstroLock}
+          aria-pressed={astroLocked}
+          className="px-3.5 py-2 border cursor-pointer transition-colors"
+          style={{
+            background: astroLocked ? '#1f1d18' : 'transparent',
+            color: astroLocked ? '#faf6ec' : '#1f1d18',
+            borderColor: '#1f1d18',
           }}
-          className="px-3.5 py-2 bg-transparent border border-ink text-ink cursor-pointer hover:bg-ink hover:text-paper transition-colors"
         >
-          Lock astrophysical params
+          {astroLocked ? '✓ Astrophysical params locked' : 'Lock astrophysical params'}
         </button>
         <button
           type="button"

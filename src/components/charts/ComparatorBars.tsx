@@ -46,12 +46,11 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
 
   return (
     <svg
-      width={w}
-      height={h}
       viewBox={`0 0 ${String(w)} ${String(h)}`}
-      className="block"
+      preserveAspectRatio="xMidYMid meet"
+      className="block w-full h-auto"
     >
-      {[-3, -1, 0, 1, 3, 5].map((l) => (
+      {[-3, -2, -1, 0, 1, 2, 3, 4, 5].map((l) => (
         <g key={l}>
           <line
             x1={padL + mapX(Math.pow(10, l))}
@@ -65,7 +64,7 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
             y={h - 2}
             textAnchor="middle"
             fontSize="10"
-            fill="#7a7368"
+            fill="#6e675c"
             fontFamily="IBM Plex Mono, monospace"
           >
             {l === 0 ? '1×' : `10${supScript(l)}×`}

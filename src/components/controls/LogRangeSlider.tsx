@@ -8,6 +8,7 @@
 
 import { useCallback, useId, useRef } from 'react';
 import { Sparkline } from '../charts/Sparkline';
+import { Tooltip } from '../Tooltip';
 
 interface LogRangeSliderProps {
   symbol: string;
@@ -24,6 +25,10 @@ interface LogRangeSliderProps {
   distribution: 'log-uniform' | 'linear-uniform';
   preview: number[];
   onChange: (lo: number, hi: number) => void;
+  /** When true, slider becomes read-only and dimmed. Used by "Lock astro params" toggle. */
+  disabled?: boolean;
+  /** Optional tooltip body for primary-source citations etc. */
+  tooltip?: React.ReactNode;
 }
 
 function formatBound(v: number): string {
@@ -71,6 +76,8 @@ export function LogRangeSlider({
   distribution,
   preview,
   onChange,
+  disabled = false,
+  tooltip,
 }: LogRangeSliderProps) {
   const id = useId();
   const trackRef = useRef<HTMLDivElement>(null);
@@ -141,6 +148,7 @@ export function LogRangeSlider({
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
+    if (disabled) return;
     const f = fracFromPointer(e.clientX);
     const which: 'lo' | 'hi' = Math.abs(f - loFrac) <= Math.abs(f - hiFrac) ? 'lo' : 'hi';
     draggingRef.current = which;
@@ -149,6 +157,7 @@ export function LogRangeSlider({
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>): void => {
+    if (disabled) return;
     if (draggingRef.current === null) return;
     updateFor(draggingRef.current, fracFromPointer(e.clientX));
   };
@@ -159,10 +168,13 @@ export function LogRangeSlider({
   };
 
   return (
-    <div className="grid grid-cols-[180px_1fr_220px] gap-6 items-center py-3.5 border-b border-edge">
+    <div
+      className={`grid grid-cols-[180px_1fr_220px] gap-6 items-center py-3.5 border-b border-edge ${disabled ? 'opacity-60' : ''}`}
+    >
       <div className="flex items-baseline gap-2.5">
         <span className="font-serif italic text-[22px] text-ink">{symbol}</span>
         <span className="font-sans text-[13px] text-muted">{label}</span>
+        {tooltip !== undefined && <Tooltip>{tooltip}</Tooltip>}
       </div>
       <div className="flex items-center gap-3">
         <span
@@ -172,12 +184,13 @@ export function LogRangeSlider({
         </span>
         <div
           ref={trackRef}
-          className="flex-1 h-2.5 relative cursor-pointer touch-none"
+          className={`flex-1 h-2.5 relative touch-none ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
           style={{ background: '#ece6d3' }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
+          aria-disabled={disabled}
         >
           <div
             className="absolute top-0 h-full pointer-events-none"

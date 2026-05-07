@@ -20,8 +20,8 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
   return (
     <header className="px-20 pt-14 pb-9 border-b border-ink relative">
       <div className="flex justify-between items-center font-mono text-[11px] text-muted tracking-eyebrow uppercase">
-        <span>aliens.allinlabs.io · v0.1 draft</span>
         <span className="flex items-center gap-4">
+          <span>aliens.allinlabs.io · v0.1 draft</span>
           <button
             type="button"
             onClick={resetAll}
@@ -29,8 +29,8 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           >
             Reset all to defaults ↺
           </button>
-          <span>a worldview-sensitive analysis</span>
         </span>
+        <span>a worldview-sensitive analysis</span>
       </div>
 
       <div className="font-mono text-[11px] text-accent mt-[18px] tracking-eyebrow uppercase">

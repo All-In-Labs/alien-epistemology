@@ -64,10 +64,9 @@ export function Histogram({
 
   return (
     <svg
-      width={w}
-      height={h}
       viewBox={`0 0 ${String(w)} ${String(h)}`}
-      className="block"
+      preserveAspectRatio="xMidYMid meet"
+      className="block w-full h-auto"
     >
       {[0, 0.25, 0.5, 0.75, 1].map((g) => (
         <g key={g}>
@@ -137,7 +136,7 @@ export function Histogram({
           y={h - padB + 18}
           textAnchor="middle"
           fontSize="10"
-          fill="#7a7368"
+          fill="#6e675c"
           fontFamily="IBM Plex Mono, monospace"
         >
           {t}
@@ -148,7 +147,7 @@ export function Histogram({
         y={h - 6}
         textAnchor="middle"
         fontSize="10"
-        fill="#7a7368"
+        fill="#6e675c"
         fontFamily="IBM Plex Mono, monospace"
       >
         {xLabel}
@@ -159,7 +158,7 @@ export function Histogram({
           y={padT - 4}
           textAnchor="start"
           fontSize="10"
-          fill="#7a7368"
+          fill="#6e675c"
           fontFamily="IBM Plex Mono, monospace"
         >
           ←{belowCount.toString()} below
@@ -171,7 +170,7 @@ export function Histogram({
           y={padT - 4}
           textAnchor="end"
           fontSize="10"
-          fill="#7a7368"
+          fill="#6e675c"
           fontFamily="IBM Plex Mono, monospace"
         >
           {aboveCount.toString()} above→

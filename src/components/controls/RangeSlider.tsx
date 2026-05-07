@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react';
+import { Tooltip } from '../Tooltip';
+
 interface RangeSliderProps {
   label: string;
   sym?: string;
@@ -9,6 +12,7 @@ interface RangeSliderProps {
   warn?: boolean;
   hint?: string;
   onChange: (v: number) => void;
+  tooltip?: ReactNode;
 }
 
 export function RangeSlider({
@@ -22,6 +26,7 @@ export function RangeSlider({
   warn = false,
   hint,
   onChange,
+  tooltip,
 }: RangeSliderProps) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -31,6 +36,7 @@ export function RangeSlider({
             <span className="font-serif italic text-[15px] text-ink">{sym}</span>
           )}
           <span className="font-sans text-[13px] text-ink">{label}</span>
+          {tooltip !== undefined && <Tooltip>{tooltip}</Tooltip>}
         </div>
         <span className={`font-mono text-xs ${warn ? 'text-accent' : 'text-ink'}`}>
           {value}

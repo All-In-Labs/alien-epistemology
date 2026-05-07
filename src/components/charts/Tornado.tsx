@@ -27,10 +27,9 @@ export function Tornado({ items }: TornadoProps) {
 
   return (
     <svg
-      width={w}
-      height={h}
       viewBox={`0 0 ${String(w)} ${String(h)}`}
-      className="block"
+      preserveAspectRatio="xMidYMid meet"
+      className="block w-full h-auto"
     >
       {[-3, -2, -1, 0, 1, 2, 3].map((l) => (
         <g key={l}>
@@ -47,7 +46,7 @@ export function Tornado({ items }: TornadoProps) {
             y={h - 4}
             textAnchor="middle"
             fontSize="10"
-            fill="#7a7368"
+            fill="#6e675c"
             fontFamily="IBM Plex Mono, monospace"
           >
             {l === 0 ? 'baseline' : `${l > 0 ? '+' : ''}${String(l)} OoM`}
@@ -89,7 +88,7 @@ export function Tornado({ items }: TornadoProps) {
               y={y + 5}
               textAnchor="end"
               fontSize="12"
-              fill="#7a7368"
+              fill="#6e675c"
               fontFamily="IBM Plex Sans, sans-serif"
             >
               {it.label}
@@ -138,7 +137,7 @@ export function Tornado({ items }: TornadoProps) {
         y={20}
         textAnchor="end"
         fontSize="10"
-        fill="#7a7368"
+        fill="#6e675c"
         fontFamily="IBM Plex Mono, monospace"
         letterSpacing="0.14em"
       >

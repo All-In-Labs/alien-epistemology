@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react';
 import { Toggle } from './controls/Toggle';
+import { Tooltip } from './Tooltip';
 import type { ValueChannelId } from '../constants/valueDefaults';
 
 interface ChannelCardProps {
@@ -11,6 +13,7 @@ interface ChannelCardProps {
   on: boolean;
   onToggle: (v: boolean) => void;
   children?: React.ReactNode;
+  tooltip?: ReactNode;
 }
 
 export function ChannelCard({
@@ -23,6 +26,7 @@ export function ChannelCard({
   on,
   onToggle,
   children,
+  tooltip,
 }: ChannelCardProps) {
   return (
     <div className="px-7 py-6 bg-paper border border-ink">
@@ -31,12 +35,15 @@ export function ChannelCard({
           <div className="font-mono text-[11px] tracking-eyebrow text-muted uppercase">
             Channel {id} · sign {sign}
           </div>
-          <h3
-            className="font-display text-2xl mt-2 text-ink"
-            style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
-          >
-            {title}
-          </h3>
+          <div className="flex items-center gap-2 mt-2">
+            <h3
+              className="font-display text-2xl text-ink"
+              style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
+            >
+              {title}
+            </h3>
+            {tooltip !== undefined && <Tooltip>{tooltip}</Tooltip>}
+          </div>
           <div className="font-mono text-[11px] text-accent mt-1">{tag}</div>
         </div>
         <Toggle on={on} onChange={onToggle} label={`Channel ${id}`} />

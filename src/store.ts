@@ -27,6 +27,9 @@ interface AppState {
   grabby: GrabbyState;
   overrides: PriorOverrides;
   activePreset: PresetId | null;
+  /** When true, the R*, fp, ne sliders are disabled (locked at default values).
+   *  Lets users isolate the speculative-parameter sensitivity per spec §6.3. */
+  astroLocked: boolean;
   drakeOutput: DrakeMCOutput | null;
   setDrakeRange: (id: DrakeParamId, bound: DrakeBound) => void;
   setMethodOn: (id: DetectionMethodId, on: boolean) => void;
@@ -48,6 +51,7 @@ interface AppState {
   resetChannels: () => void;
   resetWorldview: () => void;
   resetAll: () => void;
+  toggleAstroLock: () => void;
 }
 
 export const useStore = create<AppState>()((set) => ({
@@ -59,6 +63,7 @@ export const useStore = create<AppState>()((set) => ({
   grabby: defaultGrabbyState(),
   overrides: {},
   activePreset: null,
+  astroLocked: false,
   drakeOutput: null,
   setDrakeRange: (id, bound) => {
     set((s) => ({ drakeRanges: { ...s.drakeRanges, [id]: bound } }));
@@ -136,10 +141,29 @@ export const useStore = create<AppState>()((set) => ({
       grabby: defaultGrabbyState(),
       overrides: {},
       activePreset: null,
+      astroLocked: false,
     });
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', window.location.pathname);
     }
+  },
+  toggleAstroLock: () => {
+    set((s) => {
+      // When turning ON, snap R/fp/ne back to defaults (they're being declared
+      // "well-supported" and the slider becomes disabled).
+      if (!s.astroLocked) {
+        return {
+          astroLocked: true,
+          drakeRanges: {
+            ...s.drakeRanges,
+            R: { ...defaultDrakeRanges().R },
+            fp: { ...defaultDrakeRanges().fp },
+            ne: { ...defaultDrakeRanges().ne },
+          },
+        };
+      }
+      return { astroLocked: false };
+    });
   },
 }));
 

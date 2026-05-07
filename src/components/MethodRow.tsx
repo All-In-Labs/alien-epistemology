@@ -1,9 +1,60 @@
+import type { ReactNode } from 'react';
 import { Toggle } from './controls/Toggle';
 import { DualLogTrack } from './controls/DualLogTrack';
 import { Sparkline } from './charts/Sparkline';
+import { Tooltip } from './Tooltip';
 import { useStore } from '../store';
 import type { DetectionMethodState } from '../model/detection';
 import { DETECTION_DEFAULTS, type DetectionMethodId } from '../constants/detectionDefaults';
+
+const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
+  seti: (
+    <>
+      <p>
+        <strong>SETI radio.</strong> Breakthrough Listen + Allen Telescope Array; narrow-band
+        radio surveys of nearby stars and the galactic plane.
+      </p>
+      <p className="mt-2">
+        Cost band reflects BL annual reports (~$10M/yr ATA + BL operations).
+      </p>
+    </>
+  ),
+  tech: (
+    <>
+      <p>
+        <strong>Technosignature search.</strong> Optical SETI (Wright et al. 2014), Dyson-sphere
+        infrared anomalies (Dyson 1960), NIR transit anomalies. Wider net than radio but at
+        different sensitivity.
+      </p>
+    </>
+  ),
+  bio: (
+    <>
+      <p>
+        <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now;
+        Habitable Worlds Observatory in the 2030s. Detects microbial life via O₂/CH₄ disequilibria.
+        Channel C and D do not fire under biosig detection (per spec §5.3).
+      </p>
+    </>
+  ),
+  probe: (
+    <>
+      <p>
+        <strong>Interstellar probe R&amp;D.</strong> Breakthrough Starshot-style; multi-decade
+        payoff. Decadal R&amp;D spend. Sandberg &amp; Armstrong 2013 on probe-feasibility.
+      </p>
+    </>
+  ),
+  retina: (
+    <>
+      <p>
+        <strong>RETINA passive radar.</strong> Multistatic passive radar reusing terrestrial
+        illumination — much cheaper than active scanning. Project namesake. Detects probe-scale
+        artefacts in the inner solar system.
+      </p>
+    </>
+  ),
+};
 
 interface MethodRowProps {
   method: DetectionMethodState;
@@ -47,10 +98,13 @@ export function MethodRow({ method }: MethodRowProps) {
     <div className="grid grid-cols-[40px_1fr_140px_200px_120px] gap-5 items-center py-4.5 border-b border-edge last:border-b-0">
       <Toggle on={cfg.on} onChange={(v) => { setMethodOn(cfg.id, v); }} label={cfg.id} />
       <div>
-        <div
-          className={`font-sans text-sm font-semibold ${cfg.on ? 'text-ink' : 'text-muted'}`}
-        >
-          {labelFor(cfg.id)}
+        <div className="flex items-center gap-1.5">
+          <div
+            className={`font-sans text-sm font-semibold ${cfg.on ? 'text-ink' : 'text-muted'}`}
+          >
+            {labelFor(cfg.id)}
+          </div>
+          <Tooltip>{METHOD_TOOLTIPS[cfg.id]}</Tooltip>
         </div>
         <div className="font-mono text-[10.5px] text-muted uppercase tracking-chip mt-0.5">
           type · {cfg.type}

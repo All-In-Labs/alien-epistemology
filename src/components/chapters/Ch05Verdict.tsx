@@ -137,10 +137,10 @@ export function Ch05Verdict() {
           h={300}
           refLine={0}
           refLabel="GiveWell bar (1×)"
-          logMin={-6}
+          logMin={-9}
           logMax={9}
-          nBins={75}
-          xTicks={['10⁻⁶', '10⁻³', '1', '10³', '10⁶', '10⁹']}
+          nBins={90}
+          xTicks={['10⁻⁹', '10⁻⁶', '10⁻³', '1', '10³', '10⁶', '10⁹']}
         />
         {pNeg > 0 && (
           <div className="font-mono text-[11px] text-accent mt-3">

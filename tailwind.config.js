@@ -7,7 +7,7 @@ export default {
         bg: '#f4efe2',
         paper: '#faf6ec',
         ink: '#1f1d18',
-        muted: '#7a7368',
+        muted: '#6e675c',
         accent: '#c2410c',
         bar: '#2a2823',
         rule: '#1f1d18',

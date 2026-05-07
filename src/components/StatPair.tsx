@@ -2,7 +2,11 @@ import { useStore } from '../store';
 
 function fmtPct(p: number): string {
   if (Number.isNaN(p)) return '—';
-  return `${(p * 100).toFixed(0)}%`;
+  // For small probabilities (< 5%) where slider effects can be sub-1%, surface a
+  // decimal so users see their changes register.
+  const v = p * 100;
+  if (v > 0 && v < 5) return `${v.toFixed(1)}%`;
+  return `${v.toFixed(0)}%`;
 }
 
 export function StatPair() {

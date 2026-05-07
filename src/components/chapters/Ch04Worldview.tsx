@@ -3,9 +3,55 @@ import { PresetTile } from '../PresetTile';
 import { RangeSlider } from '../controls/RangeSlider';
 import { Segmented } from '../controls/Segmented';
 import { Toggle } from '../controls/Toggle';
+import { Tooltip } from '../Tooltip';
 import { useStore } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
 import type { RiskAversion } from '../../model/worldview';
+
+const TT_LONGTERMISM = (
+  <p>
+    Multiplier on channels A and B. 0 = pure neartermist (only persons-now matter); 1 = total-view
+    longtermism (all future persons matter equally). Ord 2020 §10; MacAskill 2022.
+  </p>
+);
+const TT_DISCOUNT = (
+  <p>
+    Pure time-preference rate (Ramsey 1928). Discounts channels A and B by (1+r)^-T over their
+    horizon. 0% = no time preference; 3%/yr ≈ Stern Review; 10% = aggressive markets-style.
+  </p>
+);
+const TT_ALIEN_WEIGHT = (
+  <p>
+    Multiplier on channel C (direct-contact value). 0 = alien welfare doesn&rsquo;t count; 1 =
+    counts equally to humans. Schwitzgebel &amp; Garza 2015 on AI/alien moral status; Sebo 2023.
+  </p>
+);
+const TT_HINGEYNESS = (
+  <p>
+    Probability our actions today materially shift the cosmic endowment trajectory. MacAskill
+    2020 on the &ldquo;hinge of history&rdquo; hypothesis. High hingeyness amplifies channel B.
+  </p>
+);
+const TT_FILTER_PRIOR = (
+  <p>
+    P(the Great Filter is behind us). Sets the sign of channel A: when prior &gt; 0.5, finding
+    life is bad news (the filter is ahead); when prior &lt; 0.5, finding life is good news.
+    Hanson 1998.
+  </p>
+);
+const TT_PERSON_AFFECTING = (
+  <p>
+    When on, channel B (astronomical waste) is zeroed entirely — non-existent future persons have
+    no welfare to weigh. Parfit 1984; Narveson 1973.
+  </p>
+);
+const TT_RISK = (
+  <p>
+    Decision-theoretic summary stat. EV-max takes the mean (risk-neutral); log-utility takes the
+    geometric mean (risk-averse); difference-making takes the 25th percentile (downside-averse).
+    Rethink Priorities CRAFT/CURVE sequence.
+  </p>
+);
 
 export function Ch04Worldview() {
   const worldview = useStore((s) => s.worldview);
@@ -25,14 +71,33 @@ export function Ch04Worldview() {
           ? 'Active configuration · Custom (no preset selected)'
           : 'Active configuration · click another preset to switch, or tweak any dial below'}
       </div>
-      <div className="grid grid-cols-3 gap-3.5">
-        {PRESETS.map((p) => (
+      <div role="radiogroup" aria-label="Worldview preset" className="grid grid-cols-3 gap-3.5">
+        {PRESETS.map((p, idx) => (
           <PresetTile
             key={p.id}
             preset={p}
             active={activePreset === p.id}
             onClick={() => {
               loadPreset(p.id);
+            }}
+            onKeyDown={(e) => {
+              const keyMap: Record<string, number> = {
+                ArrowRight: 1,
+                ArrowLeft: -1,
+                ArrowDown: 3,
+                ArrowUp: -3,
+              };
+              const delta = keyMap[e.key];
+              if (delta === undefined) return;
+              e.preventDefault();
+              const next = (idx + delta + PRESETS.length) % PRESETS.length;
+              const target = PRESETS[next];
+              if (target) {
+                loadPreset(target.id);
+                // Focus the corresponding tile.
+                const buttons = e.currentTarget.parentElement?.querySelectorAll('button');
+                buttons?.[next]?.focus();
+              }
             }}
           />
         ))}
@@ -53,6 +118,7 @@ export function Ch04Worldview() {
             patchWorldview({ longtermismStrength: v });
           }}
           hint="0 = neartermist · 1 = pure total-view"
+          tooltip={TT_LONGTERMISM}
         />
         <RangeSlider
           sym="r"
@@ -66,6 +132,7 @@ export function Ch04Worldview() {
             patchWorldview({ timeDiscount: v / 100 });
           }}
           hint="discounts channels A & B over horizon T"
+          tooltip={TT_DISCOUNT}
         />
         <RangeSlider
           sym="w_α"
@@ -78,6 +145,7 @@ export function Ch04Worldview() {
             patchWorldview({ alienMoralWeight: v });
           }}
           hint="multiplies channel C only"
+          tooltip={TT_ALIEN_WEIGHT}
         />
         <RangeSlider
           sym="h"
@@ -90,6 +158,7 @@ export function Ch04Worldview() {
             patchWorldview({ hingeyness: v });
           }}
           hint="P( our actions matter for cosmic endowment )"
+          tooltip={TT_HINGEYNESS}
         />
         <RangeSlider
           sym="ϕ"
@@ -102,10 +171,14 @@ export function Ch04Worldview() {
             patchWorldview({ filterPriorBehind: v });
           }}
           hint="used in channel A only"
+          tooltip={TT_FILTER_PRIOR}
         />
         <div className="flex flex-col gap-1.5">
-          <div className="font-sans text-[13px] flex items-center justify-between">
-            Person-affecting view
+          <div className="font-sans text-[13px] flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5">
+              Person-affecting view
+              <Tooltip>{TT_PERSON_AFFECTING}</Tooltip>
+            </span>
             <Toggle
               on={worldview.personAffecting}
               onChange={(v) => {
@@ -119,7 +192,10 @@ export function Ch04Worldview() {
           </div>
         </div>
         <div className="flex flex-col gap-1.5 col-span-2">
-          <div className="font-sans text-[13px]">Risk aversion</div>
+          <div className="font-sans text-[13px] flex items-center gap-1.5">
+            Risk aversion
+            <Tooltip>{TT_RISK}</Tooltip>
+          </div>
           <Segmented<RiskAversion>
             value={worldview.riskAversion}
             onChange={(v) => {
