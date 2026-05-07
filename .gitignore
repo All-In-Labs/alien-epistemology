@@ -28,3 +28,7 @@ coverage
 
 # Bundle artefact from the design handoff (already extracted to design/)
 design.tar.gz
+
+# Playwright screenshots taken during phase verification
+.playwright-mcp
+phase*-*.png

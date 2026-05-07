@@ -1,0 +1,109 @@
+// Value-on-detection model from spec §5.3.
+// Four channels (A: Filter info; B: Astro waste; C: Direct contact; D: Dark Forest).
+// Each channel has an on/off toggle and tuneable dials.
+
+import { VALUE_DEFAULTS } from '../constants/valueDefaults';
+import type { DetectionType } from '../constants/detectionDefaults';
+
+export interface ChannelAState {
+  on: boolean;
+  filterPriorBehind: number;
+  delta: {
+    biosig: number;
+    technosig: number;
+    radio: number;
+    passive_radar: number;
+    probe: number;
+  };
+  vXriskInfo: number;
+}
+
+export interface ChannelBState {
+  on: boolean;
+  techViabilityShift: number;
+  lightconeClaimShift: number;
+  vCosmicEndowment: number;
+}
+
+export interface ChannelCState {
+  on: boolean;
+  pFriendly: number;
+  vContactFriendly: number;
+  fires: DetectionType[];
+}
+
+export interface ChannelDState {
+  on: boolean;
+  pHostile: number;
+  vHostileDisvalue: number;
+  fires: DetectionType[];
+}
+
+export interface ChannelsState {
+  A: ChannelAState;
+  B: ChannelBState;
+  C: ChannelCState;
+  D: ChannelDState;
+}
+
+export function defaultChannelState(): ChannelsState {
+  return {
+    A: { on: true, ...VALUE_DEFAULTS.A, delta: { ...VALUE_DEFAULTS.A.delta } },
+    B: { on: true, ...VALUE_DEFAULTS.B },
+    C: { on: true, ...VALUE_DEFAULTS.C, fires: [...VALUE_DEFAULTS.C.fires] },
+    D: { on: true, ...VALUE_DEFAULTS.D, fires: [...VALUE_DEFAULTS.D.fires] },
+  };
+}
+
+function deltaFor(a: ChannelAState, t: DetectionType): number {
+  switch (t) {
+    case 'biosig':
+      return a.delta.biosig;
+    case 'technosig':
+      return a.delta.technosig;
+    case 'radio':
+      return a.delta.radio;
+    case 'passive_radar':
+      return a.delta.passive_radar;
+    case 'probe':
+      return a.delta.probe;
+  }
+}
+
+/** Per-channel value contributions for one detection-type. */
+export function channelValues(
+  detectionType: DetectionType,
+  ch: ChannelsState,
+): { A: number; B: number; C: number; D: number } {
+  // Channel A: -Δ * V_xrisk * sign(prior). When prior > 0.5, finding life confirms the
+  // optimist (filter behind), so the news is *bad* — value is negative. When prior < 0.5,
+  // the user thinks filter is likely ahead, so finding life is *good news* — flip sign.
+  let A = 0;
+  if (ch.A.on) {
+    const delta = deltaFor(ch.A, detectionType);
+    const sign = ch.A.filterPriorBehind > 0.5 ? -1 : ch.A.filterPriorBehind < 0.5 ? 1 : 0;
+    A = sign * delta * ch.A.vXriskInfo;
+  }
+  // Channel B: net evidence shift (tech-viability + lightcone-claim) × cosmic endowment.
+  let B = 0;
+  if (ch.B.on) {
+    const net = ch.B.techViabilityShift + ch.B.lightconeClaimShift;
+    B = net * ch.B.vCosmicEndowment;
+  }
+  // Channel C: only fires for receiving-info types.
+  let C = 0;
+  if (ch.C.on && ch.C.fires.includes(detectionType)) {
+    C = ch.C.pFriendly * ch.C.vContactFriendly;
+  }
+  // Channel D: only fires for types that alert hostile alien attention.
+  let D = 0;
+  if (ch.D.on && ch.D.fires.includes(detectionType)) {
+    D = ch.D.pHostile * ch.D.vHostileDisvalue;
+  }
+  return { A, B, C, D };
+}
+
+export function valueOnDetection(detectionType: DetectionType, ch: ChannelsState): number {
+  const v = channelValues(detectionType, ch);
+  return v.A + v.B + v.C + v.D;
+}
