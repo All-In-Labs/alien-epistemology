@@ -32,3 +32,6 @@ design.tar.gz
 # Playwright screenshots taken during phase verification
 .playwright-mcp
 phase*-*.png
+post-fix-*.png
+verdict-*.png
+tornado-*.png
