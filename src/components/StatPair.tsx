@@ -14,7 +14,11 @@ export function StatPair() {
   const pAnyDetection = out ? fmtPct(out.pAnyDetection) : '—';
 
   return (
-    <div className="grid grid-cols-3 border border-ink bg-paper">
+    <div className="border border-ink bg-paper">
+      <div className="px-8 pt-3 pb-2 border-b border-edge font-mono text-[10.5px] tracking-chip uppercase text-muted">
+        Drake / detection — independent of worldview &amp; presets
+      </div>
+      <div className="grid grid-cols-3">
       <div className="px-8 py-7 border-r border-ink">
         <div className="font-mono text-[11px] tracking-chip text-muted uppercase">
           P( no other civilisation in the Milky Way )
@@ -56,6 +60,7 @@ export function StatPair() {
         <div className="font-mono text-[11.5px] text-muted mt-2.5">
           across enabled programmes · n = 100,000
         </div>
+      </div>
       </div>
     </div>
   );

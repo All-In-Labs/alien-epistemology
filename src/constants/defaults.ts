@@ -18,6 +18,8 @@ export interface DrakeParamConfig {
   defaults: DrakeBound;
   /** "Hard floor" — warn if user pulls min below this. Astrophysical params only. */
   floor?: number;
+  /** "Hard ceiling" — slider max can't exceed this. For fractions this is 1.0. */
+  ceiling?: number;
   /** Tooltip note from spec §5.1 table. */
   note: string;
 }
@@ -41,6 +43,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     distribution: 'linear-uniform',
     defaults: { min: 0.4, max: 1.0 },
     floor: 0.4,
+    ceiling: 1.0,
     note: 'Kepler + microlensing strongly suggest most stars host planets.',
   },
   ne: {
@@ -60,6 +63,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     unit: '',
     distribution: 'log-uniform',
     defaults: { min: 1e-30, max: 1.0 },
+    ceiling: 1.0,
     note: 'Genuine wide uncertainty; SDO’s headline range.',
   },
   fi: {
@@ -69,6 +73,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     unit: '',
     distribution: 'log-uniform',
     defaults: { min: 1e-3, max: 1.0 },
+    ceiling: 1.0,
     note: 'Wide.',
   },
   fc: {
@@ -78,6 +83,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     unit: '',
     distribution: 'log-uniform',
     defaults: { min: 1e-2, max: 1.0 },
+    ceiling: 1.0,
     note: 'Wide.',
   },
   L: {
@@ -96,6 +102,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     unit: '',
     distribution: 'log-uniform',
     defaults: { min: 1e-3, max: 1.0 },
+    ceiling: 1.0,
     note: 'Fraction of existing civs whose signals/biosignatures are detectable in principle by current human technology. N_detectable = N × f_d.',
   },
 };

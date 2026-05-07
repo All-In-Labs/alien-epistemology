@@ -155,9 +155,9 @@ export function Histogram({
       </text>
       {belowCount > 0 && (
         <text
-          x={padL - 6}
-          y={padT + 14}
-          textAnchor="end"
+          x={padL + 4}
+          y={padT - 4}
+          textAnchor="start"
           fontSize="10"
           fill="#7a7368"
           fontFamily="IBM Plex Mono, monospace"
@@ -167,9 +167,9 @@ export function Histogram({
       )}
       {aboveCount > 0 && (
         <text
-          x={w - padR + 6}
-          y={padT + 14}
-          textAnchor="start"
+          x={w - padR - 4}
+          y={padT - 4}
+          textAnchor="end"
           fontSize="10"
           fill="#7a7368"
           fontFamily="IBM Plex Mono, monospace"

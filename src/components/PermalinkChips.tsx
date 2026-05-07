@@ -31,6 +31,7 @@ export function PermalinkChips() {
           <button
             key={c.presetId}
             type="button"
+            aria-label={`${c.label} — ${c.desc}`}
             onClick={() => {
               loadPreset(c.presetId);
             }}

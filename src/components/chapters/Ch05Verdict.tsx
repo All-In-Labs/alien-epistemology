@@ -10,7 +10,9 @@ function fmtMul(v: number): string {
   if (!Number.isFinite(v)) return '—';
   if (v === 0) return '0';
   const abs = Math.abs(v);
-  if (abs < 0.001) return v.toExponential(1);
+  // Round near-zero magnitudes so we don't show "-8.3e-5" as a headline.
+  // Prefix "≈" makes the rounding visible without breaking the "× GiveWell" suffix.
+  if (abs < 1e-3) return v < 0 ? '≈ −0' : '≈ 0';
   if (abs < 1) return v.toFixed(3).replace(/\.?0+$/, '');
   if (abs < 100) return v.toFixed(2);
   if (abs < 1e6) return v.toFixed(0);
@@ -79,10 +81,21 @@ export function Ch05Verdict() {
               {fmtMul(headlineValue)}
               <span className="font-mono text-lg text-muted ml-1.5">{headlineLabel}</span>
             </div>
-            <div className="font-mono text-[11px] text-muted mt-1">
-              geom. mean of positive multipliers: {fmtX(gmean)} · unconditional median:{' '}
-              {fmtX(median)}
-            </div>
+            {gmean > 0 || median !== 0 ? (
+              <div className="font-mono text-[11px] text-muted mt-1">
+                {gmean > 0 && (
+                  <>
+                    geom. mean of positive multipliers: {fmtX(gmean)}
+                    {median !== 0 ? ' · ' : ''}
+                  </>
+                )}
+                {median !== 0 && <>unconditional median: {fmtX(median)}</>}
+              </div>
+            ) : (
+              <div className="font-mono text-[11px] text-muted mt-1">
+                no positive multipliers under this worldview — every detection is net negative
+              </div>
+            )}
           </div>
           <div className="flex gap-6 font-mono text-[11.5px] text-muted">
             <div>
@@ -116,8 +129,8 @@ export function Ch05Verdict() {
         />
         {pNeg > 0 && (
           <div className="font-mono text-[11px] text-accent mt-3">
-            ⚠ {fmtPct(pNeg)} of samples have negative EV (Dark Forest / hostile-contact channel
-            dominates). Histogram shows the positive tail only.
+            ⚠ {fmtPct(pNeg)} of samples have negative EV under this worldview. Histogram shows
+            the positive tail only.
           </div>
         )}
       </div>
@@ -133,9 +146,7 @@ export function Ch05Verdict() {
         <ComparatorBars
           items={[
             {
-              label: `This tool — ${presetName}${
-                Math.abs(median) < 1e-12 ? ' (given detection)' : ''
-              }`,
+              label: `This tool — ${presetName}${Math.abs(median) < 1e-12 ? ' (cond.)' : ''}`,
               lo: Math.max(Math.abs(median) < 1e-12 ? gmean / 100 : p5, 1e-9),
               mid: Math.max(headlineValue, 1e-9),
               hi: Math.max(Math.abs(median) < 1e-12 ? gmean * 100 : p95, 1e-9),

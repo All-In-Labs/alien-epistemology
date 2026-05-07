@@ -40,12 +40,15 @@ function previewFor(id: DrakeParamId, lo: number, hi: number): number[] {
 }
 
 // Generous slider range — wider than the param's defaults so users can explore.
+// Capped at the parameter's ceiling (1.0 for fractions) so users can't drag the
+// upper bound into mathematically impossible territory.
 function sliderRange(id: DrakeParamId): [number, number] {
   const cfg = DRAKE_DEFAULTS[id];
-  if (cfg.distribution === 'linear-uniform') return [0, 1];
+  if (cfg.distribution === 'linear-uniform') return [0, cfg.ceiling ?? 1];
   const lo = cfg.defaults.min / 10;
   const hi = cfg.defaults.max * 10;
-  return [Math.max(lo, 1e-40), hi];
+  const cappedHi = cfg.ceiling !== undefined ? Math.min(hi, cfg.ceiling) : hi;
+  return [Math.max(lo, 1e-40), cappedHi];
 }
 
 function buildPreviews(ranges: DrakeRanges): Record<DrakeParamId, number[]> {

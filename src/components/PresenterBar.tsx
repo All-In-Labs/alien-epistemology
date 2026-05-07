@@ -11,7 +11,9 @@ function fmtPct(p: number): string {
 
 function fmtX(v: number): string {
   if (!Number.isFinite(v)) return '—';
-  if (Math.abs(v) < 0.001) return v.toExponential(1);
+  if (v === 0) return '0×';
+  // Round near-zero values that would otherwise render as ugly scientific notation.
+  if (Math.abs(v) < 1e-3) return '≈0×';
   if (Math.abs(v) < 100) return `${v.toFixed(2)}×`;
   return `${v.toFixed(0)}×`;
 }
@@ -21,6 +23,15 @@ export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
   const idx = String(chapterIdx).padStart(2, '0');
   const max = String(Math.max(0, chapterTitles.length - 1)).padStart(2, '0');
   const title = chapterTitles[chapterIdx] ?? '';
+  // Use the conditional-on-detection median when the unconditional collapses to zero
+  // (which happens whenever P(N=0) > 0.5 — i.e. most realistic configurations).
+  // Otherwise the audience would see "median 0×" for the entire talk.
+  const headlineMedian =
+    out !== null && Math.abs(out.medianMultiplier) < 1e-12
+      ? out.medianMultiplierGivenDetection
+      : (out?.medianMultiplier ?? 0);
+  const headlineLabel =
+    out !== null && Math.abs(out.medianMultiplier) < 1e-12 ? 'median*' : 'median';
 
   return (
     <div
@@ -42,9 +53,9 @@ export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
           </span>
         </span>
         <span>
-          median{' '}
+          {headlineLabel}{' '}
           <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">
-            {out ? fmtX(out.medianMultiplier) : '—'}
+            {out ? fmtX(headlineMedian) : '—'}
           </span>
         </span>
       </span>
