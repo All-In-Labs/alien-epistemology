@@ -10,6 +10,9 @@ export function useDrakeMCRunner(): void {
   const methods = useStore((s) => s.methods);
   const channels = useStore((s) => s.channels);
   const worldview = useStore((s) => s.worldview);
+  const cosmology = useStore((s) => s.cosmology);
+  const grabby = useStore((s) => s.grabby);
+  const overrides = useStore((s) => s.overrides);
   const setDrakeOutput = useStore((s) => s.setDrakeOutput);
 
   const timer = useRef<number | undefined>(undefined);
@@ -37,6 +40,9 @@ export function useDrakeMCRunner(): void {
           methods,
           channels,
           worldview,
+          cosmology,
+          grabby,
+          overrides,
           n: MC_SAMPLES,
           seed: `drake-${seedRef.current.toString()}`,
         })
@@ -47,5 +53,5 @@ export function useDrakeMCRunner(): void {
     return () => {
       window.clearTimeout(timer.current);
     };
-  }, [drakeRanges, methods, channels, worldview, setDrakeOutput]);
+  }, [drakeRanges, methods, channels, worldview, cosmology, grabby, overrides, setDrakeOutput]);
 }

@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { Segmented } from './controls/Segmented';
-
-export type CosmologyOption = 'sdo' | 'grabby' | 'hybrid';
+import { useStore } from '../store';
+import type { CosmologyMode } from '../model/monteCarlo';
 
 export function Masthead() {
-  const [cosmology, setCosmology] = useState<CosmologyOption>('sdo');
+  const cosmology = useStore((s) => s.cosmology);
+  const setCosmology = useStore((s) => s.setCosmology);
 
   return (
     <header className="px-20 pt-14 pb-9 border-b border-ink relative">
@@ -33,19 +33,18 @@ export function Masthead() {
       </p>
 
       <div className="flex gap-6 mt-8 items-center flex-wrap">
-        <Segmented<CosmologyOption>
+        <Segmented<CosmologyMode>
           ariaLabel="Cosmological model"
           value={cosmology}
           onChange={setCosmology}
           options={[
             { value: 'sdo', label: 'SDO Drake' },
-            { value: 'grabby', label: 'Grabby Aliens', disabled: true },
-            { value: 'hybrid', label: 'Hybrid', disabled: true },
+            { value: 'grabby', label: 'Grabby Aliens' },
+            { value: 'hybrid', label: 'Hybrid' },
           ]}
         />
         <span className="font-mono text-[11px] text-muted tracking-chip uppercase">
-          Cosmological model{' '}
-          <span className="text-accent normal-case tracking-normal">(phases 5+)</span>
+          Cosmological model
         </span>
         <div className="flex-1" />
         <button

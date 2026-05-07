@@ -6,8 +6,13 @@ import {
 } from './model/detection';
 import { defaultChannelState, type ChannelsState } from './model/value';
 import { defaultWorldview, type WorldviewDials } from './model/worldview';
+import { defaultGrabbyState, type GrabbyState } from './model/grabby';
 import { applyPreset, PRESETS, type PresetId } from './presets/worldviews';
-import type { DrakeMCOutput } from './model/monteCarlo';
+import type {
+  CosmologyMode,
+  DrakeMCOutput,
+  PriorOverrides,
+} from './model/monteCarlo';
 import type { DrakeBound, DrakeParamId } from './constants/defaults';
 import type { DetectionMethodId } from './constants/detectionDefaults';
 import type { ValueChannelId } from './constants/valueDefaults';
@@ -17,6 +22,9 @@ interface AppState {
   methods: DetectionMethodState[];
   channels: ChannelsState;
   worldview: WorldviewDials;
+  cosmology: CosmologyMode;
+  grabby: GrabbyState;
+  overrides: PriorOverrides;
   activePreset: PresetId | null;
   drakeOutput: DrakeMCOutput | null;
   setDrakeRange: (id: DrakeParamId, bound: DrakeBound) => void;
@@ -29,6 +37,9 @@ interface AppState {
   patchChannelC: (patch: Partial<ChannelsState['C']>) => void;
   patchChannelD: (patch: Partial<ChannelsState['D']>) => void;
   patchWorldview: (patch: Partial<WorldviewDials>) => void;
+  setCosmology: (mode: CosmologyMode) => void;
+  patchGrabby: (patch: Partial<GrabbyState>) => void;
+  patchOverrides: (patch: Partial<PriorOverrides>) => void;
   loadPreset: (id: PresetId) => void;
   setDrakeOutput: (out: DrakeMCOutput) => void;
   resetDrakeRanges: () => void;
@@ -42,6 +53,9 @@ export const useStore = create<AppState>()((set) => ({
   methods: defaultDetectionState(),
   channels: defaultChannelState(),
   worldview: defaultWorldview(),
+  cosmology: 'sdo',
+  grabby: defaultGrabbyState(),
+  overrides: {},
   activePreset: null,
   drakeOutput: null,
   setDrakeRange: (id, bound) => {
@@ -100,5 +114,14 @@ export const useStore = create<AppState>()((set) => ({
   },
   resetWorldview: () => {
     set({ worldview: defaultWorldview(), activePreset: null });
+  },
+  setCosmology: (mode) => {
+    set({ cosmology: mode });
+  },
+  patchGrabby: (patch) => {
+    set((s) => ({ grabby: { ...s.grabby, ...patch } }));
+  },
+  patchOverrides: (patch) => {
+    set((s) => ({ overrides: { ...s.overrides, ...patch } }));
   },
 }));
