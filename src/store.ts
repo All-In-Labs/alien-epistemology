@@ -5,6 +5,8 @@ import {
   type DetectionMethodState,
 } from './model/detection';
 import { defaultChannelState, type ChannelsState } from './model/value';
+import { defaultWorldview, type WorldviewDials } from './model/worldview';
+import { applyPreset, PRESETS, type PresetId } from './presets/worldviews';
 import type { DrakeMCOutput } from './model/monteCarlo';
 import type { DrakeBound, DrakeParamId } from './constants/defaults';
 import type { DetectionMethodId } from './constants/detectionDefaults';
@@ -14,6 +16,8 @@ interface AppState {
   drakeRanges: DrakeRanges;
   methods: DetectionMethodState[];
   channels: ChannelsState;
+  worldview: WorldviewDials;
+  activePreset: PresetId | null;
   drakeOutput: DrakeMCOutput | null;
   setDrakeRange: (id: DrakeParamId, bound: DrakeBound) => void;
   setMethodOn: (id: DetectionMethodId, on: boolean) => void;
@@ -24,16 +28,21 @@ interface AppState {
   patchChannelB: (patch: Partial<ChannelsState['B']>) => void;
   patchChannelC: (patch: Partial<ChannelsState['C']>) => void;
   patchChannelD: (patch: Partial<ChannelsState['D']>) => void;
+  patchWorldview: (patch: Partial<WorldviewDials>) => void;
+  loadPreset: (id: PresetId) => void;
   setDrakeOutput: (out: DrakeMCOutput) => void;
   resetDrakeRanges: () => void;
   resetMethods: () => void;
   resetChannels: () => void;
+  resetWorldview: () => void;
 }
 
 export const useStore = create<AppState>()((set) => ({
   drakeRanges: defaultDrakeRanges(),
   methods: defaultDetectionState(),
   channels: defaultChannelState(),
+  worldview: defaultWorldview(),
+  activePreset: null,
   drakeOutput: null,
   setDrakeRange: (id, bound) => {
     set((s) => ({ drakeRanges: { ...s.drakeRanges, [id]: bound } }));
@@ -79,5 +88,17 @@ export const useStore = create<AppState>()((set) => ({
   },
   resetChannels: () => {
     set({ channels: defaultChannelState() });
+  },
+  patchWorldview: (patch) => {
+    set((s) => ({ worldview: { ...s.worldview, ...patch }, activePreset: null }));
+  },
+  loadPreset: (id) => {
+    const preset = PRESETS.find((p) => p.id === id);
+    if (!preset) return;
+    const { worldview, channels } = applyPreset(preset);
+    set({ worldview, channels, activePreset: id });
+  },
+  resetWorldview: () => {
+    set({ worldview: defaultWorldview(), activePreset: null });
   },
 }));

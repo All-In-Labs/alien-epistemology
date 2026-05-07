@@ -4,6 +4,7 @@ import { Ch00Contract } from './components/chapters/Ch00Contract';
 import { Ch01Drake } from './components/chapters/Ch01Drake';
 import { Ch02Detection } from './components/chapters/Ch02Detection';
 import { Ch03Value } from './components/chapters/Ch03Value';
+import { Ch04Worldview } from './components/chapters/Ch04Worldview';
 import { useDrakeMCRunner } from './hooks/useDrakeMCRunner';
 
 export default function App() {
@@ -24,9 +25,10 @@ export default function App() {
       <Ch01Drake />
       <Ch02Detection />
       <Ch03Value />
+      <Ch04Worldview />
       <footer className="px-20 py-12 border-t border-ink font-mono text-[11px] text-muted tracking-chip uppercase flex justify-between">
         <span>Sources · SDO 2018 · Bostrom 2003 · Hanson 2021 · Ord 2020 · Azad 2026</span>
-        <span>Phase 3 of 7 — Value channels</span>
+        <span>Phase 4 of 7 — Worldview & presets</span>
       </footer>
     </div>
   );

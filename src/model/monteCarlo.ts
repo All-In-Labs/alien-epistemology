@@ -4,7 +4,8 @@ import {
   totalDecadalCostMillions,
   type DetectionMethodState,
 } from './detection';
-import { valueOnDetection, type ChannelsState } from './value';
+import { channelValues, type ChannelsState } from './value';
+import { applyWorldview, defaultWorldview, type WorldviewDials } from './worldview';
 import { makeRng } from '../lib/rng';
 import type { DetectionType } from '../constants/detectionDefaults';
 
@@ -14,6 +15,8 @@ export interface DrakeMCInput {
   methods?: DetectionMethodState[];
   /** Optional value channels. When provided, MC also computes EV in DALYs. */
   channels?: ChannelsState;
+  /** Optional worldview transforms. When provided, channel-values are transformed before EV is summed. */
+  worldview?: WorldviewDials;
   n: number;
   seed: string;
 }
@@ -39,6 +42,7 @@ export function runDrakeMC({
   ranges,
   methods,
   channels,
+  worldview,
   n,
   seed,
 }: DrakeMCInput): DrakeMCOutput {
@@ -52,14 +56,16 @@ export function runDrakeMC({
   let gtOne = 0;
   let detectionSum = 0;
   let evSum = 0;
-  // Pre-compute the per-detection-type value (channels are constants for the run).
+  // Pre-compute per-detection-type V_user (worldview-transformed channel sum).
+  // Channels and worldview are constants for the run, so we can do this once.
+  const wv = worldview ?? defaultWorldview();
   const vByType: Record<DetectionType, number> | null = channels
     ? {
-        radio: valueOnDetection('radio', channels),
-        technosig: valueOnDetection('technosig', channels),
-        biosig: valueOnDetection('biosig', channels),
-        probe: valueOnDetection('probe', channels),
-        passive_radar: valueOnDetection('passive_radar', channels),
+        radio: applyWorldview(channelValues('radio', channels), wv).total,
+        technosig: applyWorldview(channelValues('technosig', channels), wv).total,
+        biosig: applyWorldview(channelValues('biosig', channels), wv).total,
+        probe: applyWorldview(channelValues('probe', channels), wv).total,
+        passive_radar: applyWorldview(channelValues('passive_radar', channels), wv).total,
       }
     : null;
   for (let i = 0; i < n; i++) {
