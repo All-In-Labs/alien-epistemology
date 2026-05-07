@@ -6,9 +6,8 @@ export function binLog10(
 ): number[] {
   const bins = new Array<number>(nBins).fill(0);
   const range = logMax - logMin;
-  for (let i = 0; i < samples.length; i++) {
-    const v = samples[i];
-    if (v === undefined || v <= 0) continue;
+  for (const v of samples) {
+    if (v <= 0) continue;
     const logV = Math.log10(v);
     const t = Math.max(0, Math.min(0.999999, (logV - logMin) / range));
     const idx = Math.floor(t * nBins);

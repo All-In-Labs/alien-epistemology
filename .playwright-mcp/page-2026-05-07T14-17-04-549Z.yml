@@ -1,0 +1,165 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: aliens.allinlabs.io · v0.1 draft
+      - generic [ref=e7]: a worldview-sensitive analysis
+    - generic [ref=e8]: An interactive essay in seven parts
+    - heading "Should we fund alien-finding?" [level=1] [ref=e9]:
+      - text: Should we fund
+      - emphasis [ref=e10]: alien-finding?
+    - paragraph [ref=e11]:
+      - text: Frank Drake’s 1961 equation gives a number; Sandberg, Drexler & Ord’s 2018 reformulation gives a
+      - emphasis [ref=e12]: distribution
+      - text: . This tool lets you set its bounds, choose detection programmes, weight four value channels and your own worldview — then asks what cost-effectiveness, in GiveWell-bar units, the search comes out at.
+    - generic [ref=e13]:
+      - radiogroup "Cosmological model" [ref=e14]:
+        - radio "SDO Drake" [checked] [ref=e15] [cursor=pointer]
+        - radio "Grabby Aliens" [disabled] [ref=e16]
+        - radio "Hybrid" [disabled] [ref=e17]
+      - generic [ref=e18]: Cosmological model (phases 5+)
+      - button "Presenter mode (P)" [disabled] [ref=e19]
+      - button "Copy permalink ↗" [disabled] [ref=e20]
+  - generic [ref=e21]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: P( no other civilisation in the Milky Way )
+        - generic [ref=e25]: —
+        - generic [ref=e26]: —
+      - generic [ref=e27]:
+        - generic [ref=e28]: P( at least one other civilisation in the Milky Way )
+        - generic [ref=e29]: —
+        - generic [ref=e30]: —
+      - generic [ref=e31]:
+        - generic [ref=e32]: P( more than one ) — surfacing the Poisson tail — —
+        - generic [ref=e33]: n = 100,000 Monte Carlo samples · debounced 150 ms
+    - paragraph [ref=e34]: The pairing matters more than either individual stat. “We are probably alone” and “we probably are not” are equally valid framings of the same Monte Carlo result.
+  - generic [ref=e35]:
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - generic [ref=e38]: Ch. 00
+        - generic [ref=e39]: The honesty contract
+      - generic [ref=e40]:
+        - heading "Three rules this tool keeps." [level=2] [ref=e41]
+        - paragraph [ref=e42]: Before any numbers — the constraints under which the model was designed. If you find a result that violates one of these, the tool is broken; tell us.
+    - generic [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: "1"
+        - generic [ref=e47]:
+          - generic [ref=e48]: Distributions, never point estimates.
+          - paragraph [ref=e49]: The SDO finding is that uncertainty over Drake’s parameters spans many orders of magnitude. A single number for N hides that — and chooses, implicitly, which orders of magnitude get to count. We display histograms and percentile bands. The single number you see in any stat is always either a median or an explicitly labelled summary.
+      - generic [ref=e50]:
+        - generic [ref=e51]: "2"
+        - generic [ref=e52]:
+          - generic [ref=e53]: No worldview is privileged.
+          - paragraph [ref=e54]: The six presets — Bostrom, Hanson, Ord, Neartermist, Dark Forest, Astronomical-Waste — sit equally in the dropdown. None is the default look. Defaults under Ord Moderate must not produce “obviously a top EA cause”; if they do, the defaults are biased and need adjusting.
+      - generic [ref=e55]:
+        - generic [ref=e56]: "3"
+        - generic [ref=e57]:
+          - generic [ref=e58]: Defaults don't flatter the conclusion.
+          - paragraph [ref=e59]: Per-method detection sensitivities are the most uncertain numbers in the whole model and would be the easiest to fudge. We pick placeholders that sit roughly in the middle of expert disagreement and label them as such. The result of the tool is a function of your inputs; we own the inputs we picked.
+      - generic [ref=e60]: Cf. SDO 2018 · Azad 2026 (directional reasoning) · §10 of the project spec
+  - generic [ref=e61]:
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]: Ch. 01
+        - generic [ref=e65]: The equation
+      - generic [ref=e66]:
+        - heading "Seven uncertain factors, one log-uniform multiplication." [level=2] [ref=e67]
+        - paragraph [ref=e68]: Each parameter is sampled from a log-uniform distribution between bounds you set. Astrophysical parameters have established lower bounds; the tool nudges you to respect them. The speculative parameters fₗ, fᵢ, f_c, L are wide on purpose — that is the SDO finding.
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - generic [ref=e73]: R*
+            - generic [ref=e74]: Star formation rate
+          - generic [ref=e75]:
+            - generic [ref=e76]: "1.5"
+            - generic [ref=e77]:
+              - slider "Star formation rate minimum" [ref=e79] [cursor=pointer]: "0.354"
+              - slider "Star formation rate maximum" [ref=e80] [cursor=pointer]: "0.646"
+            - generic [ref=e81]: "10"
+          - img [ref=e83]
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e88]: fₚ
+            - generic [ref=e89]: Fraction of stars with planets
+          - generic [ref=e90]:
+            - generic [ref=e91]: "0.4"
+            - generic [ref=e92]:
+              - slider "Fraction of stars with planets minimum" [ref=e94] [cursor=pointer]: "0.4"
+              - slider "Fraction of stars with planets maximum" [ref=e95] [cursor=pointer]: "1"
+            - generic [ref=e96]: "1"
+          - img [ref=e98]
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - generic [ref=e103]: nₑ
+            - generic [ref=e104]: Habitable planets per system
+          - generic [ref=e105]:
+            - generic [ref=e106]: "0.1"
+            - generic [ref=e107]:
+              - slider "Habitable planets per system minimum" [ref=e109] [cursor=pointer]: "0.333"
+              - slider "Habitable planets per system maximum" [ref=e110] [cursor=pointer]: "0.667"
+            - generic [ref=e111]: "1"
+          - img [ref=e113]
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]: fₗ
+            - generic [ref=e119]: Fraction developing life
+          - generic [ref=e120]:
+            - generic [ref=e121]: 10⁻³⁰
+            - generic [ref=e122]:
+              - slider "Fraction developing life minimum" [ref=e124] [cursor=pointer]: "0.031"
+              - slider "Fraction developing life maximum" [ref=e125] [cursor=pointer]: "0.969"
+            - generic [ref=e126]: "1"
+          - img [ref=e128]
+        - generic [ref=e131]:
+          - generic [ref=e132]:
+            - generic [ref=e133]: fᵢ
+            - generic [ref=e134]: Fraction with intelligence
+          - generic [ref=e135]:
+            - generic [ref=e136]: 10⁻³
+            - generic [ref=e137]:
+              - slider "Fraction with intelligence minimum" [ref=e139] [cursor=pointer]: "0.2"
+              - slider "Fraction with intelligence maximum" [ref=e140] [cursor=pointer]: "0.8"
+            - generic [ref=e141]: "1"
+          - img [ref=e143]
+        - generic [ref=e146]:
+          - generic [ref=e147]:
+            - generic [ref=e148]: f_c
+            - generic [ref=e149]: Fraction communicating
+          - generic [ref=e150]:
+            - generic [ref=e151]: "0.01"
+            - generic [ref=e152]:
+              - slider "Fraction communicating minimum" [ref=e154] [cursor=pointer]: "0.25"
+              - slider "Fraction communicating maximum" [ref=e155] [cursor=pointer]: "0.75"
+            - generic [ref=e156]: "1"
+          - img [ref=e158]
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - generic [ref=e163]: L
+            - generic [ref=e164]: Civilisation lifetime
+          - generic [ref=e165]:
+            - generic [ref=e166]: "100"
+            - generic [ref=e167]:
+              - slider "Civilisation lifetime minimum" [ref=e169] [cursor=pointer]: "0.1"
+              - slider "Civilisation lifetime maximum" [ref=e170] [cursor=pointer]: "0.9"
+            - generic [ref=e171]: 10¹⁰
+          - img [ref=e173]
+        - generic [ref=e176]:
+          - generic [ref=e177]:
+            - generic [ref=e178]: f_d
+            - generic [ref=e179]: Detection-readiness multiplier
+          - generic [ref=e180]:
+            - generic [ref=e181]: 10⁻³
+            - generic [ref=e182]:
+              - slider "Detection-readiness multiplier minimum" [ref=e184] [cursor=pointer]: "0.2"
+              - slider "Detection-readiness multiplier maximum" [ref=e185] [cursor=pointer]: "0.8"
+            - generic [ref=e186]: "1"
+          - img [ref=e188]
+      - generic [ref=e191]:
+        - button "Lock astrophysical params" [ref=e192] [cursor=pointer]
+        - button "Reset to SDO defaults" [ref=e193] [cursor=pointer]
+        - generic [ref=e194]: Distribution previews update on slider release
+  - contentinfo [ref=e195]:
+    - generic [ref=e196]: Sources · SDO 2018 · Bostrom 2003 · Hanson 2021 · Ord 2020 · Azad 2026
+    - generic [ref=e197]: Phase 1 of 7 — Drake core
