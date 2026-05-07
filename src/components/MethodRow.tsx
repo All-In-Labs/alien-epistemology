@@ -1,0 +1,167 @@
+import { Toggle } from './controls/Toggle';
+import { Sparkline } from './charts/Sparkline';
+import { useStore } from '../store';
+import type { DetectionMethodState } from '../model/detection';
+import type { DetectionMethodId } from '../constants/detectionDefaults';
+
+interface MethodRowProps {
+  method: DetectionMethodState;
+}
+
+function fmtCost(costM: number): string {
+  if (costM >= 1000) return `$${(costM / 1000).toFixed(costM % 1000 === 0 ? 0 : 1)}B`;
+  return `$${costM.toFixed(0)}M`;
+}
+
+function logSensitivityFraction(sens: number): number {
+  // map log10(s) ∈ [-6, 0] → [0, 1]
+  const log = Math.log10(Math.max(sens, 1e-12));
+  return Math.max(0, Math.min(1, (log + 6) / 6));
+}
+
+function fakePreview(seedKey: string, on: boolean): number[] {
+  // Deterministic preview shape — the real per-method histogram is computed in the
+  // worker in phase 4; here we render a placeholder shape that's distinct per method.
+  let h = 0;
+  for (let i = 0; i < seedKey.length; i++) h = (h * 31 + seedKey.charCodeAt(i)) >>> 0;
+  const out = new Array<number>(24);
+  for (let i = 0; i < 24; i++) {
+    h = (Math.imul(h, 1103515245) + 12345) >>> 0;
+    const t = i / 23;
+    const center = 0.5 + ((h & 0xff) / 255 - 0.5) * 0.5;
+    const d = (t - center) / 0.18;
+    out[i] = Math.exp(-d * d) * (on ? 1 : 0.4);
+  }
+  return out;
+}
+
+export function MethodRow({ method }: MethodRowProps) {
+  const setMethodOn = useStore((s) => s.setMethodOn);
+  const setMethodCost = useStore((s) => s.setMethodCost);
+  const cfg = method;
+
+  // log sensitivity bar shows the *default* sensitivity for now (mid-bound)
+  const sensMid = Math.sqrt(cfg.sensMin * cfg.sensMax);
+  const sensFrac = logSensitivityFraction(sensMid);
+  const sensExp = Math.round(Math.log10(sensMid));
+
+  return (
+    <div className="grid grid-cols-[40px_1fr_140px_200px_120px] gap-5 items-center py-4.5 border-b border-edge last:border-b-0">
+      <Toggle on={cfg.on} onChange={(v) => { setMethodOn(cfg.id, v); }} label={cfg.id} />
+      <div>
+        <div
+          className={`font-sans text-sm font-semibold ${cfg.on ? 'text-ink' : 'text-muted'}`}
+        >
+          {labelFor(cfg.id)}
+        </div>
+        <div className="font-mono text-[10.5px] text-muted uppercase tracking-chip mt-0.5">
+          type · {cfg.type}
+        </div>
+      </div>
+      <div>
+        <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em]">
+          cost / decade
+        </div>
+        <div className="font-serif text-lg text-ink mt-0.5">{fmtCost(cfg.costM)}</div>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.001}
+          value={costFrac(cfg)}
+          onChange={(e) => {
+            const f = Number(e.target.value);
+            const newCost = fracToCost(cfg, f);
+            setMethodCost(cfg.id, newCost);
+          }}
+          className="w-full mt-1"
+          style={{ accentColor: cfg.on ? '#1f1d18' : '#c8c4bc' }}
+          aria-label={`${cfg.id} cost`}
+        />
+      </div>
+      <div>
+        <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em]">
+          log sensitivity
+        </div>
+        <div className="h-1.5 mt-2 relative" style={{ background: '#ece6d3' }}>
+          <div
+            className="absolute h-full"
+            style={{
+              width: `${(sensFrac * 100).toFixed(2)}%`,
+              background: cfg.on ? '#c2410c' : '#c8c4bc',
+            }}
+          />
+        </div>
+        <div className="font-mono text-[11px] text-muted mt-0.5">
+          10{supScript(sensExp)} per civ · per $1B-decade
+        </div>
+      </div>
+      <Sparkline
+        values={fakePreview(`A-m-${cfg.id}`, cfg.on)}
+        w={120}
+        h={28}
+        stroke={cfg.on ? '#1f1d18' : '#bdb6a4'}
+        fill={cfg.on ? 'rgba(31,29,24,0.08)' : 'rgba(31,29,24,0.03)'}
+      />
+    </div>
+  );
+}
+
+function labelFor(id: string): string {
+  const map: Record<string, string> = {
+    seti: 'SETI radio (BL/ATA)',
+    tech: 'Technosignature search',
+    bio: 'Biosignature astrobiology',
+    probe: 'Interstellar probe R&D',
+    retina: 'RETINA (passive radar)',
+  };
+  return map[id] ?? id;
+}
+
+function costBoundsFor(id: DetectionMethodId): [number, number] {
+  switch (id) {
+    case 'seti':
+      return [10, 500];
+    case 'tech':
+      return [10, 500];
+    case 'bio':
+      return [1000, 20000];
+    case 'probe':
+      return [100, 5000];
+    case 'retina':
+      return [1, 50];
+  }
+}
+
+function costFrac(m: DetectionMethodState): number {
+  const [min, max] = costBoundsFor(m.id);
+  if (m.costM <= min) return 0;
+  if (m.costM >= max) return 1;
+  return (Math.log10(m.costM) - Math.log10(min)) / (Math.log10(max) - Math.log10(min));
+}
+
+function fracToCost(m: DetectionMethodState, f: number): number {
+  const [min, max] = costBoundsFor(m.id);
+  const t = Math.max(0, Math.min(1, f));
+  return Math.pow(10, Math.log10(min) + t * (Math.log10(max) - Math.log10(min)));
+}
+
+function supScript(n: number): string {
+  const map: Record<string, string> = {
+    '-': '⁻',
+    '0': '⁰',
+    '1': '¹',
+    '2': '²',
+    '3': '³',
+    '4': '⁴',
+    '5': '⁵',
+    '6': '⁶',
+    '7': '⁷',
+    '8': '⁸',
+    '9': '⁹',
+  };
+  return String(n)
+    .split('')
+    .map((c) => map[c] ?? c)
+    .join('');
+}

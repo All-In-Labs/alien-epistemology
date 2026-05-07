@@ -7,6 +7,7 @@ const DEBOUNCE_MS = 150;
 
 export function useDrakeMCRunner(): void {
   const drakeRanges = useStore((s) => s.drakeRanges);
+  const methods = useStore((s) => s.methods);
   const setDrakeOutput = useStore((s) => s.setDrakeOutput);
   const timer = useRef<number | undefined>(undefined);
   const seedRef = useRef(0);
@@ -17,6 +18,7 @@ export function useDrakeMCRunner(): void {
       seedRef.current += 1;
       const out = runDrakeMC({
         ranges: drakeRanges,
+        methods,
         n: MC_SAMPLES,
         seed: `drake-${seedRef.current.toString()}`,
       });
@@ -25,5 +27,5 @@ export function useDrakeMCRunner(): void {
     return () => {
       window.clearTimeout(timer.current);
     };
-  }, [drakeRanges, setDrakeOutput]);
+  }, [drakeRanges, methods, setDrakeOutput]);
 }

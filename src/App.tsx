@@ -2,6 +2,7 @@ import { Masthead } from './components/Masthead';
 import { StatPair } from './components/StatPair';
 import { Ch00Contract } from './components/chapters/Ch00Contract';
 import { Ch01Drake } from './components/chapters/Ch01Drake';
+import { Ch02Detection } from './components/chapters/Ch02Detection';
 import { useDrakeMCRunner } from './hooks/useDrakeMCRunner';
 
 export default function App() {
@@ -20,9 +21,10 @@ export default function App() {
       </section>
       <Ch00Contract />
       <Ch01Drake />
+      <Ch02Detection />
       <footer className="px-20 py-12 border-t border-ink font-mono text-[11px] text-muted tracking-chip uppercase flex justify-between">
         <span>Sources · SDO 2018 · Bostrom 2003 · Hanson 2021 · Ord 2020 · Azad 2026</span>
-        <span>Phase 1 of 7 — Drake core</span>
+        <span>Phase 2 of 7 — Detection</span>
       </footer>
     </div>
   );

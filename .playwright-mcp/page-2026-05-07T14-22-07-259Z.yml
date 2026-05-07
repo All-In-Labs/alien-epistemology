@@ -1,0 +1,243 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: aliens.allinlabs.io · v0.1 draft
+      - generic [ref=e7]: a worldview-sensitive analysis
+    - generic [ref=e8]: An interactive essay in seven parts
+    - heading "Should we fund alien-finding?" [level=1] [ref=e9]:
+      - text: Should we fund
+      - emphasis [ref=e10]: alien-finding?
+    - paragraph [ref=e11]:
+      - text: Frank Drake’s 1961 equation gives a number; Sandberg, Drexler & Ord’s 2018 reformulation gives a
+      - emphasis [ref=e12]: distribution
+      - text: . This tool lets you set its bounds, choose detection programmes, weight four value channels and your own worldview — then asks what cost-effectiveness, in GiveWell-bar units, the search comes out at.
+    - generic [ref=e13]:
+      - radiogroup "Cosmological model" [ref=e14]:
+        - radio "SDO Drake" [checked] [ref=e15] [cursor=pointer]
+        - radio "Grabby Aliens" [disabled] [ref=e16]
+        - radio "Hybrid" [disabled] [ref=e17]
+      - generic [ref=e18]: Cosmological model (phases 5+)
+      - button "Presenter mode (P)" [disabled] [ref=e19]
+      - button "Copy permalink ↗" [disabled] [ref=e20]
+  - generic [ref=e21]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e24]: P( no other civilisation in the Milky Way )
+        - generic [ref=e25]: —
+        - generic [ref=e26]: —
+      - generic [ref=e27]:
+        - generic [ref=e28]: P( at least one other civilisation in the Milky Way )
+        - generic [ref=e29]: —
+        - generic [ref=e30]: —
+      - generic [ref=e31]:
+        - generic [ref=e32]: P( more than one ) — surfacing the Poisson tail — —
+        - generic [ref=e33]: P( any detection in decade ) · —
+        - generic [ref=e34]: n = 100,000 Monte Carlo samples · debounced 150 ms
+    - paragraph [ref=e35]: The pairing matters more than either individual stat. “We are probably alone” and “we probably are not” are equally valid framings of the same Monte Carlo result.
+  - generic [ref=e36]:
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: Ch. 00
+        - generic [ref=e40]: The honesty contract
+      - generic [ref=e41]:
+        - heading "Three rules this tool keeps." [level=2] [ref=e42]
+        - paragraph [ref=e43]: Before any numbers — the constraints under which the model was designed. If you find a result that violates one of these, the tool is broken; tell us.
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]: "1"
+        - generic [ref=e48]:
+          - generic [ref=e49]: Distributions, never point estimates.
+          - paragraph [ref=e50]: The SDO finding is that uncertainty over Drake’s parameters spans many orders of magnitude. A single number for N hides that — and chooses, implicitly, which orders of magnitude get to count. We display histograms and percentile bands. The single number you see in any stat is always either a median or an explicitly labelled summary.
+      - generic [ref=e51]:
+        - generic [ref=e52]: "2"
+        - generic [ref=e53]:
+          - generic [ref=e54]: No worldview is privileged.
+          - paragraph [ref=e55]: The six presets — Bostrom, Hanson, Ord, Neartermist, Dark Forest, Astronomical-Waste — sit equally in the dropdown. None is the default look. Defaults under Ord Moderate must not produce “obviously a top EA cause”; if they do, the defaults are biased and need adjusting.
+      - generic [ref=e56]:
+        - generic [ref=e57]: "3"
+        - generic [ref=e58]:
+          - generic [ref=e59]: Defaults don't flatter the conclusion.
+          - paragraph [ref=e60]: Per-method detection sensitivities are the most uncertain numbers in the whole model and would be the easiest to fudge. We pick placeholders that sit roughly in the middle of expert disagreement and label them as such. The result of the tool is a function of your inputs; we own the inputs we picked.
+      - generic [ref=e61]: Cf. SDO 2018 · Azad 2026 (directional reasoning) · §10 of the project spec
+  - generic [ref=e62]:
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e65]: Ch. 01
+        - generic [ref=e66]: The equation
+      - generic [ref=e67]:
+        - heading "Seven uncertain factors, one log-uniform multiplication." [level=2] [ref=e68]
+        - paragraph [ref=e69]: Each parameter is sampled from a log-uniform distribution between bounds you set. Astrophysical parameters have established lower bounds; the tool nudges you to respect them. The speculative parameters fₗ, fᵢ, f_c, L are wide on purpose — that is the SDO finding.
+    - generic [ref=e70]:
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: R*
+            - generic [ref=e75]: Star formation rate
+          - generic [ref=e76]:
+            - generic [ref=e77]: "1.5"
+            - generic [ref=e78]:
+              - slider "Star formation rate minimum" [ref=e80] [cursor=pointer]: "0.354"
+              - slider "Star formation rate maximum" [ref=e81] [cursor=pointer]: "0.646"
+            - generic [ref=e82]: "10"
+          - img [ref=e84]
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]: fₚ
+            - generic [ref=e90]: Fraction of stars with planets
+          - generic [ref=e91]:
+            - generic [ref=e92]: "0.4"
+            - generic [ref=e93]:
+              - slider "Fraction of stars with planets minimum" [ref=e95] [cursor=pointer]: "0.4"
+              - slider "Fraction of stars with planets maximum" [ref=e96] [cursor=pointer]: "1"
+            - generic [ref=e97]: "1"
+          - img [ref=e99]
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - generic [ref=e104]: nₑ
+            - generic [ref=e105]: Habitable planets per system
+          - generic [ref=e106]:
+            - generic [ref=e107]: "0.1"
+            - generic [ref=e108]:
+              - slider "Habitable planets per system minimum" [ref=e110] [cursor=pointer]: "0.333"
+              - slider "Habitable planets per system maximum" [ref=e111] [cursor=pointer]: "0.667"
+            - generic [ref=e112]: "1"
+          - img [ref=e114]
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e119]: fₗ
+            - generic [ref=e120]: Fraction developing life
+          - generic [ref=e121]:
+            - generic [ref=e122]: 10⁻³⁰
+            - generic [ref=e123]:
+              - slider "Fraction developing life minimum" [ref=e125] [cursor=pointer]: "0.031"
+              - slider "Fraction developing life maximum" [ref=e126] [cursor=pointer]: "0.969"
+            - generic [ref=e127]: "1"
+          - img [ref=e129]
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - generic [ref=e134]: fᵢ
+            - generic [ref=e135]: Fraction with intelligence
+          - generic [ref=e136]:
+            - generic [ref=e137]: 10⁻³
+            - generic [ref=e138]:
+              - slider "Fraction with intelligence minimum" [ref=e140] [cursor=pointer]: "0.2"
+              - slider "Fraction with intelligence maximum" [ref=e141] [cursor=pointer]: "0.8"
+            - generic [ref=e142]: "1"
+          - img [ref=e144]
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - generic [ref=e149]: f_c
+            - generic [ref=e150]: Fraction communicating
+          - generic [ref=e151]:
+            - generic [ref=e152]: "0.01"
+            - generic [ref=e153]:
+              - slider "Fraction communicating minimum" [ref=e155] [cursor=pointer]: "0.25"
+              - slider "Fraction communicating maximum" [ref=e156] [cursor=pointer]: "0.75"
+            - generic [ref=e157]: "1"
+          - img [ref=e159]
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - generic [ref=e164]: L
+            - generic [ref=e165]: Civilisation lifetime
+          - generic [ref=e166]:
+            - generic [ref=e167]: "100"
+            - generic [ref=e168]:
+              - slider "Civilisation lifetime minimum" [ref=e170] [cursor=pointer]: "0.1"
+              - slider "Civilisation lifetime maximum" [ref=e171] [cursor=pointer]: "0.9"
+            - generic [ref=e172]: 10¹⁰
+          - img [ref=e174]
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - generic [ref=e179]: f_d
+            - generic [ref=e180]: Detection-readiness multiplier
+          - generic [ref=e181]:
+            - generic [ref=e182]: 10⁻³
+            - generic [ref=e183]:
+              - slider "Detection-readiness multiplier minimum" [ref=e185] [cursor=pointer]: "0.2"
+              - slider "Detection-readiness multiplier maximum" [ref=e186] [cursor=pointer]: "0.8"
+            - generic [ref=e187]: "1"
+          - img [ref=e189]
+      - generic [ref=e192]:
+        - button "Lock astrophysical params" [ref=e193] [cursor=pointer]
+        - button "Reset to SDO defaults" [ref=e194] [cursor=pointer]
+        - generic [ref=e195]: Distribution previews update on slider release
+  - generic [ref=e196]:
+    - generic [ref=e197]:
+      - generic [ref=e198]:
+        - generic [ref=e199]: Ch. 02
+        - generic [ref=e200]: The instruments
+      - generic [ref=e201]:
+        - heading "Five programmes you can fund, in any combination." [level=2] [ref=e202]
+        - paragraph [ref=e203]: Each method has a cost (decadal marginal spend) and a sensitivity coefficient — probability of finding a single detectable civilisation per $1B-decade of marginal spend. These sensitivities are the most uncertain numbers in the model.
+    - generic [ref=e204]:
+      - generic [ref=e205]:
+        - generic [ref=e206]:
+          - button "seti" [pressed] [ref=e207] [cursor=pointer]
+          - generic [ref=e209]:
+            - generic [ref=e210]: SETI radio (BL/ATA)
+            - generic [ref=e211]: type · radio
+          - generic [ref=e212]:
+            - generic [ref=e213]: cost / decade
+            - generic [ref=e214]: $50M
+            - slider "seti cost" [ref=e215]: "0.411"
+          - generic [ref=e216]:
+            - generic [ref=e217]: log sensitivity
+            - generic [ref=e220]: 10⁻² per civ · per $1B-decade
+          - img [ref=e221]
+        - generic [ref=e224]:
+          - button "tech" [ref=e225] [cursor=pointer]
+          - generic [ref=e227]:
+            - generic [ref=e228]: Technosignature search
+            - generic [ref=e229]: type · technosig
+          - generic [ref=e230]:
+            - generic [ref=e231]: cost / decade
+            - generic [ref=e232]: $50M
+            - slider "tech cost" [ref=e233]: "0.411"
+          - generic [ref=e234]:
+            - generic [ref=e235]: log sensitivity
+            - generic [ref=e238]: 10⁻³ per civ · per $1B-decade
+          - img [ref=e239]
+        - generic [ref=e242]:
+          - button "bio" [ref=e243] [cursor=pointer]
+          - generic [ref=e245]:
+            - generic [ref=e246]: Biosignature astrobiology
+            - generic [ref=e247]: type · biosig
+          - generic [ref=e248]:
+            - generic [ref=e249]: cost / decade
+            - generic [ref=e250]: $5B
+            - slider "bio cost" [ref=e251]: "0.537"
+          - generic [ref=e252]:
+            - generic [ref=e253]: log sensitivity
+            - generic [ref=e256]: 10⁻³ per civ · per $1B-decade
+          - img [ref=e257]
+        - generic [ref=e260]:
+          - button "probe" [ref=e261] [cursor=pointer]
+          - generic [ref=e263]:
+            - generic [ref=e264]: Interstellar probe R&D
+            - generic [ref=e265]: type · probe
+          - generic [ref=e266]:
+            - generic [ref=e267]: cost / decade
+            - generic [ref=e268]: $500M
+            - slider "probe cost" [ref=e269]: "0.411"
+          - generic [ref=e270]:
+            - generic [ref=e271]: log sensitivity
+            - generic [ref=e274]: 10⁻⁵ per civ · per $1B-decade
+          - img [ref=e275]
+        - generic [ref=e278]:
+          - button "retina" [pressed] [ref=e279] [cursor=pointer]
+          - generic [ref=e281]:
+            - generic [ref=e282]: RETINA (passive radar)
+            - generic [ref=e283]: type · passive_radar
+          - generic [ref=e284]:
+            - generic [ref=e285]: cost / decade
+            - generic [ref=e286]: $5M
+            - slider "retina cost" [ref=e287]: "0.411"
+          - generic [ref=e288]:
+            - generic [ref=e289]: log sensitivity
+            - generic [ref=e292]: 10⁻⁴ per civ · per $1B-decade
+          - img [ref=e293]
+      - generic [ref=e296]: Per-method sensitivities dominate the result. Adjust them critically. Tooltips link to the primary literature; defaults are placeholders awaiting domain-expert refinement.
+      - button "Reset detection defaults" [ref=e298] [cursor=pointer]
+  - contentinfo [ref=e299]:
+    - generic [ref=e300]: Sources · SDO 2018 · Bostrom 2003 · Hanson 2021 · Ord 2020 · Azad 2026
+    - generic [ref=e301]: Phase 2 of 7 — Detection

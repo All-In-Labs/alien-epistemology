@@ -58,6 +58,10 @@ export function StatPair() {
           P( more than one ) — surfacing the Poisson tail —{' '}
           <span className="text-ink">{pGtOne}</span>
         </span>
+        <span>
+          P( any detection in decade ) ·{' '}
+          <span className="text-ink">{out ? fmtPct(out.pAnyDetection) : '—'}</span>
+        </span>
         <span>n = 100,000 Monte Carlo samples · debounced 150 ms</span>
       </div>
     </div>
