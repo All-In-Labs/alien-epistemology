@@ -5,6 +5,7 @@ import { Ch01Drake } from './components/chapters/Ch01Drake';
 import { Ch02Detection } from './components/chapters/Ch02Detection';
 import { Ch03Value } from './components/chapters/Ch03Value';
 import { Ch04Worldview } from './components/chapters/Ch04Worldview';
+import { Ch05Verdict } from './components/chapters/Ch05Verdict';
 import { PriorOverridePanel } from './components/PriorOverridePanel';
 import { useDrakeMCRunner } from './hooks/useDrakeMCRunner';
 
@@ -27,12 +28,13 @@ export default function App() {
       <Ch02Detection />
       <Ch03Value />
       <Ch04Worldview />
+      <Ch05Verdict />
       <section className="px-20 py-10 border-t border-ink">
         <PriorOverridePanel />
       </section>
       <footer className="px-20 py-12 border-t border-ink font-mono text-[11px] text-muted tracking-chip uppercase flex justify-between">
         <span>Sources · SDO 2018 · Bostrom 2003 · Hanson 2021 · Ord 2020 · Azad 2026</span>
-        <span>Phase 5 of 7 — Cosmology &amp; overrides</span>
+        <span>Phase 6 of 7 — Verdict</span>
       </footer>
     </div>
   );

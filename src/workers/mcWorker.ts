@@ -23,6 +23,7 @@ self.addEventListener('message', (e: MessageEvent<WorkerRequest>) => {
     output.detectableSamples.buffer as ArrayBuffer,
     output.detectionProbSamples.buffer as ArrayBuffer,
     output.evSamples.buffer as ArrayBuffer,
+    output.multiplierSamples.buffer as ArrayBuffer,
   ];
   (self as unknown as Worker).postMessage(msg, transfers);
 });

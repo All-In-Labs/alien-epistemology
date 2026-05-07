@@ -54,11 +54,25 @@ export interface DrakeMCOutput {
   evDALYs: number;
   /** Total decadal cost in M$ for enabled methods (constant per run). */
   totalCostM: number;
+  /** P(EV < 0) — non-trivial under hostile-contact channel D. */
+  pNegativeEV: number;
+  /** P(multiplier > 1× GiveWell). */
+  pAboveGiveWell: number;
+  /** Cost-effectiveness multiplier samples in × GiveWell-bar units. May be negative. */
+  multiplierSamples: Float64Array;
+  /** Median × GiveWell of multiplier samples (excluding non-finite). */
+  medianMultiplier: number;
+  /** 5th and 95th percentile of multiplier samples. */
+  p5Multiplier: number;
+  p95Multiplier: number;
   samples: Float64Array;
   detectableSamples: Float64Array;
   detectionProbSamples: Float64Array;
   evSamples: Float64Array;
 }
+
+/** GiveWell top-charity bar in DALYs per dollar (~$100/DALY averted). */
+export const GIVEWELL_BAR_DALY_PER_DOLLAR = 1 / 100;
 
 export function runDrakeMC({
   ranges,
@@ -168,6 +182,34 @@ export function runDrakeMC({
       }
     }
   }
+  // Cost-effectiveness multiplier (× GiveWell bar) per sample.
+  const totalCostM = methods !== undefined ? totalDecadalCostMillions(methods) : 0;
+  const totalCostUSD = totalCostM * 1e6;
+  const multiplierSamples = new Float64Array(n);
+  let pNeg = 0;
+  let pAbove = 0;
+  if (totalCostUSD > 0 && channels !== undefined) {
+    for (let i = 0; i < n; i++) {
+      const ev = evSamples[i] ?? 0;
+      const dalysPerDollar = ev / totalCostUSD;
+      const multiplier = dalysPerDollar / GIVEWELL_BAR_DALY_PER_DOLLAR;
+      multiplierSamples[i] = multiplier;
+      if (multiplier < 0) pNeg++;
+      if (multiplier > 1) pAbove++;
+    }
+  }
+
+  // Percentiles of the multiplier samples.
+  const sortedMultipliers = totalCostUSD > 0 ? Array.from(multiplierSamples).sort((a, b) => a - b) : [];
+  const pickPctl = (p: number): number => {
+    if (sortedMultipliers.length === 0) return 0;
+    const idx = Math.max(
+      0,
+      Math.min(sortedMultipliers.length - 1, Math.floor(p * sortedMultipliers.length)),
+    );
+    return sortedMultipliers[idx] ?? 0;
+  };
+
   return {
     pNZero: zero / n,
     pNExactlyOne: one / n,
@@ -175,7 +217,13 @@ export function runDrakeMC({
     pNGteOne: 1 - zero / n,
     pAnyDetection: methods !== undefined ? detectionSum / n : 0,
     evDALYs: channels !== undefined ? evSum / n : 0,
-    totalCostM: methods !== undefined ? totalDecadalCostMillions(methods) : 0,
+    totalCostM,
+    pNegativeEV: totalCostUSD > 0 ? pNeg / n : 0,
+    pAboveGiveWell: totalCostUSD > 0 ? pAbove / n : 0,
+    multiplierSamples,
+    medianMultiplier: pickPctl(0.5),
+    p5Multiplier: pickPctl(0.05),
+    p95Multiplier: pickPctl(0.95),
     samples,
     detectableSamples,
     detectionProbSamples,
