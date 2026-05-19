@@ -62,7 +62,7 @@ export function PriorOverridePanel() {
               [{grabby.zoneCredenceMin.toFixed(3)}, {grabby.zoneCredenceMax.toFixed(2)}]
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <input
                 type="range"

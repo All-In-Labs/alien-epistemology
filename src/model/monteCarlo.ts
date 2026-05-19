@@ -174,20 +174,31 @@ export function runDrakeMC({
       N = s.N;
       N_detectable = s.N_detectable;
     }
+    let overrideAlive: boolean | undefined = undefined;
     if (overrides?.overridePNGteOne !== undefined) {
-      const alive = rng() < overrides.overridePNGteOne;
-      N = alive ? Math.max(N, 1) : 0;
-      N_detectable = alive ? Math.max(N_detectable, 1) : 0;
+      overrideAlive = rng() < overrides.overridePNGteOne;
+      N = overrideAlive ? Math.max(N, 1) : 0;
+      N_detectable = overrideAlive ? Math.max(N_detectable, 1) : 0;
     }
     samples[i] = N;
     detectableSamples[i] = N_detectable;
 
-    // Poisson partition contributions for this sample's rate.
-    // For very large N, exp(-N) underflows to 0 → contributes 0 to pNZero, 0 to pNOne,
-    // 1 to pNGtOne. Float64 handles this transition gracefully.
-    if (N <= 0) {
+    // Partition contributions.
+    if (overrideAlive !== undefined) {
+      // Bayesian-shortcut override directly sets P(N≥1). Bypass the Poisson partition
+      // so the user-set value round-trips through the headline pNGteOne stat; otherwise
+      // small Drake-derived N values get bumped to 1 by Math.max and exp(-1)=0.37 leaks
+      // into pNZero, breaking the UI's promise that the slider controls P(N≥1).
+      if (overrideAlive) {
+        pNGtOneSum += 1;
+      } else {
+        pNZeroSum += 1;
+      }
+    } else if (N <= 0) {
       pNZeroSum += 1;
     } else {
+      // Poisson partition: for very large N, exp(-N) underflows to 0 → contributes 0 to
+      // pNZero, 0 to pNOne, 1 to pNGtOne. Float64 handles this transition gracefully.
       const expNeg = Math.exp(-N);
       pNZeroSum += expNeg;
       pNOneSum += N * expNeg;
@@ -358,8 +369,9 @@ function channelValueComponentsForTypeSet(
       prodMiss *= 1 - d;
     }
     const totalDelta = 1 - prodMiss;
-    const sign = ch.A.filterPriorBehind > 0.5 ? -1 : ch.A.filterPriorBehind < 0.5 ? 1 : 0;
-    A = sign * totalDelta * ch.A.vXriskInfo;
+    // Unsigned magnitude; sign is applied later by applyWorldview using the worldview's
+    // filterPriorBehind dial.
+    A = totalDelta * ch.A.vXriskInfo;
   }
   let B = 0;
   if (ch.B.on && types.length > 0) {

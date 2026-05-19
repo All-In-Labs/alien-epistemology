@@ -169,10 +169,10 @@ export function LogRangeSlider({
 
   return (
     <div
-      className={`grid grid-cols-[180px_1fr_220px] gap-6 items-center py-3.5 border-b border-edge ${disabled ? 'opacity-60' : ''}`}
+      className={`flex flex-col lg:grid lg:grid-cols-[180px_1fr_220px] gap-3 lg:gap-6 items-stretch lg:items-center py-3.5 border-b border-edge ${disabled ? 'opacity-60' : ''}`}
     >
       <div className="flex items-baseline gap-2.5">
-        <span className="font-serif italic text-[22px] text-ink">{symbol}</span>
+        <span className="font-display italic text-[22px] text-ink">{symbol}</span>
         <span className="font-sans text-[13px] text-muted">{label}</span>
         {tooltip !== undefined && <Tooltip>{tooltip}</Tooltip>}
       </div>
@@ -185,7 +185,7 @@ export function LogRangeSlider({
         <div
           ref={trackRef}
           className={`flex-1 h-2.5 relative touch-none ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-          style={{ background: '#ece6d3' }}
+          style={{ background: '#c8c4bc' }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -235,7 +235,7 @@ export function LogRangeSlider({
               top: '-4px',
               width: '2px',
               height: '18px',
-              background: '#c2410c',
+              background: '#2e6a31',
             }}
           />
           <div
@@ -246,7 +246,7 @@ export function LogRangeSlider({
               top: '-4px',
               width: '2px',
               height: '18px',
-              background: '#c2410c',
+              background: '#2e6a31',
             }}
           />
         </div>

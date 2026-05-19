@@ -59,7 +59,11 @@ export function applyWorldview(
   const discountA = Math.pow(1 + d.timeDiscount, -HORIZON_A);
   const discountB = Math.pow(1 + d.timeDiscount, -HORIZON_B);
 
-  const A = v.A * d.longtermismStrength * discountA;
+  // Channel A sign tracks the user's filter prior. > 0.5 ⇒ detection challenges optimism
+  // (negative information value); < 0.5 ⇒ detection confirms pessimism (positive); = 0.5
+  // ⇒ neutral (no directional component, magnitude collapses to zero).
+  const signA = d.filterPriorBehind > 0.5 ? -1 : d.filterPriorBehind < 0.5 ? 1 : 0;
+  const A = v.A * signA * d.longtermismStrength * discountA;
   let B = v.B * d.longtermismStrength * d.hingeyness * discountB;
   if (d.personAffecting) B = 0;
   const C = v.C * d.alienMoralWeight;

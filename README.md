@@ -5,8 +5,9 @@ An interactive essay that asks: should we fund alien-finding as an EA cause area
 `design/effective-aliens-visualizer/project/direction-a.jsx`.
 
 The tool's single most important property is **epistemic neutrality**: distributions over point
-estimates, no privileged worldview, no defaults that flatter the conclusion. See the Ch.0
-honesty contract on the live page for the full rules.
+estimates, no privileged worldview, no defaults that flatter the conclusion. Click *View
+assumptions ↗* in the masthead to read the full honesty contract — relocated to an appendix
+modal so it sits next to the analysis rather than gating entry to it.
 
 ## What it does
 
@@ -87,7 +88,7 @@ stats and the chapter counter; **←/→** snap-scroll between the seven chapter
 | §6.5 Permalinks | `src/lib/permalink.ts`, `src/hooks/usePermalink.ts` |
 | §7.1 Cost-effectiveness | `multiplierSamples` in monteCarlo.ts; Ch.5 verdict |
 | §7.2 Comparators | `src/constants/comparators.ts`, ComparatorBars |
-| Ch.0 honesty contract | `src/components/chapters/Ch00Contract.tsx` |
+| Honesty contract / assumptions appendix | `src/components/AssumptionsModal.tsx` |
 | Ch.6 tornado | `src/components/chapters/Ch06Tornado.tsx` |
 | Presenter mode | `src/components/PresenterBar.tsx` + keybindings in `App.tsx` |
 

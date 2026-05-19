@@ -41,8 +41,14 @@ export function Histogram({
   const innerH = h - padT - padB;
 
   const { bins, belowCount, aboveCount } = binLog10WithOverflow(samples, logMin, logMax, nBins);
+  // Y-scale is driven by in-range bins only — including the overflow counts would
+  // crush the in-range distribution when one tail has a lot of mass. The overflow
+  // shows up as a hatched edge-marker rendered at full chart height (count-
+  // independent) so the reader sees "there's mass beyond this edge" without the
+  // count distorting the y-axis.
   const binMax = Math.max(...bins, 1);
   const bw = innerW / bins.length;
+  const overflowW = 14;
 
   const p5 = percentile(samples, 0.05);
   const p25 = percentile(samples, 0.25);
@@ -111,12 +117,39 @@ export function Histogram({
           />
         );
       })}
+      {/* Off-chart overflow markers — full-height hatched stripes at the chart
+          edges that signal "there's mass beyond this edge" without trying to
+          encode the count in bar height (which would distort the in-range scale
+          when one tail is huge). The count is shown as a label above. */}
+      <defs>
+        <pattern id="overflow-hatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#2a2823" strokeWidth="2" opacity="0.5" />
+        </pattern>
+      </defs>
+      {belowCount > 0 && (
+        <rect
+          x={padL - overflowW - 2}
+          y={padT}
+          width={overflowW}
+          height={innerH}
+          fill="url(#overflow-hatch)"
+        />
+      )}
+      {aboveCount > 0 && (
+        <rect
+          x={w - padR + 2}
+          y={padT}
+          width={overflowW}
+          height={innerH}
+          fill="url(#overflow-hatch)"
+        />
+      )}
       <line
         x1={refX}
         x2={refX}
         y1={padT - 4}
         y2={padT + innerH + 4}
-        stroke="#c2410c"
+        stroke="#2e6a31"
         strokeWidth={1.5}
         strokeDasharray="3 3"
       />
@@ -124,7 +157,7 @@ export function Histogram({
         x={refX + 6}
         y={padT + 10}
         fontSize="11"
-        fill="#c2410c"
+        fill="#2e6a31"
         fontFamily="IBM Plex Mono, monospace"
       >
         {refLabel}
@@ -154,26 +187,26 @@ export function Histogram({
       </text>
       {belowCount > 0 && (
         <text
-          x={padL + 4}
+          x={padL - overflowW / 2 - 4}
           y={padT - 4}
-          textAnchor="start"
+          textAnchor="middle"
           fontSize="10"
           fill="#6e675c"
           fontFamily="IBM Plex Mono, monospace"
         >
-          ←{belowCount.toString()} below
+          ←{belowCount.toString()}
         </text>
       )}
       {aboveCount > 0 && (
         <text
-          x={w - padR - 4}
+          x={w - padR + overflowW / 2 + 4}
           y={padT - 4}
-          textAnchor="end"
+          textAnchor="middle"
           fontSize="10"
           fill="#6e675c"
           fontFamily="IBM Plex Mono, monospace"
         >
-          {aboveCount.toString()} above→
+          {aboveCount.toString()}→
         </text>
       )}
     </svg>

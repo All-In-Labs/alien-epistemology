@@ -36,8 +36,9 @@ const CHANNEL_D_TOOLTIP = (
 
 export function Ch03Value() {
   const channels = useStore((s) => s.channels);
+  const worldview = useStore((s) => s.worldview);
+  const patchWorldview = useStore((s) => s.patchWorldview);
   const setChannelOn = useStore((s) => s.setChannelOn);
-  const patchA = useStore((s) => s.patchChannelA);
   const patchB = useStore((s) => s.patchChannelB);
   const patchC = useStore((s) => s.patchChannelC);
   const patchD = useStore((s) => s.patchChannelD);
@@ -49,7 +50,7 @@ export function Ch03Value() {
       title="Four channels — two positive, two negative, all defensible."
       kicker="Detection is not unambiguously good. Channel A (Hanson's Filter) and Channel D (Dark Forest) can drive expected value negative. The tool refuses to hide that."
     >
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChannelCard
           id="A"
           title="Great Filter information"
@@ -63,18 +64,18 @@ export function Ch03Value() {
           }}
           tooltip={CHANNEL_A_TOOLTIP}
         >
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-3">
             <RangeSlider
               sym="ϕ"
               label="Filter prior P( behind us )"
-              value={channels.A.filterPriorBehind}
+              value={worldview.filterPriorBehind}
               min={0}
               max={1}
               step={0.01}
               onChange={(v) => {
-                patchA({ filterPriorBehind: v });
+                patchWorldview({ filterPriorBehind: v });
               }}
-              hint="< 0.5 flips channel A positive"
+              hint="< 0.5 flips channel A positive · also editable in Ch.4"
             />
           </div>
         </ChannelCard>
@@ -92,7 +93,7 @@ export function Ch03Value() {
           }}
           tooltip={CHANNEL_B_TOOLTIP}
         >
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-3">
             <RangeSlider
               label="Tech-viability shift"
               value={channels.B.techViabilityShift}

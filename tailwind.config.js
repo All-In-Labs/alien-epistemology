@@ -4,18 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#f4efe2',
+        bg: '#ecede4',
         paper: '#faf6ec',
         ink: '#1f1d18',
         muted: '#6e675c',
-        accent: '#c2410c',
+        accent: '#2e6a31',
         bar: '#2a2823',
         rule: '#1f1d18',
         edge: '#e5dfcd',
       },
       fontFamily: {
-        display: ['Fraunces', 'serif'],
-        serif: ['"Source Serif 4"', 'Source Serif Pro', 'serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        subhead: ['Podkova', 'Georgia', 'serif'],
+        serif: ['"Hind Vadodara"', 'system-ui', 'sans-serif'],
         sans: ['"IBM Plex Sans"', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'monospace'],
       },

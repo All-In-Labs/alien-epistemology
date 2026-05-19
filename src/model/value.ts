@@ -7,6 +7,11 @@ import type { DetectionType } from '../constants/detectionDefaults';
 
 export interface ChannelAState {
   on: boolean;
+  /**
+   * @deprecated The Channel A sign is now controlled by `WorldviewDials.filterPriorBehind`
+   * (the single source of truth). This field is retained for permalink back-compat only —
+   * it is initialised by `defaultChannelState()` but no model code reads it.
+   */
   filterPriorBehind: number;
   delta: {
     biosig: number;
@@ -75,14 +80,15 @@ export function channelValues(
   detectionType: DetectionType,
   ch: ChannelsState,
 ): { A: number; B: number; C: number; D: number } {
-  // Channel A: -Δ * V_xrisk * sign(prior). When prior > 0.5, finding life confirms the
-  // optimist (filter behind), so the news is *bad* — value is negative. When prior < 0.5,
-  // the user thinks filter is likely ahead, so finding life is *good news* — flip sign.
+  // Channel A returns the UNSIGNED magnitude Δ × V_xrisk_info. The sign — which depends
+  // on whether detection confirms or challenges the user's filter prior — is applied
+  // in applyWorldview() using `WorldviewDials.filterPriorBehind`. Centralising the sign
+  // there fixes the prior bug where worldview-level presets (e.g. Hanson) couldn't
+  // affect Channel A because the sign was being read from a separate channel-level dial.
   let A = 0;
   if (ch.A.on) {
     const delta = deltaFor(ch.A, detectionType);
-    const sign = ch.A.filterPriorBehind > 0.5 ? -1 : ch.A.filterPriorBehind < 0.5 ? 1 : 0;
-    A = sign * delta * ch.A.vXriskInfo;
+    A = delta * ch.A.vXriskInfo;
   }
   // Channel B: net evidence shift (tech-viability + lightcone-claim) × cosmic endowment.
   let B = 0;
@@ -126,12 +132,12 @@ export function channelValuesForTypeSet(
 ): { A: number; B: number; C: number; D: number } {
   let A = 0;
   if (ch.A.on && types.length > 0) {
-    // Probabilistic union of Δs from each fired type.
+    // Probabilistic union of Δs from each fired type. Returned UNSIGNED; sign is applied
+    // in applyWorldview() from the worldview's filter prior.
     let prodMiss = 1;
     for (const t of types) prodMiss *= 1 - deltaFor(ch.A, t);
     const totalDelta = 1 - prodMiss;
-    const sign = ch.A.filterPriorBehind > 0.5 ? -1 : ch.A.filterPriorBehind < 0.5 ? 1 : 0;
-    A = sign * totalDelta * ch.A.vXriskInfo;
+    A = totalDelta * ch.A.vXriskInfo;
   }
   let B = 0;
   if (ch.B.on && types.length > 0) {

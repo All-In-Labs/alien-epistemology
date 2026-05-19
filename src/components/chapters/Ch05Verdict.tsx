@@ -92,21 +92,29 @@ export function Ch05Verdict() {
     return buf.slice(0, k);
   })();
 
-  // Pick histogram x-range dynamically from the sample distribution so we don't
-  // waste chart space on empty extremes. Always include the GiveWell line at 0.
+  // Pick histogram x-range from the actual min/max of positive samples so all
+  // bins are visible — no off-chart overflow. Previously we clipped to the
+  // 2nd/98th percentiles to keep the chart compact, but that left long tails
+  // hidden in edge markers; now we show the full range, accepting that under
+  // wide-uncertainty presets the chart may span 20+ OoM.
   const xRange = (() => {
     if (positives.length === 0) return { logMin: -3, logMax: 3 };
-    const sorted = Array.from(positives).sort((a, b) => a - b);
-    const lo = sorted[Math.floor(sorted.length * 0.02)] ?? 1e-6;
-    const hi = sorted[Math.floor(sorted.length * 0.98)] ?? 1e6;
-    let logMin = Math.floor(Math.log10(lo));
-    let logMax = Math.ceil(Math.log10(hi));
+    let minLog = Infinity;
+    let maxLog = -Infinity;
+    for (const v of positives) {
+      if (v <= 0) continue;
+      const lv = Math.log10(v);
+      if (lv < minLog) minLog = lv;
+      if (lv > maxLog) maxLog = lv;
+    }
+    if (!Number.isFinite(minLog) || !Number.isFinite(maxLog)) {
+      return { logMin: -3, logMax: 3 };
+    }
+    let logMin = Math.floor(minLog);
+    let logMax = Math.ceil(maxLog);
     // Always show the GiveWell line.
     logMin = Math.min(logMin, -1);
     logMax = Math.max(logMax, 1);
-    // Reasonable bounds.
-    logMin = Math.max(logMin, -12);
-    logMax = Math.min(logMax, 12);
     return { logMin, logMax };
   })();
   const xTicks = (() => {
@@ -219,14 +227,27 @@ export function Ch05Verdict() {
           ]}
         />
         <div
-          className="mt-5 pt-4 grid grid-cols-2 gap-x-8 gap-y-1.5 font-mono text-[11px] text-muted"
+          className="mt-5 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 font-mono text-[11px] text-muted"
           style={{ borderTop: '1px dashed #d8d3c8' }}
         >
           <div className="col-span-2 tracking-chip uppercase mb-1">Sources</div>
           {COMPARATORS.map((c) => (
             <div key={c.label} className="flex justify-between gap-3">
               <span className="text-ink">{c.label}</span>
-              <span className="text-right">{c.source}</span>
+              <span className="text-right">
+                {c.sourceUrl !== undefined ? (
+                  <a
+                    href={c.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-dotted underline-offset-2 hover:text-accent transition-colors"
+                  >
+                    {c.source}
+                  </a>
+                ) : (
+                  c.source
+                )}
+              </span>
             </div>
           ))}
         </div>

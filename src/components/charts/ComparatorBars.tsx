@@ -34,15 +34,32 @@ function supScript(n: number): string {
 
 export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsProps) {
   const padL = 280;
-  const padR = 24;
+  const padR = 40;
   const h = items.length * rowH + 36;
   const innerW = w - padL - padR;
 
-  // Map log10(x) ∈ [-3, 5] → [0, innerW]
+  // Auto-extend the axis so the tool's wide-tail bar fits. Default window is
+  // [-3, 5] OoM (good for most cause-area comparators); expand whenever a bar
+  // exceeds it. Without this, "This tool — Bostrom" runs past the chart's
+  // right edge under longtermist presets where p95 ≈ 10^7+.
+  let minLog = -3;
+  let maxLog = 5;
+  for (const item of items) {
+    if (item.lo > 0) minLog = Math.min(minLog, Math.floor(Math.log10(item.lo)));
+    if (item.hi > 0) maxLog = Math.max(maxLog, Math.ceil(Math.log10(item.hi)));
+  }
+  const logSpan = maxLog - minLog;
+
   const mapX = (v: number): number => {
-    const lv = Math.log10(Math.max(v, 1e-9));
-    return ((lv + 3) / 8) * innerW;
+    const lv = Math.log10(Math.max(v, Math.pow(10, minLog - 1)));
+    return ((lv - minLog) / logSpan) * innerW;
   };
+
+  // Build tick marks across the (possibly-expanded) range. Show every OoM when
+  // the span is small, every 2 OoM when larger, so labels don't crowd.
+  const tickStep = logSpan <= 8 ? 1 : 2;
+  const ticks: number[] = [];
+  for (let l = minLog; l <= maxLog; l += tickStep) ticks.push(l);
 
   return (
     <svg
@@ -50,7 +67,7 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
       preserveAspectRatio="xMidYMid meet"
       className="block w-full h-auto"
     >
-      {[-3, -2, -1, 0, 1, 2, 3, 4, 5].map((l) => (
+      {ticks.map((l) => (
         <g key={l}>
           <line
             x1={padL + mapX(Math.pow(10, l))}
@@ -77,7 +94,7 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
         x2={padL + mapX(1)}
         y1={16}
         y2={h - 14}
-        stroke="#c2410c"
+        stroke="#2e6a31"
         strokeWidth={1.25}
         strokeDasharray="3 3"
       />
@@ -87,7 +104,7 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
         const x1 = padL + mapX(it.hi);
         const xm = padL + mapX(it.mid);
         const isMain = it.main ?? false;
-        const stroke = isMain ? '#c2410c' : '#2a2823';
+        const stroke = isMain ? '#2e6a31' : '#2a2823';
         const sw = isMain ? 2 : 1.5;
         return (
           <g key={i}>

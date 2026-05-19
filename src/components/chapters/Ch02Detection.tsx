@@ -20,7 +20,7 @@ export function Ch02Detection() {
       </div>
       <div
         className="font-serif text-sm text-muted mt-4 pl-3.5 italic max-w-[780px]"
-        style={{ borderLeft: '2px solid #c2410c' }}
+        style={{ borderLeft: '2px solid #2e6a31' }}
       >
         Per-method sensitivities dominate the result. Adjust them critically. Tooltips link to the
         primary literature; defaults are placeholders awaiting domain-expert refinement.

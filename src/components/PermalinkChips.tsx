@@ -5,7 +5,7 @@
 import { useStore } from '../store';
 
 interface ChipDef {
-  presetId: 'bostrom' | 'near' | 'hanson';
+  presetId: 'bostrom' | 'near' | 'hanson' | 'max-aliens' | 'min-aliens';
   label: string;
   desc: string;
 }
@@ -14,6 +14,8 @@ const CHIPS: ChipDef[] = [
   { presetId: 'bostrom', label: 'Bostrom view', desc: 'long-term, total-view' },
   { presetId: 'near', label: 'Neartermist view', desc: 'person-affecting, 3% disc.' },
   { presetId: 'hanson', label: 'Hanson Filter view', desc: 'filter likely ahead' },
+  { presetId: 'max-aliens', label: 'Maximum-aliens', desc: 'every dial toward "rules"' },
+  { presetId: 'min-aliens', label: 'Minimum-aliens', desc: 'every dial toward "catastrophic"' },
 ];
 
 export function PermalinkChips() {

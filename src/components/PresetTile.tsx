@@ -27,7 +27,7 @@ export const PresetTile = forwardRef<HTMLButtonElement, PresetTileProps>(functio
       }}
     >
       <div className="font-mono text-[10.5px] tracking-chip uppercase opacity-70">preset</div>
-      <div className="font-display text-lg mt-1" style={{ fontWeight: 600 }}>
+      <div className="font-subhead text-lg mt-1" style={{ fontWeight: 600 }}>
         {preset.name}
       </div>
       <div className="font-serif italic text-[13px] opacity-80 mt-1.5">{preset.short}</div>

@@ -27,7 +27,7 @@ export function DualLogTrack({
   ariaLabelLo,
   ariaLabelHi,
   height = 6,
-  fillColor = '#c2410c',
+  fillColor = '#2e6a31',
 }: DualLogTrackProps) {
   const id = useId();
   const trackRef = useRef<HTMLDivElement>(null);

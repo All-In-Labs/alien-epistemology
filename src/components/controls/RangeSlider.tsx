@@ -33,7 +33,7 @@ export function RangeSlider({
       <div className="flex items-baseline justify-between gap-3">
         <div className="flex items-baseline gap-2">
           {sym !== undefined && (
-            <span className="font-serif italic text-[15px] text-ink">{sym}</span>
+            <span className="font-display italic text-[15px] text-ink">{sym}</span>
           )}
           <span className="font-sans text-[13px] text-ink">{label}</span>
           {tooltip !== undefined && <Tooltip>{tooltip}</Tooltip>}
@@ -53,7 +53,7 @@ export function RangeSlider({
           onChange(Number(e.target.value));
         }}
         className="w-full"
-        style={{ accentColor: warn ? '#c2410c' : '#1f1d18' }}
+        style={{ accentColor: warn ? '#2e6a31' : '#1f1d18' }}
       />
       {hint !== undefined && <div className="font-mono text-[10.5px] text-muted">{hint}</div>}
     </div>

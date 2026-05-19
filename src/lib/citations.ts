@@ -29,7 +29,7 @@ export const CITATIONS = {
   },
   azad2026: {
     label: 'Azad, Contra Fermi Paradox is Not Contra UFOs (2026)',
-    url: 'https://jehanazad.com',
+    url: 'https://www.jehanazad.com/p/contra-fermi-paradox-is-not-contra',
   },
   sandbergArmstrong: {
     label: 'Sandberg & Armstrong (2013)',

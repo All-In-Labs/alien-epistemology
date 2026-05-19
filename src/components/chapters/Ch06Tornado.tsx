@@ -43,11 +43,12 @@ function runSweep(state: ReturnType<typeof captureState>, seed: string): number 
     n: SWEEP_N,
     seed,
   });
-  // Use the geometric mean of positive multipliers as the aggregate. The unconditional
-  // median collapses to 0 whenever P(N=0) > 0.5, which is most of the parameter space —
-  // making the tornado uninformative if we used it. Geometric mean is the natural
-  // log-axis aggregate and stays meaningful as long as ≥1 sample produced detection.
-  return out.gmeanPositiveMultiplier;
+  // Use the mean multiplier (signed). Earlier we used gmeanPositiveMultiplier, which
+  // filtered out negative samples — making the tornado blind to V_D / Channel-D-style
+  // shifts that flip the verdict negative. Mean captures sign and magnitude honestly.
+  // (Median collapses to 0 when most samples are zero, so that's not an option.)
+  if (out.totalCostM <= 0) return 0;
+  return (out.evDALYs / (out.totalCostM * 1e6)) * 100;
 }
 
 const SWEEPS: SweepDef[] = [
@@ -97,6 +98,27 @@ const SWEEPS: SweepDef[] = [
     },
     setHigh: (s) => {
       s.channels.B.vCosmicEndowment = 1e20;
+    },
+  },
+  {
+    symbol: 'V_A',
+    label: 'X-risk information value',
+    setLow: (s) => {
+      s.channels.A.vXriskInfo = 1e6;
+    },
+    setHigh: (s) => {
+      s.channels.A.vXriskInfo = 1e14;
+    },
+  },
+  {
+    symbol: 'V_D',
+    label: 'Hostile-contact disvalue',
+    // "Low" = MORE negative (worst-case Dark Forest); "high" = less negative.
+    setLow: (s) => {
+      s.channels.D.vHostileDisvalue = -1e16;
+    },
+    setHigh: (s) => {
+      s.channels.D.vHostileDisvalue = -1e8;
     },
   },
   {
@@ -162,16 +184,52 @@ const SWEEPS: SweepDef[] = [
 ];
 
 function logShift(reference: number, sweep: number): number {
-  if (reference <= 0 || sweep <= 0) return 0;
-  return Math.log10(sweep / reference);
+  // Sign-aware log10 OoM shift. Bar position represents the direction and magnitude
+  // of the metric's movement, even when the metric flips sign (e.g. V_D extreme low
+  // pushes mean multiplier from + to −).
+  if (!Number.isFinite(reference) || !Number.isFinite(sweep)) return 0;
+  const absRef = Math.max(Math.abs(reference), 1e-30);
+  const absSweep = Math.max(Math.abs(sweep), 1e-30);
+  const logRatio = Math.log10(absSweep / absRef);
+  const sameSign = reference === 0 || sweep === 0 || reference * sweep > 0;
+  if (sameSign) {
+    // Direction follows the sweep's sign × the sign of the magnitude change.
+    // Reference > 0 case: sweep > ref ⇒ shift right; sweep < ref ⇒ shift left.
+    // Reference < 0 case: more-negative sweep is "worse" ⇒ shift left.
+    return Math.sign(reference || sweep || 1) * logRatio;
+  }
+  // Sign flip — represents a regime change. Bar goes in sweep's direction with
+  // magnitude reflecting both the OoM change and the flip itself (+2 OoM "penalty"
+  // so visible flips don't collapse to 0 when |sweep| ≈ |reference|).
+  return Math.sign(sweep) * (Math.abs(logRatio) + 2);
 }
 
-function fmtMultiplier(v: number): string {
-  if (!Number.isFinite(v)) return '—';
-  if (v === 0) return '0×';
-  if (v < 0.001) return v.toExponential(1);
-  if (v < 100) return `${v.toFixed(2)}×`;
-  return `${v.toFixed(0)}×`;
+function fmtNum(n: number): string {
+  if (n < 10) return n.toFixed(1);
+  if (n < 1000) return Math.round(n).toLocaleString();
+  if (n < 1e6) return `${(n / 1000).toFixed(1)}K`;
+  if (n < 1e9) return `${(n / 1e6).toFixed(1)}M`;
+  if (n < 1e12) return `${(n / 1e9).toFixed(1)}B`;
+  return n.toExponential(1);
+}
+
+/**
+ * Format an endpoint metric as a ratio-to-baseline label. Compact form so labels
+ * don't overflow the chart area: the chart header already says "RATIO TO
+ * BASELINE", so we drop that suffix. Sign-flips get a short "neg" marker.
+ */
+function fmtRatio(sweep: number, baseline: number): string {
+  if (!Number.isFinite(sweep) || !Number.isFinite(baseline)) return '—';
+  if (baseline === 0) return '—';
+  const r = sweep / baseline;
+  const flip = r < 0;
+  const ar = Math.abs(r);
+  // Widened "essentially baseline" band: ratios within (0.5, 2) — i.e. less
+  // than 0.3 OoM either side of baseline — collapse to "≈ 1×" so the reader's
+  // attention stays on the inputs that actually move the verdict.
+  if (!flip && ar > 0.5 && ar < 2) return '≈ 1×';
+  const body = ar >= 1 ? `×${fmtNum(ar)}` : `÷${fmtNum(1 / ar)}`;
+  return flip ? `${body} neg` : body;
 }
 
 export function Ch06Tornado() {
@@ -210,19 +268,25 @@ export function Ch06Tornado() {
         runOne();
         return;
       }
+      // Use the SAME seed for low, high, and baseline so MC noise cancels and
+      // only the parameter effect remains. Otherwise small-effect endpoints can
+      // come out the "wrong side" of baseline simply because their independent
+      // MC run rolled a different sample path — e.g. V_D high should be
+      // slightly *above* baseline (less hostile cost) but with independent
+      // seeds it can land below by pure chance.
       const lowState = captureState();
       sweep.setLow(lowState);
-      const lowMed = runSweep(lowState, `tornado-${sweep.symbol}-low`);
+      const lowMed = runSweep(lowState, 'tornado-baseline');
       const highState = captureState();
       sweep.setHigh(highState);
-      const highMed = runSweep(highState, `tornado-${sweep.symbol}-high`);
+      const highMed = runSweep(highState, 'tornado-baseline');
       out.push({
         symbol: sweep.symbol,
         label: sweep.label,
         low: logShift(baseline, lowMed),
         high: logShift(baseline, highMed),
-        lowLabel: fmtMultiplier(lowMed),
-        highLabel: fmtMultiplier(highMed),
+        lowLabel: fmtRatio(lowMed, baseline),
+        highLabel: fmtRatio(highMed, baseline),
       });
       // Yield to the main thread between sweeps so input/scroll/repaint stay
       // responsive even though MC is running synchronously.
@@ -248,18 +312,25 @@ export function Ch06Tornado() {
       num="06"
       eyebrow="What changes the answer most?"
       title="The tornado plot."
-      kicker="Each bar shows how the geometric mean of positive cost-effectiveness multipliers shifts when a single input is moved to the bottom or top of its plausible range, with all others held at the active configuration. (Geom. mean is used because the unconditional median collapses to 0 whenever P(N=0) > 0.5.) Order is by total spread."
+      kicker="Each row shows how the mean cost-effectiveness multiplier shifts (as a ratio to baseline) when one input is swept to the bottom or top of its plausible range. Dark bars on the left = that endpoint pushes the verdict below baseline (worse); orange bars on the right = above baseline (better) — independent of whether it came from the low or high sweep, so inversely-correlated inputs (e.g. time discount) read consistently. Endpoints marked “(flips)” cross zero. Order is by total spread."
     >
-      <div className="bg-paper border border-ink px-7 py-7">
+      <div className="bg-paper border border-ink px-4 sm:px-7 py-7">
         {items ? (
-          <Tornado items={items} />
+          // On narrow viewports the SVG would compress to <30% scale, making
+          // every label unreadable and visually overlapping. Let it keep its
+          // designed minimum width and scroll horizontally instead.
+          <div className="overflow-x-auto -mx-4 sm:-mx-7 px-4 sm:px-7 lg:mx-0 lg:px-0">
+            <div className="min-w-[900px] lg:min-w-0">
+              <Tornado items={items} />
+            </div>
+          </div>
         ) : (
           <div className="font-mono text-[11px] text-muted py-12 text-center">
             Computing sensitivity sweeps…
           </div>
         )}
         <div
-          className="grid grid-cols-3 gap-6 mt-6 pt-5"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6 pt-5"
           style={{ borderTop: '1px dashed #d8d3c8' }}
         >
           {[
@@ -278,7 +349,7 @@ export function Ch06Tornado() {
           ].map((card, i) => (
             <div key={i}>
               <div
-                className="font-display text-lg text-ink"
+                className="font-subhead text-lg text-ink"
                 style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
               >
                 {card.h}

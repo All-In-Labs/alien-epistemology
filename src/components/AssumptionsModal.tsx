@@ -93,6 +93,19 @@ const CATEGORIES: Category[] = [
           </>
         ),
       },
+      {
+        text: (
+          <>
+            <strong>Grabby is not externally calibrated.</strong> The SDO branch reproduces{' '}
+            <CitationLink cite="sdo2018" text="SDO 2018" />'s pre-Fermi pNZero within ~10pp
+            when fed SDO's parameter ranges (see <em>literature-anchors.test.ts</em>). The
+            Grabby branch has no equivalent anchor against{' '}
+            <CitationLink cite="hansonGrabby" text="Hanson 2021" />'s published density /
+            expansion-rate numbers — our "P(inside zone)" framing doesn't cleanly map to
+            them. Treat Grabby-mode output with higher uncertainty than SDO-mode output.
+          </>
+        ),
+      },
     ],
   },
   {
@@ -172,8 +185,11 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Channel A's sign depends on the user's filter prior. Prior &gt; 0.5 → finding life is{' '}
-            <em>bad news</em>; &lt; 0.5 → <em>good news</em>; = 0.5 → channel zeroed.
+            Channel A's sign comes from <strong>WorldviewDials.filterPriorBehind</strong> (the
+            worldview-level dial, set in Ch.4 — also surfaced as a convenience slider in Ch.3).
+            Prior &gt; 0.5 → finding life is <em>bad news</em>; &lt; 0.5 → <em>good news</em>;
+            = 0.5 → channel zeroed. <em>ChannelAState.filterPriorBehind</em> is a vestigial
+            field retained for permalink back-compat — it is not read by the model.
           </>
         ),
       },
@@ -205,9 +221,55 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            DALY magnitudes (V_xrisk_info ~10¹⁰, V_cosmic_endowment ~10¹⁶, V_contact_friendly ~10⁸,
-            V_hostile_disvalue ~−10¹²) are spec defaults. Channel B's 10¹⁶ default reflects
-            astronomical-waste numbers and tends to dominate the verdict.
+            <strong>V_xrisk_info = 10¹⁰ DALYs</strong> (Channel A). Loosely inspired by
+            longtermist x-risk valuations (cf. <CitationLink cite="ordPrecipice" text="Ord 2020" />);
+            roughly one order of magnitude below the standard total-view figure (~10¹¹ DALYs per
+            unit of probability shift). Tornado bounds: 10⁶ to 10¹⁴.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>V_cosmic_endowment = 10¹⁶ DALYs</strong> (Channel B). Inspired by{' '}
+            <CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />, but{' '}
+            <strong>~22 OOM below</strong> his published conservative biological estimate
+            (~10³⁸ lives over the cosmic endowment, or ~10¹³ lives per second of delay).
+            The compression is deliberate: feeding Bostrom's literal number makes alien-finding
+            ≈ 10²⁹ × GiveWell under almost any preset, violating the spec's epistemic-neutrality
+            requirement. 10¹⁶ keeps Channel B as the dominant contributor under longtermism
+            (~99% of EV mass) while leaving room for other channels to matter at the margin.
+            Tornado bounds: 10¹² to 10²⁰ — the upper end is still 18 OOM below Bostrom.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>V_contact_friendly = 10⁸ DALYs</strong> (Channel C). No clean published
+            anchor — order-of-magnitude equivalent to one global-health-grade technological
+            transfer. Multiplied by <em>alienMoralWeight</em> at the worldview stage.
+            Not currently probed by the tornado.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>V_hostile_disvalue = −10¹² DALYs</strong> (Channel D). Roughly two orders
+            of magnitude above current-population × per-life-disvalue (~10¹⁰) — reflects
+            multi-generation harm if hostile contact ≈ extinction. Tornado bounds: −10⁸ to −10¹⁶.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            Empirical note: under any longtermist preset, <strong>Channel A is a rounding
+            error compared to Channel B</strong> (V_xrisk ≪ V_endowment by 6 OOM). The
+            "four channels" framing is structurally important for honest neutrality, but the
+            verdict under longtermism is overwhelmingly Channel-B-driven. See the Ch.6 tornado
+            for confirmation.
           </>
         ),
       },
@@ -418,7 +480,7 @@ export function AssumptionsModal({ open, onClose }: AssumptionsModalProps) {
             <div key={cat.title}>
               <div className="flex items-baseline gap-3 border-b border-ink pb-2 mb-3.5">
                 <h3
-                  className="font-display text-[20px] text-ink"
+                  className="font-subhead text-[20px] text-ink"
                   style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
                 >
                   {cat.title}

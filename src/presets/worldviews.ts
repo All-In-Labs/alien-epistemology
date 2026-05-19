@@ -5,8 +5,23 @@
 import type { WorldviewDials } from '../model/worldview';
 import type { ChannelsState } from '../model/value';
 import { defaultChannelState } from '../model/value';
+import { defaultDrakeRanges, type DrakeRanges } from '../model/drake';
+import {
+  defaultDetectionState,
+  type DetectionMethodState,
+} from '../model/detection';
+import { defaultGrabbyState, type GrabbyState } from '../model/grabby';
+import type { CosmologyMode, PriorOverrides } from '../model/monteCarlo';
 
-export type PresetId = 'bostrom' | 'hanson' | 'ord' | 'near' | 'dark' | 'astro';
+export type PresetId =
+  | 'bostrom'
+  | 'hanson'
+  | 'ord'
+  | 'near'
+  | 'dark'
+  | 'astro'
+  | 'max-aliens'
+  | 'min-aliens';
 
 export interface Preset {
   id: PresetId;
@@ -20,6 +35,14 @@ export interface Preset {
     C: Partial<ChannelsState['C']>;
     D: Partial<ChannelsState['D']>;
   }>;
+  /** Optional full-state overrides — used by demo presets that load a complete
+   *  configuration in one shot (Drake bounds, methods, cosmology, overrides).
+   *  Each is applied as a full replacement of the corresponding state slice. */
+  drakeRanges?: DrakeRanges;
+  methods?: DetectionMethodState[];
+  cosmology?: CosmologyMode;
+  grabby?: GrabbyState;
+  overrides?: PriorOverrides;
 }
 
 export const PRESETS: Preset[] = [
@@ -121,12 +144,134 @@ export const PRESETS: Preset[] = [
       grabbyCredence: 0.1,
     },
   },
+  // ---- Demo presets — full-state configs that load every slider in one click.
+  // These exist for the lightning-talk "upper/lower bound" demonstration: the
+  // verdict the tool *can* deliver if every assumption is dialled toward one
+  // extreme. They're not endorsements; they're the boundary of the model.
+  {
+    id: 'max-aliens',
+    name: 'Maximum-aliens demo',
+    short: 'every dial pushed toward "alien-finding rules"',
+    worldview: {
+      longtermismStrength: 1.0,
+      timeDiscount: 0,
+      personAffecting: false,
+      alienMoralWeight: 1.0,
+      hingeyness: 1.0,
+      filterPriorBehind: 0,
+      riskAversion: 'EV-max',
+      grabbyCredence: 0.1,
+    },
+    channels: {
+      A: {
+        on: true,
+        delta: { biosig: 0.5, technosig: 0.5, radio: 0.5, passive_radar: 0.5, probe: 0.5 },
+        vXriskInfo: 1e12,
+      },
+      B: {
+        on: true,
+        techViabilityShift: 0.5,
+        lightconeClaimShift: 0.5,
+        vCosmicEndowment: 1e20,
+      },
+      C: {
+        on: true,
+        pFriendly: 1,
+        vContactFriendly: 1e10,
+        fires: ['radio', 'technosig', 'passive_radar'],
+      },
+      D: {
+        on: true,
+        pHostile: 0,
+        vHostileDisvalue: 0,
+        fires: ['radio', 'technosig', 'probe'],
+      },
+    },
+    drakeRanges: {
+      R: { min: 10, max: 10 },
+      fp: { min: 1, max: 1 },
+      ne: { min: 1, max: 1 },
+      fl: { min: 1, max: 1 },
+      fi: { min: 1, max: 1 },
+      fc: { min: 1, max: 1 },
+      L: { min: 1e10, max: 1e10 },
+      fd: { min: 1, max: 1 },
+    },
+    methods: [
+      { id: 'seti', type: 'radio', on: true, costM: 10, sensMin: 0.1, sensMax: 0.1 },
+      { id: 'tech', type: 'technosig', on: false, costM: 50, sensMin: 1e-5, sensMax: 1e-2 },
+      { id: 'bio', type: 'biosig', on: false, costM: 5000, sensMin: 1e-4, sensMax: 1e-2 },
+      { id: 'probe', type: 'probe', on: false, costM: 500, sensMin: 1e-6, sensMax: 1e-4 },
+      { id: 'retina', type: 'passive_radar', on: true, costM: 1, sensMin: 0.01, sensMax: 0.01 },
+    ],
+    cosmology: 'sdo',
+    grabby: defaultGrabbyState(),
+    overrides: { overridePNGteOne: 1.0, detectionFloor: 1.0 },
+  },
+  {
+    id: 'min-aliens',
+    name: 'Minimum-aliens demo',
+    short: 'every dial pushed toward "alien-finding is catastrophic"',
+    worldview: {
+      longtermismStrength: 0,
+      timeDiscount: 0.10,
+      personAffecting: true,
+      alienMoralWeight: 0,
+      hingeyness: 0,
+      filterPriorBehind: 0.5,
+      riskAversion: 'EV-max',
+      grabbyCredence: 0,
+    },
+    channels: {
+      A: { on: false },
+      B: { on: false },
+      C: { on: false },
+      D: {
+        on: true,
+        pHostile: 1,
+        vHostileDisvalue: -1e20,
+        fires: ['radio', 'technosig', 'biosig', 'probe', 'passive_radar'],
+      },
+    },
+    drakeRanges: {
+      R: { min: 10, max: 10 },
+      fp: { min: 1, max: 1 },
+      ne: { min: 1, max: 1 },
+      fl: { min: 1, max: 1 },
+      fi: { min: 1, max: 1 },
+      fc: { min: 1, max: 1 },
+      L: { min: 1e10, max: 1e10 },
+      fd: { min: 1, max: 1 },
+    },
+    methods: [
+      { id: 'seti', type: 'radio', on: true, costM: 10, sensMin: 0.1, sensMax: 0.1 },
+      { id: 'tech', type: 'technosig', on: false, costM: 50, sensMin: 1e-5, sensMax: 1e-2 },
+      { id: 'bio', type: 'biosig', on: false, costM: 5000, sensMin: 1e-4, sensMax: 1e-2 },
+      { id: 'probe', type: 'probe', on: false, costM: 500, sensMin: 1e-6, sensMax: 1e-4 },
+      { id: 'retina', type: 'passive_radar', on: false, costM: 5, sensMin: 1e-6, sensMax: 1e-2 },
+    ],
+    cosmology: 'sdo',
+    grabby: defaultGrabbyState(),
+    overrides: { overridePNGteOne: 1.0, detectionFloor: 1.0 },
+  },
 ];
 
-export function applyPreset(preset: Preset): {
+// Suppress "unused" lint for default helpers — they're imported for future
+// preset definitions and to keep the demo presets self-documenting.
+void defaultDrakeRanges;
+void defaultDetectionState;
+
+export interface AppliedPreset {
   worldview: WorldviewDials;
   channels: ChannelsState;
-} {
+  drakeRanges?: DrakeRanges | undefined;
+  methods?: DetectionMethodState[] | undefined;
+  cosmology?: CosmologyMode | undefined;
+  grabby?: GrabbyState | undefined;
+  overrides?: PriorOverrides | undefined;
+}
+
+export function applyPreset(preset: Preset): AppliedPreset {
   const channels = defaultChannelState();
   if (preset.channels) {
     if (preset.channels.A) channels.A = { ...channels.A, ...preset.channels.A };
@@ -134,5 +279,13 @@ export function applyPreset(preset: Preset): {
     if (preset.channels.C) channels.C = { ...channels.C, ...preset.channels.C };
     if (preset.channels.D) channels.D = { ...channels.D, ...preset.channels.D };
   }
-  return { worldview: { ...preset.worldview }, channels };
+  return {
+    worldview: { ...preset.worldview },
+    channels,
+    drakeRanges: preset.drakeRanges,
+    methods: preset.methods,
+    cosmology: preset.cosmology,
+    grabby: preset.grabby,
+    overrides: preset.overrides,
+  };
 }

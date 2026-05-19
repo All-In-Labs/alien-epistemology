@@ -96,7 +96,7 @@ export function MethodRow({ method }: MethodRowProps) {
   const sliderMax = specBounds.max * 10;
 
   return (
-    <div className="grid grid-cols-[40px_1fr_140px_200px_120px] gap-5 items-center py-4.5 border-b border-edge last:border-b-0">
+    <div className="grid grid-cols-[40px_1fr] lg:grid-cols-[40px_1fr_140px_200px_120px] gap-3 lg:gap-5 items-center py-4 lg:py-4.5 border-b border-edge last:border-b-0">
       <Toggle on={cfg.on} onChange={(v) => { setMethodOn(cfg.id, v); }} label={cfg.id} />
       <div>
         <div className="flex items-center gap-1.5">
@@ -111,7 +111,7 @@ export function MethodRow({ method }: MethodRowProps) {
           type · {cfg.type}
         </div>
       </div>
-      <div>
+      <div className="col-span-2 lg:col-span-1">
         <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em]">
           cost / decade
         </div>
@@ -132,7 +132,7 @@ export function MethodRow({ method }: MethodRowProps) {
           aria-label={`${cfg.id} cost`}
         />
       </div>
-      <div>
+      <div className="col-span-2 lg:col-span-1">
         <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em] flex justify-between">
           <span>log sensitivity</span>
           <span className="opacity-70">
@@ -151,18 +151,20 @@ export function MethodRow({ method }: MethodRowProps) {
             }}
             ariaLabelLo={`${cfg.id} sensitivity minimum`}
             ariaLabelHi={`${cfg.id} sensitivity maximum`}
-            fillColor={cfg.on ? '#c2410c' : '#c8c4bc'}
+            fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
           />
         </div>
         <div className="font-mono text-[11px] text-muted mt-1">per civ · per $1B-decade</div>
       </div>
-      <Sparkline
-        values={fakePreview(`A-m-${cfg.id}`, cfg.on)}
-        w={120}
-        h={28}
-        stroke={cfg.on ? '#1f1d18' : '#bdb6a4'}
-        fill={cfg.on ? 'rgba(31,29,24,0.08)' : 'rgba(31,29,24,0.03)'}
-      />
+      <div className="hidden lg:block">
+        <Sparkline
+          values={fakePreview(`A-m-${cfg.id}`, cfg.on)}
+          w={120}
+          h={28}
+          stroke={cfg.on ? '#1f1d18' : '#bdb6a4'}
+          fill={cfg.on ? 'rgba(31,29,24,0.08)' : 'rgba(31,29,24,0.03)'}
+        />
+      </div>
     </div>
   );
 }

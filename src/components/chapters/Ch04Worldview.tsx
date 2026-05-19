@@ -76,7 +76,7 @@ export function Ch04Worldview() {
           ? 'Active configuration · Custom (no preset selected)'
           : 'Active configuration · click another preset to switch, or tweak any dial below'}
       </div>
-      <div role="radiogroup" aria-label="Worldview preset" className="grid grid-cols-3 gap-3.5">
+      <div role="radiogroup" aria-label="Worldview preset" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {PRESETS.map((p, idx) => (
           <PresetTile
             key={p.id}
@@ -109,7 +109,7 @@ export function Ch04Worldview() {
       </div>
 
       <div
-        className="mt-7 grid grid-cols-2 bg-paper border border-ink px-7 py-6"
+        className="mt-7 grid grid-cols-1 lg:grid-cols-2 bg-paper border border-ink px-4 sm:px-7 py-6"
         style={{ rowGap: '18px', columnGap: '60px' }}
       >
         <RangeSlider

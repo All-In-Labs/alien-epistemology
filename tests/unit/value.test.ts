@@ -11,24 +11,19 @@ describe('valueOnDetection', () => {
     expect(valueOnDetection('radio', ch)).toBe(0);
   });
 
-  it('channel A is negative when filterPriorBehind > 0.5 and Δ > 0 (bad news)', () => {
+  it('channel A magnitude is the unsigned product Δ × V_xrisk_info (sign applied later in worldview)', () => {
     const ch = defaultChannelState();
     ch.B.on = false;
     ch.C.on = false;
     ch.D.on = false;
-    ch.A.filterPriorBehind = 0.8; // strong prior filter is behind us
-    const v = valueOnDetection('technosig', ch);
-    expect(v).toBeLessThan(0);
-  });
-
-  it('channel A flips sign when filterPriorBehind < 0.5 (filter ahead — finding life is GOOD news)', () => {
-    const ch = defaultChannelState();
-    ch.B.on = false;
-    ch.C.on = false;
-    ch.D.on = false;
-    ch.A.filterPriorBehind = 0.2;
-    const v = valueOnDetection('technosig', ch);
-    expect(v).toBeGreaterThan(0);
+    // The channel layer is now sign-free; it returns the unsigned magnitude regardless
+    // of the (now-vestigial) ch.A.filterPriorBehind field. Sign is applied by
+    // applyWorldview using WorldviewDials.filterPriorBehind.
+    const v1 = valueOnDetection('technosig', { ...ch, A: { ...ch.A, filterPriorBehind: 0.8 } });
+    const v2 = valueOnDetection('technosig', { ...ch, A: { ...ch.A, filterPriorBehind: 0.2 } });
+    expect(v1).toBe(v2);
+    expect(v1).toBeGreaterThan(0);
+    expect(v1).toBeCloseTo(ch.A.delta.technosig * ch.A.vXriskInfo, 6);
   });
 
   it('channel C only fires for radio/technosig/passive_radar', () => {

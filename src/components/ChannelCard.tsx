@@ -37,7 +37,7 @@ export function ChannelCard({
           </div>
           <div className="flex items-center gap-2 mt-2">
             <h3
-              className="font-display text-2xl text-ink"
+              className="font-subhead text-2xl text-ink"
               style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
             >
               {title}

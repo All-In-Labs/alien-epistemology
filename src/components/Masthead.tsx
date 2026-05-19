@@ -24,9 +24,9 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
   const [assumptionsOpen, setAssumptionsOpen] = useState(false);
 
   return (
-    <header className="px-20 pt-14 pb-9 border-b border-ink relative">
-      <div className="flex justify-between items-center font-mono text-[11px] text-muted tracking-eyebrow uppercase">
-        <span className="flex items-center gap-4">
+    <header className="px-4 sm:px-8 lg:px-20 pt-8 sm:pt-14 pb-9 border-b border-ink relative">
+      <div className="flex flex-wrap justify-between items-center gap-y-2 font-mono text-[11px] text-muted tracking-eyebrow uppercase">
+        <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span>aliens.allinlabs.io · v0.1 draft</span>
           <button
             type="button"
@@ -65,7 +65,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           <span
             aria-hidden
             className="inline-flex w-[18px] h-[18px] rounded-full border items-center justify-center text-[10px] font-mono"
-            style={{ borderColor: '#c2410c', color: '#c2410c' }}
+            style={{ borderColor: '#2e6a31', color: '#2e6a31' }}
           >
             i
           </span>
@@ -73,7 +73,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
         </span>
       </div>
       <h1
-        className="font-display text-[96px] leading-[0.94] mt-3.5 max-w-[1100px]"
+        className="font-display text-5xl sm:text-6xl lg:text-[96px] leading-[1.0] lg:leading-[0.94] mt-3.5 max-w-[1100px]"
         style={{ letterSpacing: '-0.02em', fontWeight: 600 }}
       >
         Should we fund{' '}
@@ -81,7 +81,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           alien-finding?
         </em>
       </h1>
-      <p className="font-serif text-[21px] leading-[1.45] mt-6 max-w-[840px] text-ink">
+      <p className="font-serif text-base sm:text-lg lg:text-[21px] leading-[1.45] mt-6 max-w-[840px] text-ink">
         Frank Drake&rsquo;s 1961 equation gives a number; Sandberg, Drexler &amp; Ord&rsquo;s 2018
         reformulation gives a <em>distribution</em>. This tool lets you set its bounds, choose
         detection programmes, weight four value channels and your own worldview &mdash; then asks
@@ -132,7 +132,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
                 patchWorldview({ grabbyCredence: Number(e.target.value) });
               }}
               className="w-[100px]"
-              style={{ accentColor: '#c2410c' }}
+              style={{ accentColor: '#2e6a31' }}
               aria-label="Grabby credence (hybrid mix)"
             />
             <span className="text-ink normal-case tracking-normal">
@@ -146,9 +146,9 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           onClick={onTogglePresenter}
           className="font-mono text-[11px] tracking-chip uppercase px-4 py-2.5 border border-ink bg-transparent text-ink cursor-pointer transition-colors hover:bg-ink hover:text-paper"
           style={{
-            background: presenter ? '#c2410c' : 'transparent',
+            background: presenter ? '#2e6a31' : 'transparent',
             color: presenter ? '#faf6ec' : '#1f1d18',
-            borderColor: presenter ? '#c2410c' : '#1f1d18',
+            borderColor: presenter ? '#2e6a31' : '#1f1d18',
           }}
         >
           {presenter ? 'Exit presenter' : 'Presenter mode (P)'}

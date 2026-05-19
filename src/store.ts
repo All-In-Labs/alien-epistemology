@@ -123,8 +123,18 @@ export const useStore = create<AppState>()((set) => ({
   loadPreset: (id) => {
     const preset = PRESETS.find((p) => p.id === id);
     if (!preset) return;
-    const { worldview, channels } = applyPreset(preset);
-    set({ worldview, channels, activePreset: id });
+    const applied = applyPreset(preset);
+    set((s) => ({
+      worldview: applied.worldview,
+      channels: applied.channels,
+      // Full-state demo presets also reset Drake / methods / cosmology / overrides.
+      drakeRanges: applied.drakeRanges ?? s.drakeRanges,
+      methods: applied.methods ?? s.methods,
+      cosmology: applied.cosmology ?? s.cosmology,
+      grabby: applied.grabby ?? s.grabby,
+      overrides: applied.overrides ?? s.overrides,
+      activePreset: id,
+    }));
   },
   resetWorldview: () => {
     set({ worldview: defaultWorldview(), activePreset: null });
