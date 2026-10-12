@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Toggle } from './controls/Toggle';
 import { DualLogTrack } from './controls/DualLogTrack';
-import { Sparkline } from './charts/Sparkline';
 import { Tooltip } from './Tooltip';
 import { CitationLink } from './CitationLink';
 import { useStore } from '../store';
@@ -23,6 +22,22 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         For scale: Breakthrough Listen was funded at $100M over 10 years (2015). Costs here are
         marginal additional spend per decade.
       </p>
+      <p className="mt-2">
+        <strong>Reach 10⁻⁸–10⁻³ of the galaxy</strong>, depending on how loud they are. Low end:
+        Earth-like leakage, which even an SKA-class array could pick up only within ~65 light
+        years (<CitationLink cite="sheikh2025" text="Sheikh et al. 2025" />) &mdash; a few thousand
+        of the galaxy&rsquo;s 100&ndash;400 billion stars (
+        <CitationLink cite="nasaStarCount2015" text="NASA" />
+        ). High end: beacons above ~4×10¹⁸ W, visible across the ~60 million stars in Breakthrough
+        Listen&rsquo;s galactic-centre beams (
+        <CitationLink cite="gajjar2021" text="Gajjar et al. 2021" />
+        ). In between: an Arecibo-class transmitter is visible to the Green Bank Telescope out to
+        ~127 pc (<CitationLink cite="margot2026" text="Margot et al. 2026" />
+        ); nearby-star surveys have covered ~1,300 stars (
+        <CitationLink cite="price2020" text="Price et al. 2020" />) and ~288,000 stars in the
+        beams (<CitationLink cite="wlodarczykSroka2020" text="Wlodarczyk-Sroka et al. 2020" />
+        ).
+      </p>
     </>
   ),
   tech: (
@@ -32,6 +47,13 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         transit anomalies. Wider net than radio but at different sensitivity. See{' '}
         <CitationLink cite="wright2014" text="Wright et al. 2014 (G-HAT)" />.
       </p>
+      <p className="mt-2">
+        <strong>Reach 10⁻⁸–3×10⁻³ of the galaxy.</strong> Low end: Keck&rsquo;s laser search of
+        5,600 stars (<CitationLink cite="tellisMarcy2017" text="Tellis & Marcy 2017" />). High
+        end: infrared waste-heat searches of ~2.9×10⁸ stars within 5 kpc (
+        <CitationLink cite="suazo2022" text="Suazo et al. 2022" />) &mdash; but only a
+        civilisation turning much of its star&rsquo;s light into heat would show up.
+      </p>
     </>
   ),
   bio: (
@@ -40,6 +62,15 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now; the Habitable
         Worlds Observatory is proposed for launch in the 2040s. Detects microbial life via O₂/CH₄
         disequilibria. Channel C and D do not fire under biosig detection (per spec §5.3).
+      </p>
+      <p className="mt-2">
+        It looks for life, not civilisations, so it counts life-bearing planets: R* × fₚ × nₑ ×
+        fₗ × ~3 billion years (about how long Earth has had life).{' '}
+        <strong>Reach 10⁻¹²–10⁻⁹ of the galaxy:</strong> JWST&rsquo;s Rocky Worlds programme is
+        observing 9 rocky planets, and it tests whether they have atmospheres, not whether they
+        have life (<CitationLink cite="stsciRockyWorlds2025" text="STScI 2025" />
+        ). That is ~1&ndash;10 star systems of 100&ndash;400 billion, with up to 10× allowed
+        because targets are chosen for having habitable-zone planets.
       </p>
     </>
   ),
@@ -62,6 +93,12 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         broadcast illumination — much cheaper than active scanning. Built for aircraft detection, so
         it can only see artefacts that enter the airspace its transmitters illuminate.
       </p>
+      <p className="mt-2">
+        <strong>Reach 10⁻¹²–10⁻⁶: a guess, with no published source.</strong> Since it sees only
+        our own airspace, its reach is the share of civilisations with an artefact here this
+        decade. The top of the range is as if a typical civilisation had probes near one star in
+        a million. If you think they&rsquo;re already here, use the prior overrides after Ch.4.
+      </p>
     </>
   ),
 };
@@ -75,26 +112,27 @@ function fmtCost(costM: number): string {
   return `$${costM.toFixed(0)}M`;
 }
 
-function fakePreview(seedKey: string, on: boolean): number[] {
-  // Deterministic preview shape — the real per-method histogram is computed in the
-  // worker in phase 4; here we render a placeholder shape that's distinct per method.
-  let h = 0;
-  for (let i = 0; i < seedKey.length; i++) h = (h * 31 + seedKey.charCodeAt(i)) >>> 0;
-  const out = new Array<number>(24);
-  for (let i = 0; i < 24; i++) {
-    h = (Math.imul(h, 1103515245) + 12345) >>> 0;
-    const t = i / 23;
-    const center = 0.5 + ((h & 0xff) / 255 - 0.5) * 0.5;
-    const d = (t - center) / 0.18;
-    out[i] = Math.exp(-d * d) * (on ? 1 : 0.4);
+/** 3e-3 → "3×10⁻³", 1e-8 → "10⁻⁸", 30 → "30". One significant figure. */
+function fmtPow(x: number): string {
+  if (!(x > 0)) return '0';
+  let e = Math.floor(Math.log10(x) + 1e-9);
+  let m = Math.round(x / Math.pow(10, e));
+  if (m >= 10) {
+    m = 1;
+    e += 1;
   }
-  return out;
+  if (e >= 0 && e <= 3) return String(m * Math.pow(10, e));
+  return m === 1 ? `10${supScript(e)}` : `${String(m)}×10${supScript(e)}`;
 }
+
+/** Methods whose reach range has no published source behind it. */
+const UNSOURCED_REACH: readonly DetectionMethodId[] = ['retina'];
 
 export function MethodRow({ method }: MethodRowProps) {
   const setMethodOn = useStore((s) => s.setMethodOn);
   const setMethodCost = useStore((s) => s.setMethodCost);
   const setMethodSensitivity = useStore((s) => s.setMethodSensitivity);
+  const setMethodReach = useStore((s) => s.setMethodReach);
   const cfg = method;
 
   // Slider bounds extend an order of magnitude beyond spec defaults so users can
@@ -104,9 +142,14 @@ export function MethodRow({ method }: MethodRowProps) {
   const noInDecade = NO_IN_DECADE_DETECTION.includes(cfg.type);
   const sliderMin = specBounds.min / 10;
   const sliderMax = specBounds.max * 10;
+  // Reach can be explored an order of magnitude either side of its sourced range, but
+  // never past the whole galaxy.
+  const reachBounds = DETECTION_DEFAULTS[cfg.id].reach;
+  const reachSliderMin = reachBounds.min / 10;
+  const reachSliderMax = Math.min(1, reachBounds.max * 10);
 
   return (
-    <div className="grid grid-cols-[40px_1fr] lg:grid-cols-[40px_1fr_140px_200px_120px] gap-3 lg:gap-5 items-center py-4 lg:py-4.5 border-b border-edge last:border-b-0">
+    <div className="grid grid-cols-[40px_1fr] lg:grid-cols-[40px_1fr_140px_190px_190px] gap-3 lg:gap-5 items-center py-4 lg:py-4.5 border-b border-edge last:border-b-0">
       <Toggle
         on={cfg.on}
         onChange={(v) => {
@@ -147,44 +190,63 @@ export function MethodRow({ method }: MethodRowProps) {
         />
       </div>
       {noInDecade ? (
-        <div className="col-span-2 lg:col-span-1 font-serif text-[13px] text-muted leading-snug">
+        <div className="col-span-2 font-serif text-[13px] text-muted leading-snug">
           No detections possible within a decade: travel time alone is ~20 years. Adds cost only.
         </div>
       ) : (
-        <div className="col-span-2 lg:col-span-1">
-          <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em] flex justify-between">
-            <span>log sensitivity</span>
-            <span className="opacity-70">
-              10{supScript(Math.round(Math.log10(cfg.sensMin)))}–10
-              {supScript(Math.round(Math.log10(cfg.sensMax)))}
-            </span>
+        <>
+          <div className="col-span-2 lg:col-span-1">
+            <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em] flex justify-between">
+              <span>reach</span>
+              <span className="opacity-70">
+                {fmtPow(cfg.reachMin)}–{fmtPow(cfg.reachMax)}
+              </span>
+            </div>
+            <div className="mt-2">
+              <DualLogTrack
+                rangeMin={reachSliderMin}
+                rangeMax={reachSliderMax}
+                loValue={cfg.reachMin}
+                hiValue={cfg.reachMax}
+                onChange={(lo, hi) => {
+                  setMethodReach(cfg.id, lo, hi);
+                }}
+                ariaLabelLo={`${cfg.id} reach minimum`}
+                ariaLabelHi={`${cfg.id} reach maximum`}
+                fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
+              />
+            </div>
+            <div className="font-mono text-[11px] text-muted mt-1">
+              of the galaxy · {UNSOURCED_REACH.includes(cfg.id) ? 'a guess' : 'sourced ⓘ'}
+            </div>
           </div>
-          <div className="mt-2">
-            <DualLogTrack
-              rangeMin={sliderMin}
-              rangeMax={sliderMax}
-              loValue={cfg.sensMin}
-              hiValue={cfg.sensMax}
-              onChange={(lo, hi) => {
-                setMethodSensitivity(cfg.id, lo, hi);
-              }}
-              ariaLabelLo={`${cfg.id} sensitivity minimum`}
-              ariaLabelHi={`${cfg.id} sensitivity maximum`}
-              fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
-            />
+          <div className="col-span-2 lg:col-span-1">
+            <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em] flex justify-between">
+              <span>sensitivity</span>
+              <span className="opacity-70">
+                {fmtPow(cfg.sensMin)}–{fmtPow(cfg.sensMax)}
+              </span>
+            </div>
+            <div className="mt-2">
+              <DualLogTrack
+                rangeMin={sliderMin}
+                rangeMax={sliderMax}
+                loValue={cfg.sensMin}
+                hiValue={cfg.sensMax}
+                onChange={(lo, hi) => {
+                  setMethodSensitivity(cfg.id, lo, hi);
+                }}
+                ariaLabelLo={`${cfg.id} sensitivity minimum`}
+                ariaLabelHi={`${cfg.id} sensitivity maximum`}
+                fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
+              />
+            </div>
+            <div className="font-mono text-[11px] text-muted mt-1">
+              in reach · per $1B-decade
+            </div>
           </div>
-          <div className="font-mono text-[11px] text-muted mt-1">per civ · per $1B-decade</div>
-        </div>
+        </>
       )}
-      <div className="hidden lg:block">
-        <Sparkline
-          values={fakePreview(`A-m-${cfg.id}`, cfg.on)}
-          w={120}
-          h={28}
-          stroke={cfg.on ? '#1f1d18' : '#bdb6a4'}
-          fill={cfg.on ? 'rgba(31,29,24,0.08)' : 'rgba(31,29,24,0.03)'}
-        />
-      </div>
     </div>
   );
 }

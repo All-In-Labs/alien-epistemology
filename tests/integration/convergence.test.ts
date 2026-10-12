@@ -58,7 +58,8 @@ describe('MC convergence', () => {
   it('n=10⁴ and n=10⁵ agree on pAnyDetection within stderr', () => {
     const small = defaultRun(10_000, 'conv-s2');
     const large = defaultRun(100_000, 'conv-l2');
-    // pAnyDetection at default is ~2%; stderr ≈ sqrt(0.02×0.98/10⁴) ≈ 0.0014.
+    // pAnyDetection with log-uniform fₗ at default is ~0.4% (survey reach caps it);
+    // stderr ≈ sqrt(0.004×0.996/10⁴) ≈ 0.0006.
     expect(Math.abs(small.pAnyDetection - large.pAnyDetection)).toBeLessThan(0.01);
   });
 });

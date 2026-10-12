@@ -17,9 +17,10 @@ The user adjusts:
    between user-set bounds. fₗ follows Sandberg, Drexler & Ord's own model by default;
    dragging its slider switches to a custom log-uniform range.
 2. **Detection programmes** (Ch.2) — five toggleable methods (SETI radio, technosignature,
-   biosignature astrobiology, interstellar probe R&D, RETINA passive radar) with cost and
-   sensitivity dials. Only SETI is on by default. Probes can't detect anything within a decade,
-   so they add cost only.
+   biosignature astrobiology, interstellar probe R&D, RETINA passive radar), each with a cost,
+   a survey reach (the share of the galaxy its instruments can cover this decade, sourced from
+   published surveys) and a sensitivity within that reach. Only SETI is on by default. Probes
+   can't detect anything within a decade, so they add cost only.
 3. **Value channels** (Ch.3) — Great Filter information (always bad news), astronomical waste,
    direct-contact value and Dark Forest disvalue, plus per-world value uncertainty
 4. **Worldview** (Ch.4) — seven dials (longtermism strength, time discount, alien moral weight,
@@ -32,7 +33,7 @@ The user adjusts:
 …and sees the verdict (Ch.5) as an **"out of 100 worlds" split**: more good than GiveWell's
 top charities / less difference either way / serious harm. One GiveWell multiple in plain words
 sits underneath (average, typical world or cautious), with the full distribution, comparator
-bars, and a tornado plot of which input moves the answer most (Ch.6).
+bars from published estimates, and a tornado plot of which input moves the answer most (Ch.6).
 
 See `drake-tool-spec.md` §0 for how the build has diverged from the original spec.
 

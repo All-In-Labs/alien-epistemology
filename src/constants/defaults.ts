@@ -28,6 +28,16 @@ export const DEFAULT_FL_DISTRIBUTION: FlDistribution = 'sdo-lognormal';
 /** SDO 2018 abiogenesis-rate parameters: log10(λVt) ~ Normal(mean, sd). */
 export const SDO_FL_LOG10_RATE = { mean: 0, sd: 50 } as const;
 
+/**
+ * How long a planet stays life-bearing, in years. Biosignature searches look for life, not
+ * civilisations, so the count they need is life-bearing planets: R* × fₚ × nₑ × fₗ × this.
+ * Earth has hosted life for more than 3.5 billion years; 3 × 10⁹ rounds that down. One
+ * fixed number rather than a range because it only matters when the biosignature search is
+ * switched on, and the biosignature reach range (10⁻¹²–10⁻⁹) is far wider than any
+ * plausible spread here.
+ */
+export const BIOSPHERE_LIFETIME_YEARS = 3e9;
+
 export interface DrakeParamConfig {
   id: DrakeParamId;
   symbol: string;
@@ -122,7 +132,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     distribution: 'log-uniform',
     defaults: { min: 1e-3, max: 1.0 },
     ceiling: 1.0,
-    note: 'Fraction of existing civs whose signals/biosignatures are detectable in principle by current human technology. N_detectable = N × f_d.',
+    note: 'Fraction of civilisations (or, for biosignature searches, life-bearing planets) producing a signature of a kind our instruments look for: narrowband radio, lasers, waste heat, atmospheric gases. How far away we could see it is handled separately, by each method’s reach in Ch.2. N_detectable = N × f_d.',
   },
 };
 

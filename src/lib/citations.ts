@@ -91,6 +91,56 @@ export const CITATIONS = {
     label: 'Rethink Priorities CRAFT/CURVE',
     url: 'https://rethinkpriorities.org/research-area/curve/',
   },
+  // Detection reach (Ch.2). Each method's reach range is built from these.
+  nasaStarCount2015: {
+    label: 'NASA Blueshift, How Many Stars in the Milky Way? (2015)',
+    url: 'https://asd.gsfc.nasa.gov/blueshift/?p=7791',
+  },
+  price2020: {
+    label: 'Price et al., Breakthrough Listen: 1327 nearby stars (2020)',
+    url: 'https://arxiv.org/abs/1906.07750',
+  },
+  wlodarczykSroka2020: {
+    label: 'Wlodarczyk-Sroka, Garrett & Siemion (2020)',
+    url: 'https://arxiv.org/abs/2006.09756',
+  },
+  gajjar2021: {
+    label: 'Gajjar et al., Breakthrough Listen: Galactic Centre I (2021)',
+    url: 'https://arxiv.org/abs/2104.14148',
+  },
+  margot2026: {
+    label: 'Margot et al., Ten years of UCLA SETI searches with the GBT (2026)',
+    url: 'https://arxiv.org/abs/2605.05408',
+  },
+  sheikh2025: {
+    label: 'Sheikh et al., Earth Detecting Earth (2025)',
+    url: 'https://arxiv.org/abs/2502.02614',
+  },
+  tellisMarcy2017: {
+    label: 'Tellis & Marcy, Laser emission from 5600 stars (2017)',
+    url: 'https://arxiv.org/abs/1704.02535',
+  },
+  suazo2022: {
+    label: 'Suazo et al., Project Hephaistos I (2022)',
+    url: 'https://arxiv.org/abs/2201.11123',
+  },
+  stsciRockyWorlds2025: {
+    label: 'STScI, Rocky Worlds DDT programme (2025)',
+    url: 'https://www.stsci.edu/contents/newsletters/2025-volume-42-issue-02/webb-and-hubbles-rocky-worlds-program-is-fully-underway-what-to-expect',
+  },
+  // Comparator cause areas (Ch.5).
+  titotal2024: {
+    label: 'titotal, Explaining the discrepancies in cost effectiveness ratings (2024)',
+    url: 'https://forum.effectivealtruism.org/posts/qARKFgYhCqmKB2YpF',
+  },
+  ccmOutputs2024: {
+    label: 'Rethink Priorities CCM default outputs, as reported by Vasco Grilo (Jan 2024)',
+    url: 'https://ea.greaterwrong.com/posts/pniDWyjc9vY5sjGre/rethink-priorities-cross-cause-cost-effectiveness-model',
+  },
+  millettSnyderBeattie2017: {
+    label: 'Millett & Snyder-Beattie, Existential Risk and Cost-Effective Biosecurity (2017)',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC5576214',
+  },
 } satisfies Record<string, Citation>;
 
 export type CitationKey = keyof typeof CITATIONS;

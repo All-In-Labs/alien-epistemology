@@ -53,8 +53,21 @@ function runSweep(state: ReturnType<typeof captureState>, seed: string): number 
 
 const SWEEPS: SweepDef[] = [
   {
+    symbol: 'r_seti',
+    label: 'SETI reach',
+    // The two ends of the sourced reach range, each as a single point.
+    setLow: (s) => {
+      const m = s.methods.find((mm) => mm.id === 'seti');
+      if (m) m.reachMax = m.reachMin;
+    },
+    setHigh: (s) => {
+      const m = s.methods.find((mm) => mm.id === 'seti');
+      if (m) m.reachMin = m.reachMax;
+    },
+  },
+  {
     symbol: 's_seti',
-    label: 'SETI sensitivity',
+    label: 'SETI sensitivity in reach',
     setLow: (s) => {
       const m = s.methods.find((mm) => mm.id === 'seti');
       if (m) {
@@ -206,6 +219,15 @@ function spreadOf(items: TornadoItem[], symbol: string): string {
 /** Captions computed from the sweep results, so they can't contradict the chart. */
 function captionsFor(items: TornadoItem[]): { h: string; b: string }[] {
   const top = items[0];
+  if (top?.high === 0 && top.low === 0) {
+    // Every row is flat: no programme is switched on, so nothing is spent or found.
+    return [
+      {
+        h: 'Nothing moves the answer yet.',
+        b: 'No detection programme is switched on (Ch.2), so there is nothing to spend and nothing to find. Switch one on to see which inputs matter.',
+      },
+    ];
+  }
   return [
     {
       h: top ? `${top.label.replace(/\s*\(.*\)$/, '')} moves the answer most.` : 'Computing…',
@@ -219,7 +241,7 @@ function captionsFor(items: TornadoItem[]): { h: string; b: string }[] {
     },
     {
       h: 'What we can measure matters least.',
-      b: `R*, the best-measured input, spans ${spreadOf(items, 'R*')} orders of magnitude; fₗ, the least-measured, spans ${spreadOf(items, 'fₗ')}. SETI sensitivity spans ${spreadOf(items, 's_seti')} — and its default range is a placeholder guess, not a community estimate.`,
+      b: `R*, the best-measured input, spans ${spreadOf(items, 'R*')} orders of magnitude; fₗ, the least-measured, spans ${spreadOf(items, 'fₗ')}. SETI’s reach spans ${spreadOf(items, 'r_seti')}, from published surveys; its sensitivity within reach spans ${spreadOf(items, 's_seti')}, and that range is still a placeholder guess, not a community estimate.`,
     },
   ];
 }

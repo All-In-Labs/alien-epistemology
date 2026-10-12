@@ -11,6 +11,22 @@ import {
   type DetectionMethodState,
 } from '../model/detection';
 import type { PriorOverrides } from '../model/monteCarlo';
+import { DETECTION_DEFAULTS, type DetectionMethodId } from '../constants/detectionDefaults';
+
+/** Demo presets: a method pinned at the top of its sourced reach and in-reach sensitivity. */
+function demoMethod(id: DetectionMethodId, on: boolean, costM: number): DetectionMethodState {
+  const cfg = DETECTION_DEFAULTS[id];
+  return {
+    id,
+    type: cfg.type,
+    on,
+    costM,
+    sensMin: cfg.sensitivity.max,
+    sensMax: cfg.sensitivity.max,
+    reachMin: cfg.reach.max,
+    reachMax: cfg.reach.max,
+  };
+}
 
 export type PresetId =
   | 'bostrom'
@@ -190,11 +206,11 @@ export const PRESETS: Preset[] = [
       fd: { min: 1, max: 1 },
     },
     methods: [
-      { id: 'seti', type: 'radio', on: true, costM: 10, sensMin: 0.1, sensMax: 0.1 },
-      { id: 'tech', type: 'technosig', on: false, costM: 50, sensMin: 1e-5, sensMax: 1e-2 },
-      { id: 'bio', type: 'biosig', on: false, costM: 5000, sensMin: 1e-4, sensMax: 1e-2 },
-      { id: 'probe', type: 'probe', on: false, costM: 500, sensMin: 1e-6, sensMax: 1e-4 },
-      { id: 'retina', type: 'passive_radar', on: true, costM: 1, sensMin: 0.01, sensMax: 0.01 },
+      demoMethod('seti', true, 10),
+      demoMethod('tech', false, 50),
+      demoMethod('bio', false, 5000),
+      demoMethod('probe', false, 500),
+      demoMethod('retina', true, 1),
     ],
     overrides: { overridePNGteOne: 1.0, detectionFloor: 1.0 },
   },
@@ -233,11 +249,11 @@ export const PRESETS: Preset[] = [
       fd: { min: 1, max: 1 },
     },
     methods: [
-      { id: 'seti', type: 'radio', on: true, costM: 10, sensMin: 0.1, sensMax: 0.1 },
-      { id: 'tech', type: 'technosig', on: false, costM: 50, sensMin: 1e-5, sensMax: 1e-2 },
-      { id: 'bio', type: 'biosig', on: false, costM: 5000, sensMin: 1e-4, sensMax: 1e-2 },
-      { id: 'probe', type: 'probe', on: false, costM: 500, sensMin: 1e-6, sensMax: 1e-4 },
-      { id: 'retina', type: 'passive_radar', on: false, costM: 5, sensMin: 1e-6, sensMax: 1e-2 },
+      demoMethod('seti', true, 10),
+      demoMethod('tech', false, 50),
+      demoMethod('bio', false, 5000),
+      demoMethod('probe', false, 500),
+      demoMethod('retina', false, 5),
     ],
     overrides: { overridePNGteOne: 1.0, detectionFloor: 1.0 },
   },

@@ -171,11 +171,15 @@ export function runDrakeMC({
     const s = sampleDrake(rng, ranges, flDistribution);
     let N = s.N;
     let N_detectable = s.N_detectable;
+    let N_lifeDetectable = s.N_lifeDetectable;
     let overrideAlive: boolean | undefined = undefined;
     if (overrides?.overridePNGteOne !== undefined) {
       overrideAlive = rng() < overrides.overridePNGteOne;
       N = overrideAlive ? Math.max(N, 1) : 0;
       N_detectable = overrideAlive ? Math.max(N_detectable, 1) : 0;
+      // The override is about civilisations; simple life is left as sampled, but every
+      // civilisation still lives on a life-bearing planet.
+      N_lifeDetectable = Math.max(N_lifeDetectable, N_detectable);
     }
     samples[i] = N;
     detectableSamples[i] = N_detectable;
@@ -204,7 +208,7 @@ export function runDrakeMC({
 
     if (methods !== undefined) {
       const m = methods;
-      const per = pDetectPerMethod(rng, m, N_detectable);
+      const per = pDetectPerMethod(rng, m, N_detectable, N_lifeDetectable);
       let pCombined = per.combined;
       if (overrides?.detectionFloor !== undefined && N_detectable > 0) {
         pCombined = Math.max(pCombined, overrides.detectionFloor);

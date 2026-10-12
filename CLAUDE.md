@@ -76,8 +76,15 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   the prior overrides. Permalinks v1–v3 drop the old `cosmology` / `grabby` fields on decode.
 - Interstellar probes can't return a detection within the model's decade (travel time), so
   the probe method has zero detection probability: funding it only adds cost.
-- Per-method detection sensitivity coefficients are the most uncertain numbers in the model.
-  The Ch.2 italic block-quote says so.
+- Detection = reach × in-reach sensitivity: `p_m = r_m × (1 − exp(−s_m × c_$B))`. Reach is
+  the share of the galaxy a method's instruments cover this decade, sourced from published
+  surveys (tooltips + `detectionDefaults.ts` comments). Spend never raises reach. In-reach
+  sensitivities are still placeholders and the most uncertain numbers in the model; the
+  Ch.2 italic block-quote says so. RETINA's reach is a labelled guess (no source).
+- Biosignature searches count life-bearing planets (`N_lifeDetectable`, using
+  `BIOSPHERE_LIFETIME_YEARS`), not civilisations.
+- Comparator bars must be published figures with a named source. If a cause area has none
+  (AI safety, currently), list it in `COMPARATOR_OMISSIONS`; don't invent a range.
 - The verdict histogram only shows positive multipliers. P(EV<0) is shown as a separate stat
   (in accent) so non-trivial negative-EV worldviews aren't hidden by the log axis.
 - **Grokkability is a goal**: a visitor who hasn't dug into the numbers should get the
@@ -98,8 +105,10 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   slider switches to a custom log-uniform range. `runDrakeMC` itself still defaults to
   log-uniform, so tests that want what visitors see must pass `flDistribution` and
   `valueUncertainty` explicitly (see `neutrality.test.ts`, "at the site defaults").
-- Permalinks are schema v4. v1/v2 links migrate to zero value uncertainty and log-uniform fₗ,
-  so old links keep their maths.
+- Permalinks are schema v5. v1/v2 links migrate to zero value uncertainty and log-uniform fₗ,
+  so old links keep their maths for features that were added. Error corrections do change old
+  links: v1–v3 drop Grabby mode; v1–v4 keep each method's on/off and cost but take the new
+  reach and sensitivity defaults (old sensitivities were on a different scale).
 - `pnpm` is via corepack (Node 22 bundles it). `.npmrc` disables `verifyDepsBeforeRun` and
   `ignored-builds-check` because `esbuild`'s build script is approved via
   `package.json` `pnpm.onlyBuiltDependencies` but pnpm 11's verify-deps check still flags it.

@@ -6,11 +6,20 @@
 import pako from 'pako';
 
 import type { DrakeRanges } from '../model/drake';
-import type { DetectionMethodState } from '../model/detection';
+import { defaultDetectionState, type DetectionMethodState } from '../model/detection';
 import { NO_VALUE_UNCERTAINTY, type ChannelsState, type ValueUncertainty } from '../model/value';
 import type { FlDistribution } from '../constants/defaults';
 import { normalizeRiskAversion, type WorldviewDials } from '../model/worldview';
 import type { PriorOverrides } from '../model/monteCarlo';
+
+/**
+ * A detection method as v1–v4 links stored it: no survey reach, and sensitivities on the
+ * old scale (per civilisation anywhere in the galaxy).
+ */
+type LegacyMethod = Omit<DetectionMethodState, 'reachMin' | 'reachMax'> & {
+  reachMin?: unknown;
+  reachMax?: unknown;
+};
 
 /**
  * Fields common to v1–v3. Those versions also carried `cosmology` and `grabby` (the
@@ -18,7 +27,7 @@ import type { PriorOverrides } from '../model/monteCarlo';
  */
 interface LegacyCommon {
   drakeRanges: DrakeRanges;
-  methods: DetectionMethodState[];
+  methods: LegacyMethod[];
   channels: ChannelsState;
   worldview: WorldviewDials & { grabbyCredence?: unknown };
   cosmology?: unknown;
@@ -39,8 +48,21 @@ type SerializedStateV3 = LegacyCommon & {
 };
 
 /** v=4: drops the Grabby Aliens mode (cosmology, grabby, worldview.grabbyCredence). */
-export interface SerializedState {
+interface SerializedStateV4 {
   v: 4;
+  drakeRanges: DrakeRanges;
+  methods: LegacyMethod[];
+  channels: ChannelsState;
+  worldview: WorldviewDials;
+  overrides: PriorOverrides;
+  valueUncertainty: ValueUncertainty;
+  flDistribution: FlDistribution;
+  astroLocked: boolean;
+}
+
+/** v=5: detection methods gain survey reach; sensitivities become per target in reach. */
+export interface SerializedState {
+  v: 5;
   drakeRanges: DrakeRanges;
   methods: DetectionMethodState[];
   channels: ChannelsState;
@@ -68,13 +90,28 @@ function migrateV2(v2: SerializedStateV2): SerializedStateV3 {
  * v3 → v4: drop the Grabby Aliens fields. A link that was in Grabby or Hybrid mode now
  * opens in the standard (SDO) model; its other settings carry over unchanged.
  */
-function migrateV3(v3: SerializedStateV3): SerializedState {
+function migrateV3(v3: SerializedStateV3): SerializedStateV4 {
   const { cosmology: _c, grabby: _g, worldview, ...rest } = v3;
   void _c;
   void _g;
   const { grabbyCredence: _gc, ...wv } = worldview;
   void _gc;
   return { ...rest, worldview: wv, v: 4 };
+}
+
+/**
+ * v4 → v5: detection gains survey reach. Old sensitivities were per civilisation anywhere
+ * in the galaxy, so they mean nothing on the new in-reach scale. Like the Grabby removal
+ * this corrects an error, so old links get the corrected maths: each method keeps whether
+ * it is funded and at what cost, and takes the current sensitivity and reach defaults.
+ */
+function migrateV4(v4: SerializedStateV4): SerializedState {
+  const legacy = new Map(v4.methods.map((m) => [m.id, m]));
+  const methods = defaultDetectionState().map((m) => {
+    const old = legacy.get(m.id);
+    return old ? { ...m, on: old.on, costM: old.costM } : m;
+  });
+  return { ...v4, methods, v: 5 };
 }
 
 function base64urlEncode(bytes: Uint8Array): string {
@@ -119,15 +156,18 @@ function decodeAnyVersion(s: string): SerializedState {
   const obj = JSON.parse(json) as { v?: number };
   if (obj.v === 1) {
     const v1 = obj as unknown as SerializedStateV1;
-    return migrateV3(migrateV2({ ...v1, v: 2, astroLocked: false }));
+    return migrateV4(migrateV3(migrateV2({ ...v1, v: 2, astroLocked: false })));
   }
   if (obj.v === 2) {
-    return migrateV3(migrateV2(obj as unknown as SerializedStateV2));
+    return migrateV4(migrateV3(migrateV2(obj as unknown as SerializedStateV2)));
   }
   if (obj.v === 3) {
-    return migrateV3(obj as unknown as SerializedStateV3);
+    return migrateV4(migrateV3(obj as unknown as SerializedStateV3));
   }
   if (obj.v === 4) {
+    return migrateV4(obj as unknown as SerializedStateV4);
+  }
+  if (obj.v === 5) {
     return obj as unknown as SerializedState;
   }
   throw new Error(`Unknown permalink version: ${String(obj.v)}`);

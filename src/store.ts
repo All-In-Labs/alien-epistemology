@@ -50,6 +50,7 @@ interface AppState {
   setMethodOn: (id: DetectionMethodId, on: boolean) => void;
   setMethodCost: (id: DetectionMethodId, costM: number) => void;
   setMethodSensitivity: (id: DetectionMethodId, sensMin: number, sensMax: number) => void;
+  setMethodReach: (id: DetectionMethodId, reachMin: number, reachMax: number) => void;
   setChannelOn: (id: ValueChannelId, on: boolean) => void;
   patchChannelA: (patch: Partial<ChannelsState['A']>) => void;
   patchChannelB: (patch: Partial<ChannelsState['B']>) => void;
@@ -102,6 +103,11 @@ export const useStore = create<AppState>()((set) => ({
   setMethodSensitivity: (id, sensMin, sensMax) => {
     set((s) => ({
       methods: s.methods.map((m) => (m.id === id ? { ...m, sensMin, sensMax } : m)),
+    }));
+  },
+  setMethodReach: (id, reachMin, reachMax) => {
+    set((s) => ({
+      methods: s.methods.map((m) => (m.id === id ? { ...m, reachMin, reachMax } : m)),
     }));
   },
   setDrakeOutput: (out) => {
@@ -200,7 +206,7 @@ export const useStore = create<AppState>()((set) => ({
 export function getSerializedState(): SerializedState {
   const s = useStore.getState();
   return {
-    v: 4,
+    v: 5,
     drakeRanges: s.drakeRanges,
     methods: s.methods,
     channels: s.channels,

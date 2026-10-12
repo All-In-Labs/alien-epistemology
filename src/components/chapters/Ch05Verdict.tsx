@@ -3,7 +3,7 @@ import { Histogram } from '../charts/Histogram';
 import { ComparatorBars } from '../charts/ComparatorBars';
 import { useStore } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
-import { COMPARATORS } from '../../constants/comparators';
+import { COMPARATORS, COMPARATOR_OMISSIONS } from '../../constants/comparators';
 import { summaryFor, outcomeSplit, plainGloss, plainNumber } from '../../model/summary';
 import { OutcomeDots } from '../charts/OutcomeDots';
 import { OUTCOME_COLORS } from '../../constants/outcomeColors';
@@ -327,6 +327,22 @@ export function Ch05Verdict() {
                 ) : (
                   c.source
                 )}
+              </span>
+            </div>
+          ))}
+          <div className="col-span-2 tracking-chip uppercase mt-3 mb-1">Not shown</div>
+          {COMPARATOR_OMISSIONS.map((o) => (
+            <div key={o.label} className="flex justify-between gap-3">
+              <span className="text-ink">{o.label}</span>
+              <span className="text-right">
+                <a
+                  href={o.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-dotted underline-offset-2 hover:text-accent transition-colors"
+                >
+                  {o.reason}
+                </a>
               </span>
             </div>
           ))}

@@ -86,8 +86,10 @@ const CATEGORIES: Category[] = [
         text: (
           <>
             <em>f_d</em> (detection-readiness multiplier) is a tool-specific addition not in
-            SDO 2018. It multiplies <em>N</em> by a sample from [user min, user max] log-uniform
-            to get <em>N_detectable</em>. Default range [10⁻³, 1.0].
+            SDO 2018: the share of civilisations producing a signature of a kind our instruments
+            look for. It multiplies <em>N</em> by a sample from [user min, user max] log-uniform
+            to get <em>N_detectable</em>. Default range [10⁻³, 1.0]. How far away a signature
+            could be seen is handled separately, by each method&rsquo;s reach (Ch.2).
           </>
         ),
       },
@@ -121,10 +123,13 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Per-civ-per-decade detection probability is{' '}
-            <em>p_m = 1 − exp(−s_m × c_m_$B)</em>, i.e. <strong>Poisson-arrival</strong> in detection
-            opportunities. Treats one method-decade-civ as a single Bernoulli trial. Realistic for
-            transit/spectroscopy methods; less so for serendipitous discoveries.
+            Per-target-per-decade detection probability is{' '}
+            <em>p_m = r_m × (1 − exp(−s_m × c_m_$B))</em>: the method&rsquo;s{' '}
+            <strong>reach</strong> <em>r_m</em> (share of the galaxy its instruments can cover
+            this decade) times a <strong>Poisson-arrival</strong> chance of catching a target in
+            reach. Spend raises the second factor, never the first, so no budget pushes{' '}
+            <em>p_m</em> above the reach. Treats one method-decade-target as a single Bernoulli
+            trial and assumes targets are spread evenly across the galaxy's stars.
           </>
         ),
       },
@@ -140,17 +145,51 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Sensitivities <em>s_m</em> are sampled log-uniform from user bounds. Costs <em>c_m</em>{' '}
-            are point estimates with no uncertainty.
+            Reach <em>r_m</em> and in-reach sensitivity <em>s_m</em> are sampled log-uniform from
+            user bounds. Costs <em>c_m</em> are point estimates with no uncertainty.
           </>
         ),
       },
       {
         text: (
           <>
-            The default sensitivity coefficients are <strong>placeholders</strong> awaiting
-            domain-expert refinement. Spec §10 #7 explicitly flags these as "the most uncertain
-            numbers in the model."
+            <strong>Reach is sourced</strong>: published survey sizes and sensitivity limits
+            divided by the galaxy&rsquo;s 100&ndash;400 billion stars (
+            <CitationLink cite="nasaStarCount2015" text="NASA" />
+            ). Radio SETI 10⁻⁸&ndash;10⁻³ (
+            <CitationLink cite="sheikh2025" text="Sheikh 2025" />,{' '}
+            <CitationLink cite="gajjar2021" text="Gajjar 2021" />,{' '}
+            <CitationLink cite="margot2026" text="Margot 2026" />
+            ); optical and infrared 10⁻⁸&ndash;3×10⁻³ (
+            <CitationLink cite="tellisMarcy2017" text="Tellis & Marcy 2017" />,{' '}
+            <CitationLink cite="suazo2022" text="Suazo 2022" />
+            ); biosignatures 10⁻¹²&ndash;10⁻⁹ (
+            <CitationLink cite="stsciRockyWorlds2025" text="STScI 2025" />
+            ). RETINA&rsquo;s 10⁻¹²&ndash;10⁻⁶ is a guess with no source. The
+            non-detections so far rule out little: Margot 2026&rsquo;s limit (fewer than 6.3×10⁻⁵
+            of stars within 20,000 light years host a transmitter above 5×10¹⁶ W) still allows
+            over a million such beacons, so the tool doesn&rsquo;t use them to cut <em>N</em>.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            The in-reach sensitivities <em>s_m</em> are still <strong>placeholders</strong>{' '}
+            (log-uniform 0.1&ndash;100 per target per $1B-decade for radio, optical and RETINA;
+            0.001&ndash;1 for biosignatures). They stand for whether a civilisation in view is
+            transmitting, aimed our way and in-band when we look, which nobody can measure. Spec
+            §10 #7 flags them as &ldquo;the most uncertain numbers in the model.&rdquo;
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>Biosignature searches count life, not civilisations.</strong> Their targets
+            are life-bearing planets: <em>R* × fₚ × nₑ × fₗ × 3×10⁹ years × f_d</em>, where 3
+            billion years is roughly how long Earth has had life. Every other method counts
+            detectable civilisations.
           </>
         ),
       },
@@ -363,8 +402,26 @@ const CATEGORIES: Category[] = [
             measure in DALYs (it uses its own units of value, with a funding bar of 6× its cash
             benchmark as of May 2026), and its top charities save a life for roughly $3,000–5,500.
             Multiplier = (EV in DALYs / total cost in $) ÷ (1 / 100). All comparator bars in the verdict are
-            in × GiveWell-bar units. Comparator ranges are{' '}
-            <strong>community estimates</strong>, not posteriors of any particular model.
+            in × GiveWell-bar units. Rethink Priorities&rsquo; CCM puts the GiveWell bar higher,
+            at 21 DALYs per $1,000 (
+            <CitationLink cite="ccmOutputs2024" text="as reported, Jan 2024" />
+            ), so against that bar every multiplier here would be about 2× smaller.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>Comparator bars are published figures</strong>, each labelled with its
+            source, not posteriors of any one model. Cage-free campaigns:{' '}
+            <CitationLink cite="titotal2024" text="titotal 2024" />
+            &rsquo;s replication of Rethink Priorities&rsquo; model, where moral weights move the
+            answer from 1.7× to 200×. Biosecurity:{' '}
+            <CitationLink cite="millettSnyderBeattie2017" text="Millett & Snyder-Beattie 2017" />
+            , counting future generations undiscounted (excluding them, it falls to 0.13× or
+            less). There is no AI-safety bar: the only published figures are CCM defaults that
+            Rethink Priorities&rsquo; own staff say not to trust, and an invented range would be
+            worse than none.
           </>
         ),
       },

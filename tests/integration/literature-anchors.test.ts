@@ -120,9 +120,9 @@ describe('literature anchor: Bostrom 2003 Astronomical Waste (Channel B)', () =>
       n: 50_000,
       seed: 'literature-bostrom-default',
     });
-    // Empirically: evDALYs ≈ 4.6e12 at default. The corresponding mean multiplier
-    // (evDALYs / totalCostUSD × 100) is ~10^7 — above bar, but not so far that other
-    // worldviews can't reasonably disagree.
+    // Empirically: evDALYs ≈ 1.1e12 at default (survey reach included). The corresponding
+    // mean multiplier (evDALYs / totalCostUSD × 100) is ~2×10^6 — above bar on average, but
+    // not so far that other worldviews can't reasonably disagree.
     expect(out.evDALYs).toBeGreaterThan(1e10);
     expect(out.evDALYs).toBeLessThan(1e15);
   });

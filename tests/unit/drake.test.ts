@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { makeRng } from '../../src/lib/rng';
 import { sampleDrake, defaultDrakeRanges } from '../../src/model/drake';
+import { BIOSPHERE_LIFETIME_YEARS } from '../../src/constants/defaults';
 
 describe('sampleDrake', () => {
   it('returns finite, non-negative N and N_detectable ≤ N', () => {
@@ -47,5 +48,34 @@ describe('sampleDrake', () => {
     const ranges = defaultDrakeRanges();
     const s = sampleDrake(r, ranges);
     expect(s.N_detectable).toBeCloseTo(s.N * s.components.fd, 4);
+  });
+});
+
+// Biosignature searches look for life, not civilisations. The count they need is
+// life-bearing planets: R* × fₚ × nₑ × fₗ × (how long a planet stays life-bearing).
+describe('life-bearing planets', () => {
+  it('N_lifeDetectable = R·fp·ne·fl·T_biosphere·f_d when that exceeds N', () => {
+    const r = makeRng('drake-life');
+    const ranges = defaultDrakeRanges();
+    ranges.fl = { min: 0.5, max: 1 };
+    const s = sampleDrake(r, ranges);
+    const c = s.components;
+    const life = c.R * c.fp * c.ne * c.fl * BIOSPHERE_LIFETIME_YEARS;
+    expect(life).toBeGreaterThan(s.N);
+    expect(s.N_lifeDetectable / (life * c.fd)).toBeCloseTo(1, 10);
+  });
+
+  it('every civilisation lives on a life-bearing planet: N_lifeDetectable ≥ N_detectable', () => {
+    const r = makeRng('drake-life-2');
+    const ranges = defaultDrakeRanges();
+    ranges.L = { min: 1e9, max: 1e10 };
+    for (let i = 0; i < 2000; i++) {
+      const s = sampleDrake(r, ranges);
+      expect(s.N_lifeDetectable).toBeGreaterThanOrEqual(s.N_detectable);
+    }
+  });
+
+  it('uses Earth’s record for how long a biosphere lasts (~3 billion years)', () => {
+    expect(BIOSPHERE_LIFETIME_YEARS).toBe(3e9);
   });
 });

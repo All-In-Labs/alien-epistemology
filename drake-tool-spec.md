@@ -30,7 +30,10 @@ A React SPA that evaluates "searching for alien civilisations" as an EA cause ar
 - **Probes** (§5.2) cannot detect anything within a decade (travel time ≈ 20 years at 0.2c), so they have zero in-decade detection probability.
 - **RETINA is off by default.** Only SETI is on, as §5.2 originally said.
 - **Presets** use descriptive names (Strong longtermist, Filter pessimist, Moderate longtermist), not people's names. Their dial values aren't sourced from those people (e.g. Ord argues against pure time discounting).
-- **Permalinks** are schema v4.
+- **Detection has survey reach** (§5.2). Each method's per-target detection probability is `p_m = r_m × (1 − exp(−s_m × c_m_$B))`: reach `r_m` (share of the galaxy its instruments can cover this decade, log-uniform) times the old Poisson term, with `s_m` now per target *in reach*. Spend never raises reach. Defaults, built from published surveys ÷ 1–4×10¹¹ stars: radio 1e-8–1e-3 (Sheikh 2025; Gajjar 2021; Margot 2026), optical/IR 1e-8–3e-3 (Tellis & Marcy 2017; Suazo 2022), biosignatures 1e-12–1e-9 (STScI 2025), RETINA 1e-12–1e-6 (a guess; no source). In-reach sensitivities are still placeholders: 0.1–100 per $1B-decade (radio, optical, RETINA), 0.001–1 (biosignatures). The old table's sensitivities treated every civilisation in the galaxy as within reach; at the defaults they put P(SETI detects something this decade) at ~16%, now ~5%.
+- **Biosignature searches count life-bearing planets**, R* × f_p × n_e × f_l × 3×10⁹ yr × f_d, not detectable civilisations.
+- **Comparator bars** (§7.2) are published figures with named sources: cage-free campaigns 1.7–200× (titotal 2024, replicating RP; dot = RP CCM default 71×), biosecurity 0.06–800× (Millett & Snyder-Beattie 2017, future generations counted, undiscounted). AI safety and the CCM/Founders Pledge biosecurity bars are dropped: no published figure their authors stand behind.
+- **Permalinks** are schema v5. v1–v4 links keep which methods are on and their costs, and take the new reach and sensitivity defaults.
 
 ## 1. Goal
 
@@ -142,12 +145,14 @@ Defaults (decadal marginal cost in USD):
 | Interstellar probe R&D (Starshot-style) | 100M | 500M | 5B | 1e-6 | 1e-5 | 1e-4 | probe |
 | RETINA (passive radar) | 1M | 5M | 50M | 1e-6 | 1e-4 | 1e-2 | passive_radar |
 
+**[Superseded — see §0. These sensitivities treated every civilisation in the galaxy as within reach. Methods now have a sourced survey reach, and sensitivities are per target in reach.]**
+
 These sensitivity numbers are **rough placeholders.** A user with domain expertise (and Jonny in particular for RETINA) should refine them. The tool should make it easy to adjust them and explain in tooltips that these are the most uncertain numbers in the whole model.
 
 **Combined detection probability:**
 
 For each method `m` that is enabled, with cost `c_m` and sensitivity `s_m`:
-- Per-civ-per-decade detection probability: `p_m = 1 - exp(-s_m × c_m / 1e9)`
+- Per-civ-per-decade detection probability: `p_m = 1 - exp(-s_m × c_m / 1e9)` **[now `r_m × (1 − exp(−s_m × c_m / 1e9))` with survey reach `r_m`; see §0]**
 - Probability *this* method detects at least one of `N_detectable` civs: `P_m = 1 - (1 - p_m)^N_detectable`
 - Combined: `P_detect = 1 - Π_m (1 - P_m)`
 
@@ -326,6 +331,8 @@ Display these as horizontal bars next to the tool's output (all in "× GiveWell-
 | Biosecurity / pandemic prep | 0.1×–1000× | OPP estimates |
 
 These should display as ranges (whiskers), not point values, to be honest about disagreement.
+
+**[Superseded — see §0. The table's ranges had no sources behind them. The chart now shows only published figures; AI safety has none its authors stand behind, so it is listed as "not shown".]**
 
 ### 7.3 Histogram & summary stats
 
