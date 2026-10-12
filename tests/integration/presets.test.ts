@@ -21,7 +21,7 @@ function runWithPreset(id: PresetId, seed: string) {
 }
 
 describe('preset acceptance — spec §10 #2', () => {
-  it('Ord Moderate default must NOT be "obviously top EA cause" (sanity bound)', () => {
+  it('Moderate longtermist (id ord) default must NOT be "obviously top EA cause" (sanity bound)', () => {
     const out = runWithPreset('ord', 'preset-ord');
     expect(Number.isFinite(out.evDALYs)).toBe(true);
     expect(Math.abs(out.evDALYs)).toBeLessThan(1e15);

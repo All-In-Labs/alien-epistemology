@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { makeRng } from '../../src/lib/rng';
 import {
   pDetectGivenN,
+  pDetectPerMethod,
+  totalDecadalCostMillions,
   type DetectionMethodState,
   defaultDetectionState,
 } from '../../src/model/detection';
@@ -57,5 +59,28 @@ describe('pDetectGivenN', () => {
     const pAll = pDetectGivenN(r1, all, 1000);
     const pFewer = pDetectGivenN(r2, fewer, 1000);
     expect(pAll).toBeGreaterThanOrEqual(pFewer);
+  });
+});
+
+describe('interstellar probes cannot detect anything within the decade', () => {
+  it('a probe-only programme has zero detection probability but still costs money', () => {
+    const methods = defaultDetectionState().map((m) => ({ ...m, on: m.id === 'probe' }));
+    const r = makeRng('probe-only');
+    for (const N of [1, 1e3, 1e9]) {
+      expect(pDetectGivenN(r, methods, N)).toBe(0);
+      expect(pDetectPerMethod(r, methods, N).byMethod.probe).toBe(0);
+    }
+    expect(totalDecadalCostMillions(methods)).toBeGreaterThan(0);
+  });
+
+  it('adding probes to SETI leaves the detection probability unchanged', () => {
+    const seti = defaultDetectionState().map((m) => ({ ...m, on: m.id === 'seti' }));
+    const both = defaultDetectionState().map((m) => ({
+      ...m,
+      on: m.id === 'seti' || m.id === 'probe',
+    }));
+    const a = pDetectGivenN(makeRng('same'), seti, 1e4);
+    const b = pDetectGivenN(makeRng('same'), both, 1e4);
+    expect(b).toBe(a);
   });
 });

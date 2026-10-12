@@ -13,8 +13,6 @@ export function usePermalink(): void {
   const methods = useStore((s) => s.methods);
   const channels = useStore((s) => s.channels);
   const worldview = useStore((s) => s.worldview);
-  const cosmology = useStore((s) => s.cosmology);
-  const grabby = useStore((s) => s.grabby);
   const overrides = useStore((s) => s.overrides);
   const valueUncertainty = useStore((s) => s.valueUncertainty);
   const flDistribution = useStore((s) => s.flDistribution);
@@ -47,8 +45,6 @@ export function usePermalink(): void {
     methods,
     channels,
     worldview,
-    cosmology,
-    grabby,
     overrides,
     valueUncertainty,
     flDistribution,

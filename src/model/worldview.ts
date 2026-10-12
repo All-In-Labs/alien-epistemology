@@ -40,8 +40,6 @@ export interface WorldviewDials {
   filterPriorBehind: number;
   /** Which secondary GiveWell number the verdict shows (mean / median / 25th percentile). */
   riskAversion: RiskAversion;
-  /** Grabby Aliens mixing weight for hybrid cosmology (used in phase 5). */
-  grabbyCredence: number;
 }
 
 export interface ChannelContributions {
@@ -64,7 +62,6 @@ export function defaultWorldview(): WorldviewDials {
     hingeyness: 0.1,
     filterPriorBehind: 0.5,
     riskAversion: 'average',
-    grabbyCredence: 0.1,
   };
 }
 

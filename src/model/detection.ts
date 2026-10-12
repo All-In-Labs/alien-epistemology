@@ -15,6 +15,7 @@ import { logUniform } from '../lib/sampling';
 import {
   DETECTION_DEFAULTS,
   DETECTION_METHOD_ORDER,
+  NO_IN_DECADE_DETECTION,
   type DetectionMethodId,
   type DetectionType,
 } from '../constants/detectionDefaults';
@@ -74,6 +75,8 @@ export function pDetectGivenN(
     if (!m.on) continue;
     if (m.costM <= 0) continue;
     anyOn = true;
+    // Probes can't report back within the decade: cost, but no detection chance.
+    if (NO_IN_DECADE_DETECTION.includes(m.type)) continue;
     const s = logUniform(rng, m.sensMin, m.sensMax);
     const c_B = m.costM / 1000; // convert M$ to $B-decade
     const p_m = 1 - Math.exp(-s * c_B); // per civ per decade
@@ -110,6 +113,7 @@ export function pDetectPerMethod(
   for (const m of methods) {
     if (!m.on || m.costM <= 0) continue;
     anyOn = true;
+    if (NO_IN_DECADE_DETECTION.includes(m.type)) continue;
     const s = logUniform(rng, m.sensMin, m.sensMax);
     const c_B = m.costM / 1000;
     const p_m = 1 - Math.exp(-s * c_B);

@@ -10,43 +10,41 @@ import type { DetectionMethodState } from '../model/detection';
 import { NO_VALUE_UNCERTAINTY, type ChannelsState, type ValueUncertainty } from '../model/value';
 import type { FlDistribution } from '../constants/defaults';
 import { normalizeRiskAversion, type WorldviewDials } from '../model/worldview';
-import type { GrabbyState } from '../model/grabby';
-import type { CosmologyMode, PriorOverrides } from '../model/monteCarlo';
+import type { PriorOverrides } from '../model/monteCarlo';
 
-/** v=1: original shape (no astroLocked). Used for migration only. */
-interface SerializedStateV1 {
-  v: 1;
+/**
+ * Fields common to v1–v3. Those versions also carried `cosmology` and `grabby` (the
+ * removed Grabby Aliens mode); they are read loosely here and dropped on migration.
+ */
+interface LegacyCommon {
   drakeRanges: DrakeRanges;
   methods: DetectionMethodState[];
   channels: ChannelsState;
-  worldview: WorldviewDials;
-  cosmology: CosmologyMode;
-  grabby: GrabbyState;
+  worldview: WorldviewDials & { grabbyCredence?: unknown };
+  cosmology?: unknown;
+  grabby?: unknown;
   overrides: PriorOverrides;
 }
 
-/** v=2: adds astroLocked so the lock state survives URL share. Used for migration only. */
-interface SerializedStateV2 {
-  v: 2;
-  drakeRanges: DrakeRanges;
-  methods: DetectionMethodState[];
-  channels: ChannelsState;
-  worldview: WorldviewDials;
-  cosmology: CosmologyMode;
-  grabby: GrabbyState;
-  overrides: PriorOverrides;
-  astroLocked: boolean;
-}
-
+/** v=1: original shape (no astroLocked). */
+type SerializedStateV1 = LegacyCommon & { v: 1 };
+/** v=2: adds astroLocked. */
+type SerializedStateV2 = LegacyCommon & { v: 2; astroLocked: boolean };
 /** v=3: adds valueUncertainty and flDistribution. */
-export interface SerializedState {
+type SerializedStateV3 = LegacyCommon & {
   v: 3;
+  astroLocked: boolean;
+  valueUncertainty: ValueUncertainty;
+  flDistribution: FlDistribution;
+};
+
+/** v=4: drops the Grabby Aliens mode (cosmology, grabby, worldview.grabbyCredence). */
+export interface SerializedState {
+  v: 4;
   drakeRanges: DrakeRanges;
   methods: DetectionMethodState[];
   channels: ChannelsState;
   worldview: WorldviewDials;
-  cosmology: CosmologyMode;
-  grabby: GrabbyState;
   overrides: PriorOverrides;
   valueUncertainty: ValueUncertainty;
   flDistribution: FlDistribution;
@@ -57,13 +55,26 @@ export interface SerializedState {
  * Links made before v3 had no value uncertainty and log-uniform f_l. Migrating them to
  * exactly that keeps an old link as close as possible to what its author saw.
  */
-function migrateV2(v2: SerializedStateV2): SerializedState {
+function migrateV2(v2: SerializedStateV2): SerializedStateV3 {
   return {
     ...v2,
     v: 3,
     valueUncertainty: { ...NO_VALUE_UNCERTAINTY },
     flDistribution: 'log-uniform',
   };
+}
+
+/**
+ * v3 → v4: drop the Grabby Aliens fields. A link that was in Grabby or Hybrid mode now
+ * opens in the standard (SDO) model; its other settings carry over unchanged.
+ */
+function migrateV3(v3: SerializedStateV3): SerializedState {
+  const { cosmology: _c, grabby: _g, worldview, ...rest } = v3;
+  void _c;
+  void _g;
+  const { grabbyCredence: _gc, ...wv } = worldview;
+  void _gc;
+  return { ...rest, worldview: wv, v: 4 };
 }
 
 function base64urlEncode(bytes: Uint8Array): string {
@@ -108,12 +119,15 @@ function decodeAnyVersion(s: string): SerializedState {
   const obj = JSON.parse(json) as { v?: number };
   if (obj.v === 1) {
     const v1 = obj as unknown as SerializedStateV1;
-    return migrateV2({ ...v1, v: 2, astroLocked: false });
+    return migrateV3(migrateV2({ ...v1, v: 2, astroLocked: false }));
   }
   if (obj.v === 2) {
-    return migrateV2(obj as unknown as SerializedStateV2);
+    return migrateV3(migrateV2(obj as unknown as SerializedStateV2));
   }
   if (obj.v === 3) {
+    return migrateV3(obj as unknown as SerializedStateV3);
+  }
+  if (obj.v === 4) {
     return obj as unknown as SerializedState;
   }
   throw new Error(`Unknown permalink version: ${String(obj.v)}`);

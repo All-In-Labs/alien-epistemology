@@ -25,8 +25,6 @@ function captureState() {
     methods: structuredClone(s.methods),
     channels: structuredClone(s.channels),
     worldview: structuredClone(s.worldview),
-    cosmology: s.cosmology,
-    grabby: structuredClone(s.grabby),
     overrides: structuredClone(s.overrides),
     valueUncertainty: structuredClone(s.valueUncertainty),
     flDistribution: s.flDistribution,
@@ -39,8 +37,6 @@ function runSweep(state: ReturnType<typeof captureState>, seed: string): number 
     methods: state.methods,
     channels: state.channels,
     worldview: state.worldview,
-    cosmology: state.cosmology,
-    grabby: state.grabby,
     overrides: state.overrides,
     valueUncertainty: state.valueUncertainty,
     flDistribution: state.flDistribution,
@@ -282,8 +278,6 @@ export function Ch06Tornado() {
   const methods = useStore((s) => s.methods);
   const channels = useStore((s) => s.channels);
   const worldview = useStore((s) => s.worldview);
-  const cosmology = useStore((s) => s.cosmology);
-  const grabby = useStore((s) => s.grabby);
   const overrides = useStore((s) => s.overrides);
   const valueUncertainty = useStore((s) => s.valueUncertainty);
   const flDistribution = useStore((s) => s.flDistribution);
@@ -357,8 +351,6 @@ export function Ch06Tornado() {
     methods,
     channels,
     worldview,
-    cosmology,
-    grabby,
     overrides,
     valueUncertainty,
     flDistribution,

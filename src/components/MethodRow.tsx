@@ -6,14 +6,18 @@ import { Tooltip } from './Tooltip';
 import { CitationLink } from './CitationLink';
 import { useStore } from '../store';
 import type { DetectionMethodState } from '../model/detection';
-import { DETECTION_DEFAULTS, type DetectionMethodId } from '../constants/detectionDefaults';
+import {
+  DETECTION_DEFAULTS,
+  NO_IN_DECADE_DETECTION,
+  type DetectionMethodId,
+} from '../constants/detectionDefaults';
 
 const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
   seti: (
     <>
       <p>
-        <strong>SETI radio.</strong> Breakthrough Listen + Allen Telescope Array; narrow-band
-        radio surveys of nearby stars and the galactic plane.
+        <strong>SETI radio.</strong> Breakthrough Listen + Allen Telescope Array; narrow-band radio
+        surveys of nearby stars and the galactic plane.
       </p>
       <p className="mt-2">
         For scale: Breakthrough Listen was funded at $100M over 10 years (2015). Costs here are
@@ -24,8 +28,8 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
   tech: (
     <>
       <p>
-        <strong>Technosignature search.</strong> Optical SETI, Dyson-sphere infrared anomalies,
-        NIR transit anomalies. Wider net than radio but at different sensitivity. See{' '}
+        <strong>Technosignature search.</strong> Optical SETI, Dyson-sphere infrared anomalies, NIR
+        transit anomalies. Wider net than radio but at different sensitivity. See{' '}
         <CitationLink cite="wright2014" text="Wright et al. 2014 (G-HAT)" />.
       </p>
     </>
@@ -33,10 +37,9 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
   bio: (
     <>
       <p>
-        <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now; the
-        Habitable Worlds Observatory is proposed for launch in the 2040s. Detects microbial life
-        via O₂/CH₄ disequilibria. Channel
-        C and D do not fire under biosig detection (per spec §5.3).
+        <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now; the Habitable
+        Worlds Observatory is proposed for launch in the 2040s. Detects microbial life via O₂/CH₄
+        disequilibria. Channel C and D do not fire under biosig detection (per spec §5.3).
       </p>
     </>
   ),
@@ -46,8 +49,9 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         <strong>Interstellar probe R&amp;D.</strong> Breakthrough Starshot-style; multi-decade
         payoff. Decadal R&amp;D spend.{' '}
         <CitationLink cite="armstrongSandberg" text="Armstrong & Sandberg 2013" /> on
-        probe-feasibility. A probe launched now would not return results within the decade this
-        model scores.
+        probe-feasibility. It cannot detect anything within the decade this model scores: at
+        Starshot&rsquo;s target of ~20% of light speed a probe needs ~20 years to reach Alpha
+        Centauri, plus 4.4 years for its signal to come back. Funding it here adds cost only.
       </p>
     </>
   ),
@@ -55,8 +59,8 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
     <>
       <p>
         <strong>RETINA passive radar.</strong> Multistatic passive radar reusing terrestrial
-        broadcast illumination — much cheaper than active scanning. Built for aircraft detection,
-        so it can only see artefacts that enter the airspace its transmitters illuminate.
+        broadcast illumination — much cheaper than active scanning. Built for aircraft detection, so
+        it can only see artefacts that enter the airspace its transmitters illuminate.
       </p>
     </>
   ),
@@ -97,17 +101,22 @@ export function MethodRow({ method }: MethodRowProps) {
   // explore. Spec §10 #7 calls these "the most uncertain numbers in the model" —
   // they need to be tuneable, not display-only.
   const specBounds = DETECTION_DEFAULTS[cfg.id].sensitivity;
+  const noInDecade = NO_IN_DECADE_DETECTION.includes(cfg.type);
   const sliderMin = specBounds.min / 10;
   const sliderMax = specBounds.max * 10;
 
   return (
     <div className="grid grid-cols-[40px_1fr] lg:grid-cols-[40px_1fr_140px_200px_120px] gap-3 lg:gap-5 items-center py-4 lg:py-4.5 border-b border-edge last:border-b-0">
-      <Toggle on={cfg.on} onChange={(v) => { setMethodOn(cfg.id, v); }} label={cfg.id} />
+      <Toggle
+        on={cfg.on}
+        onChange={(v) => {
+          setMethodOn(cfg.id, v);
+        }}
+        label={cfg.id}
+      />
       <div>
         <div className="flex items-center gap-1.5">
-          <div
-            className={`font-sans text-sm font-semibold ${cfg.on ? 'text-ink' : 'text-muted'}`}
-          >
+          <div className={`font-sans text-sm font-semibold ${cfg.on ? 'text-ink' : 'text-muted'}`}>
             {labelFor(cfg.id)}
           </div>
           <Tooltip>{METHOD_TOOLTIPS[cfg.id]}</Tooltip>
@@ -137,30 +146,36 @@ export function MethodRow({ method }: MethodRowProps) {
           aria-label={`${cfg.id} cost`}
         />
       </div>
-      <div className="col-span-2 lg:col-span-1">
-        <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em] flex justify-between">
-          <span>log sensitivity</span>
-          <span className="opacity-70">
-            10{supScript(Math.round(Math.log10(cfg.sensMin)))}–10
-            {supScript(Math.round(Math.log10(cfg.sensMax)))}
-          </span>
+      {noInDecade ? (
+        <div className="col-span-2 lg:col-span-1 font-serif text-[13px] text-muted leading-snug">
+          No detections possible within a decade: travel time alone is ~20 years. Adds cost only.
         </div>
-        <div className="mt-2">
-          <DualLogTrack
-            rangeMin={sliderMin}
-            rangeMax={sliderMax}
-            loValue={cfg.sensMin}
-            hiValue={cfg.sensMax}
-            onChange={(lo, hi) => {
-              setMethodSensitivity(cfg.id, lo, hi);
-            }}
-            ariaLabelLo={`${cfg.id} sensitivity minimum`}
-            ariaLabelHi={`${cfg.id} sensitivity maximum`}
-            fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
-          />
+      ) : (
+        <div className="col-span-2 lg:col-span-1">
+          <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em] flex justify-between">
+            <span>log sensitivity</span>
+            <span className="opacity-70">
+              10{supScript(Math.round(Math.log10(cfg.sensMin)))}–10
+              {supScript(Math.round(Math.log10(cfg.sensMax)))}
+            </span>
+          </div>
+          <div className="mt-2">
+            <DualLogTrack
+              rangeMin={sliderMin}
+              rangeMax={sliderMax}
+              loValue={cfg.sensMin}
+              hiValue={cfg.sensMax}
+              onChange={(lo, hi) => {
+                setMethodSensitivity(cfg.id, lo, hi);
+              }}
+              ariaLabelLo={`${cfg.id} sensitivity minimum`}
+              ariaLabelHi={`${cfg.id} sensitivity maximum`}
+              fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
+            />
+          </div>
+          <div className="font-mono text-[11px] text-muted mt-1">per civ · per $1B-decade</div>
         </div>
-        <div className="font-mono text-[11px] text-muted mt-1">per civ · per $1B-decade</div>
-      </div>
+      )}
       <div className="hidden lg:block">
         <Sparkline
           values={fakePreview(`A-m-${cfg.id}`, cfg.on)}

@@ -94,33 +94,21 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Grabby Aliens cosmology (<CitationLink cite="hansonGrabby" text="Hanson 2021" />) is
-            simplified per spec §11.6: a single <em>P(we are inside a grabby zone)</em> sampled
-            log-uniformly between user bounds, rather than Hanson's full expansion-rate dynamics.
-            When inside a grabby zone, <em>N_detectable</em> is treated as saturated (1×10⁶).
-            Note that Hanson et al. fit their expansion speed on the premise that we are{' '}
-            <em>not</em> inside a grabby volume, so this framing departs from their model.
+            <strong>No Grabby Aliens mode.</strong> An earlier version offered one, modelled as
+            a chance that we are inside an expanding civilisation&rsquo;s territory. But{' '}
+            <CitationLink cite="hansonGrabby" text="Hanson et al. 2021" /> fit their model on the
+            premise that we are <em>not</em>, so it contradicted the paper it cited. The scenario
+            it was really capturing &mdash; &ldquo;they&rsquo;re already here&rdquo; &mdash; lives
+            in the prior overrides, just after Ch.4.
           </>
         ),
       },
       {
         text: (
           <>
-            Hybrid cosmology mixes SDO and Grabby branches per-sample by{' '}
-            <em>worldview.grabbyCredence</em>; not a posterior weighted average.
-          </>
-        ),
-      },
-      {
-        text: (
-          <>
-            <strong>Only the SDO branch is calibrated.</strong> With SDO&rsquo;s fₗ model and
-            their Table 1 ranges it reproduces <CitationLink cite="sdo2018" text="SDO 2018" />
-            &rsquo;s pre-Fermi 52% (see <em>drake-sdo.test.ts</em>). The Grabby branch has no
-            anchor against{' '}
-            <CitationLink cite="hansonGrabby" text="Hanson 2021" />'s published density /
-            expansion-rate numbers — our "P(inside zone)" framing doesn't cleanly map to
-            them. Treat Grabby-mode output with higher uncertainty than SDO-mode output.
+            <strong>Calibration.</strong> With SDO&rsquo;s fₗ model and their Table 1 ranges,
+            the Drake model reproduces <CitationLink cite="sdo2018" text="SDO 2018" />
+            &rsquo;s pre-Fermi 52% (see <em>drake-sdo.test.ts</em>).
           </>
         ),
       },
@@ -163,14 +151,6 @@ const CATEGORIES: Category[] = [
             The default sensitivity coefficients are <strong>placeholders</strong> awaiting
             domain-expert refinement. Spec §10 #7 explicitly flags these as "the most uncertain
             numbers in the model."
-          </>
-        ),
-      },
-      {
-        text: (
-          <>
-            Under Grabby Aliens, probe + passive_radar sensitivities are boosted by{' '}
-            <strong>50×</strong> (midpoint of spec's 10–100× range). Other methods unchanged.
           </>
         ),
       },

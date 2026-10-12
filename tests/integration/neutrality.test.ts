@@ -66,17 +66,17 @@ describe('epistemic-neutrality calibration — spec §10 #5', () => {
     expect(dark.out.pNegativeEV).toBeGreaterThan(0.01);
   });
 
-  it('Ord Moderate is not "obviously a top EA cause" (CLAUDE.md hard rule)', () => {
+  it('Moderate longtermist is not "obviously a top EA cause" (CLAUDE.md hard rule)', () => {
     const results = runAllPresets();
     const ord = results.find((r) => r.id === 'ord');
     if (!ord) throw new Error('ord preset missing from PRESETS');
     // "Obviously top EA cause" would mean almost all multiplier mass clears the bar.
-    // The Ord Moderate preset MUST land short of that — the spec's most important
+    // The Moderate longtermist preset (id 'ord') MUST land short of that — the spec's most important
     // honesty check. If this fails, defaults are biased.
     expect(ord.out.pAboveGiveWell).toBeLessThan(0.8);
   });
 
-  it('Ord Moderate’s own summary number (typical world) is below the GiveWell bar', () => {
+  it('Moderate longtermist’s own summary number (typical world) is below the GiveWell bar', () => {
     const results = runAllPresets();
     const ord = results.find((r) => r.id === 'ord');
     const preset = PRESETS.find((p) => p.id === 'ord');
@@ -119,7 +119,7 @@ describe('epistemic neutrality at the site defaults', () => {
     expect(worse.some((p) => p > 0.05 && p < 0.95)).toBe(true);
   });
 
-  it('Ord Moderate’s typical-world number is below the GiveWell bar', () => {
+  it('Moderate longtermist’s typical-world number is below the GiveWell bar', () => {
     const ord = runSiteDefaults().find((r) => r.id === 'ord');
     const preset = PRESETS.find((p) => p.id === 'ord');
     if (!ord || !preset) throw new Error('ord preset missing');

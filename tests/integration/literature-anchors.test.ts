@@ -12,7 +12,7 @@ import { defaultDetectionState } from '../../src/model/detection';
 import { applyPreset, PRESETS } from '../../src/presets/worldviews';
 
 const BOSTROM_PRESET = PRESETS.find((p) => p.id === 'bostrom');
-if (!BOSTROM_PRESET) throw new Error('Bostrom preset missing — required by literature anchors');
+if (!BOSTROM_PRESET) throw new Error('Strong longtermist preset (id bostrom) missing — required by literature anchors');
 
 describe('literature anchor: SDO 2018 (arXiv:1806.02404)', () => {
   // Sandberg, Drexler & Ord (2018), "Dissolving the Fermi Paradox."
@@ -73,34 +73,6 @@ describe('literature anchor: SDO 2018 (arXiv:1806.02404)', () => {
   });
 });
 
-describe('literature anchor: Hanson 2021 Grabby Aliens — uncalibrated regression net', () => {
-  // Hanson, Martin, McCarter & Paulson (2021), "If Loud Aliens Explain Human Earliness,
-  // Quiet Aliens Are Also Rare," arXiv:2102.01522.
-  //
-  // Per spec §11.6 the Grabby branch is a v1 simplification: we sample
-  // P(we are inside a grabby zone) log-uniformly between user bounds, and saturate
-  // N_detectable at 1e6 when inside. This doesn't map cleanly to Hanson's published
-  // expansion-rate / density numbers — so no external anchor is available.
-  //
-  // What this test does instead: pin the current Grabby-mode output as a regression net.
-  // If a future change to grabby.ts shifts these numbers, this test will surface it so
-  // the change can be reviewed deliberately rather than landing silently.
-
-  it('default Grabby state with no SDO Drake gives pNGteOne in the documented range', () => {
-    const out = runDrakeMC({
-      ranges: defaultDrakeRanges(),
-      cosmology: 'grabby',
-      grabby: { zoneCredenceMin: 0.05, zoneCredenceMax: 0.5 },
-      n: 50_000,
-      seed: 'literature-grabby-regression',
-    });
-    // With log-uniform sampling between 0.05 and 0.5, mean P(inside) ≈ 0.17 (geomean of
-    // log-uniform bounds). Across MC samples, fraction with N=1e6 ≈ 0.17 ⇒ pNGteOne ≈ 0.17.
-    expect(out.pNGteOne).toBeGreaterThan(0.10);
-    expect(out.pNGteOne).toBeLessThan(0.30);
-  });
-});
-
 describe('literature anchor: Bostrom 2003 Astronomical Waste (Channel B)', () => {
   // Bostrom (2003), "Astronomical Waste," nickbostrom.com/papers/astronomical-waste/.
   //
@@ -135,8 +107,8 @@ describe('literature anchor: Bostrom 2003 Astronomical Waste (Channel B)', () =>
     expect(out.evDALYs).toBeGreaterThan(1e32);
   });
 
-  it('with our default V_cosmic_endowment = 10^16, the Bostrom preset gives a moderate longtermist verdict', () => {
-    // At the default conservatism, the Bostrom preset still favours alien-finding —
+  it('with our default V_cosmic_endowment = 10^16, the Strong longtermist preset (id bostrom) gives a moderate longtermist verdict', () => {
+    // At the default conservatism, the Strong longtermist preset (id 'bostrom') still favours alien-finding —
     // but at a magnitude where reasonable disagreement is possible. This is the
     // "epistemic neutrality" property the conservatism buys us.
     const { worldview, channels } = applyPreset(BOSTROM_PRESET);

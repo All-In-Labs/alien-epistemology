@@ -13,18 +13,11 @@ import {
 } from './value';
 import { applyWorldview, defaultWorldview, type WorldviewDials } from './worldview';
 import type { FlDistribution } from '../constants/defaults';
-import {
-  sampleGrabbyZoneCredence,
-  sensitivityBoostFor,
-  type GrabbyState,
-} from './grabby';
 import { makeRng } from '../lib/rng';
 import type { DetectionType } from '../constants/detectionDefaults';
 
-export type CosmologyMode = 'sdo' | 'grabby' | 'hybrid';
-
 export interface PriorOverrides {
-  /** When set, P(N≥1) is replaced by this value, bypassing Drake/Grabby for the partition stat.
+  /** When set, P(N≥1) is replaced by this value, bypassing Drake for the partition stat.
    *  N_detectable is sampled from a Bernoulli(value) ⇒ N=fixed-large when alive, 0 otherwise.  */
   overridePNGteOne?: number | undefined;
   /** When set, P(detection|aliens) is floored at this value (for users who think
@@ -40,10 +33,6 @@ export interface DrakeMCInput {
   channels?: ChannelsState;
   /** Optional worldview transforms. When provided, channel-values are transformed before EV is summed. */
   worldview?: WorldviewDials;
-  /** Cosmological framework. Default 'sdo'. */
-  cosmology?: CosmologyMode;
-  /** Grabby Aliens state — used when cosmology = grabby or hybrid. */
-  grabby?: GrabbyState;
   /** Optional Bayesian-shortcut prior overrides per spec §5.5. */
   overrides?: PriorOverrides;
   /** Per-sample uncertainty on value magnitudes and Channel B shifts. Default: none. */
@@ -104,8 +93,6 @@ export function runDrakeMC({
   methods,
   channels,
   worldview,
-  cosmology = 'sdo',
-  grabby,
   overrides,
   valueUncertainty = NO_VALUE_UNCERTAINTY,
   flDistribution = 'log-uniform',
@@ -126,15 +113,6 @@ export function runDrakeMC({
   let pNGtOneSum = 0;
   let detectionSum = 0;
   let evSum = 0;
-
-  const grabbyBoosted: DetectionMethodState[] | undefined =
-    methods !== undefined && cosmology !== 'sdo'
-      ? methods.map((m) => ({
-          ...m,
-          sensMin: m.sensMin * sensitivityBoostFor(m.type),
-          sensMax: m.sensMax * sensitivityBoostFor(m.type),
-        }))
-      : undefined;
 
   // Pre-compute worldview-transformed per-channel values for every non-empty subset of
   // detection types (31 subsets of 5 types, keyed by bitmask). Channel B is stored per
@@ -189,27 +167,10 @@ export function runDrakeMC({
     return i < 0 ? 0 : 1 << i;
   };
 
-  const grabbyWeight = wv.grabbyCredence;
-
   for (let i = 0; i < n; i++) {
-    let useGrabby = false;
-    if (cosmology === 'grabby') {
-      useGrabby = true;
-    } else if (cosmology === 'hybrid') {
-      useGrabby = rng() < grabbyWeight;
-    }
-    let N: number;
-    let N_detectable: number;
-    if (useGrabby && grabby !== undefined) {
-      const zoneP = sampleGrabbyZoneCredence(rng, grabby);
-      const inside = rng() < zoneP;
-      N = inside ? 1e6 : 0;
-      N_detectable = N;
-    } else {
-      const s = sampleDrake(rng, ranges, flDistribution);
-      N = s.N;
-      N_detectable = s.N_detectable;
-    }
+    const s = sampleDrake(rng, ranges, flDistribution);
+    let N = s.N;
+    let N_detectable = s.N_detectable;
     let overrideAlive: boolean | undefined = undefined;
     if (overrides?.overridePNGteOne !== undefined) {
       overrideAlive = rng() < overrides.overridePNGteOne;
@@ -242,7 +203,7 @@ export function runDrakeMC({
     }
 
     if (methods !== undefined) {
-      const m = useGrabby && grabbyBoosted ? grabbyBoosted : methods;
+      const m = methods;
       const per = pDetectPerMethod(rng, m, N_detectable);
       let pCombined = per.combined;
       if (overrides?.detectionFloor !== undefined && N_detectable > 0) {

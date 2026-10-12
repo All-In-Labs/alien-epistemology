@@ -65,11 +65,17 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
 
 - The headline stats are PAIRED — `P(N=0)` and `P(N≥1)`. Never display only one. Both must have
   identical typographic and chromatic weight.
-- The Ord Moderate preset must NOT produce "obviously a top EA cause" with default settings.
+- The Moderate longtermist preset (id `ord`) must NOT produce "obviously a top EA cause" with default settings.
   If it does, defaults are biased. Fix.
 - RETINA is in the same UI list as everything else; it doesn't get special billing.
-- Hanson's Grabby Aliens model is included but its premises are contested (per Azad). The
-  cosmology selector treats SDO/Grabby/Hybrid as equal options visually.
+- Presets have descriptive names ("Strong longtermist", "Filter pessimist", "Moderate
+  longtermist"), not people's names: their dial values aren't sourced from anyone's stated
+  views (e.g. Ord argues against pure time discounting). Keep it that way.
+- There is no Grabby Aliens mode. It was removed because it modelled "we are inside a grabby
+  volume", which Hanson et al. 2021 rule out by construction. "They're already here" lives in
+  the prior overrides. Permalinks v1–v3 drop the old `cosmology` / `grabby` fields on decode.
+- Interstellar probes can't return a detection within the model's decade (travel time), so
+  the probe method has zero detection probability: funding it only adds cost.
 - Per-method detection sensitivity coefficients are the most uncertain numbers in the model.
   The Ch.2 italic block-quote says so.
 - The verdict histogram only shows positive multipliers. P(EV<0) is shown as a separate stat
@@ -92,7 +98,7 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   slider switches to a custom log-uniform range. `runDrakeMC` itself still defaults to
   log-uniform, so tests that want what visitors see must pass `flDistribution` and
   `valueUncertainty` explicitly (see `neutrality.test.ts`, "at the site defaults").
-- Permalinks are schema v3. v1/v2 links migrate to zero value uncertainty and log-uniform fₗ,
+- Permalinks are schema v4. v1/v2 links migrate to zero value uncertainty and log-uniform fₗ,
   so old links keep their maths.
 - `pnpm` is via corepack (Node 22 bundles it). `.npmrc` disables `verifyDepsBeforeRun` and
   `ignored-builds-check` because `esbuild`'s build script is approved via

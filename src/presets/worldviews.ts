@@ -10,8 +10,7 @@ import {
   defaultDetectionState,
   type DetectionMethodState,
 } from '../model/detection';
-import { defaultGrabbyState, type GrabbyState } from '../model/grabby';
-import type { CosmologyMode, PriorOverrides } from '../model/monteCarlo';
+import type { PriorOverrides } from '../model/monteCarlo';
 
 export type PresetId =
   | 'bostrom'
@@ -36,19 +35,19 @@ export interface Preset {
     D: Partial<ChannelsState['D']>;
   }>;
   /** Optional full-state overrides — used by demo presets that load a complete
-   *  configuration in one shot (Drake bounds, methods, cosmology, overrides).
+   *  configuration in one shot (Drake bounds, methods, overrides).
    *  Each is applied as a full replacement of the corresponding state slice. */
   drakeRanges?: DrakeRanges;
   methods?: DetectionMethodState[];
-  cosmology?: CosmologyMode;
-  grabby?: GrabbyState;
   overrides?: PriorOverrides;
 }
 
 export const PRESETS: Preset[] = [
   {
     id: 'bostrom',
-    name: 'Bostrom Longtermist',
+    // Descriptive names, not people: the dial values below are illustrative and not
+    // sourced from any one author's stated views.
+    name: 'Strong longtermist',
     short: 'long-term, total-view, no discount',
     worldview: {
       longtermismStrength: 1.0,
@@ -58,13 +57,12 @@ export const PRESETS: Preset[] = [
       hingeyness: 0.5,
       filterPriorBehind: 0.5,
       riskAversion: 'average',
-      grabbyCredence: 0.1,
     },
   },
   {
     id: 'hanson',
-    name: 'Hanson Filter Pessimist',
-    short: 'filter likely ahead; weight C low',
+    name: 'Filter pessimist',
+    short: 'Great Filter probably ahead; aliens’ welfare counts little',
     worldview: {
       longtermismStrength: 0.7,
       timeDiscount: 0,
@@ -73,12 +71,11 @@ export const PRESETS: Preset[] = [
       hingeyness: 0.3,
       filterPriorBehind: 0.2,
       riskAversion: 'average',
-      grabbyCredence: 0.1,
     },
   },
   {
     id: 'ord',
-    name: 'Ord Moderate',
+    name: 'Moderate longtermist',
     short: 'typical-world view; mild discount',
     worldview: {
       longtermismStrength: 0.5,
@@ -88,7 +85,6 @@ export const PRESETS: Preset[] = [
       hingeyness: 0.2,
       filterPriorBehind: 0.5,
       riskAversion: 'typical',
-      grabbyCredence: 0.1,
     },
   },
   {
@@ -103,7 +99,6 @@ export const PRESETS: Preset[] = [
       hingeyness: 0,
       filterPriorBehind: 0.5,
       riskAversion: 'average',
-      grabbyCredence: 0,
     },
   },
   {
@@ -118,7 +113,6 @@ export const PRESETS: Preset[] = [
       hingeyness: 0.2,
       filterPriorBehind: 0.5,
       riskAversion: 'cautious',
-      grabbyCredence: 0.1,
     },
     // Dark Forest premises: detection chiefly tells us the lightcone is claimed (B's
     // tech-viability evidence is faint, lightcone-claim evidence is strong) and that
@@ -141,7 +135,6 @@ export const PRESETS: Preset[] = [
       hingeyness: 0.8,
       filterPriorBehind: 0.7,
       riskAversion: 'average',
-      grabbyCredence: 0.1,
     },
   },
   // ---- Demo presets — full-state configs that load every slider in one click.
@@ -160,7 +153,6 @@ export const PRESETS: Preset[] = [
       hingeyness: 1.0,
       filterPriorBehind: 0,
       riskAversion: 'average',
-      grabbyCredence: 0.1,
     },
     channels: {
       A: {
@@ -204,8 +196,6 @@ export const PRESETS: Preset[] = [
       { id: 'probe', type: 'probe', on: false, costM: 500, sensMin: 1e-6, sensMax: 1e-4 },
       { id: 'retina', type: 'passive_radar', on: true, costM: 1, sensMin: 0.01, sensMax: 0.01 },
     ],
-    cosmology: 'sdo',
-    grabby: defaultGrabbyState(),
     overrides: { overridePNGteOne: 1.0, detectionFloor: 1.0 },
   },
   {
@@ -220,7 +210,6 @@ export const PRESETS: Preset[] = [
       hingeyness: 0,
       filterPriorBehind: 0.5,
       riskAversion: 'average',
-      grabbyCredence: 0,
     },
     channels: {
       A: { on: false },
@@ -250,8 +239,6 @@ export const PRESETS: Preset[] = [
       { id: 'probe', type: 'probe', on: false, costM: 500, sensMin: 1e-6, sensMax: 1e-4 },
       { id: 'retina', type: 'passive_radar', on: false, costM: 5, sensMin: 1e-6, sensMax: 1e-2 },
     ],
-    cosmology: 'sdo',
-    grabby: defaultGrabbyState(),
     overrides: { overridePNGteOne: 1.0, detectionFloor: 1.0 },
   },
 ];
@@ -266,8 +253,6 @@ export interface AppliedPreset {
   channels: ChannelsState;
   drakeRanges?: DrakeRanges | undefined;
   methods?: DetectionMethodState[] | undefined;
-  cosmology?: CosmologyMode | undefined;
-  grabby?: GrabbyState | undefined;
   overrides?: PriorOverrides | undefined;
 }
 
@@ -284,8 +269,6 @@ export function applyPreset(preset: Preset): AppliedPreset {
     channels,
     drakeRanges: preset.drakeRanges,
     methods: preset.methods,
-    cosmology: preset.cosmology,
-    grabby: preset.grabby,
     overrides: preset.overrides,
   };
 }

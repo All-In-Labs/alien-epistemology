@@ -1,12 +1,8 @@
 import { useState } from 'react';
-import { Segmented } from './controls/Segmented';
 import { PermalinkButton } from './PermalinkButton';
 import { PermalinkChips } from './PermalinkChips';
-import { Tooltip } from './Tooltip';
-import { CitationLink } from './CitationLink';
 import { AssumptionsModal } from './AssumptionsModal';
 import { useStore } from '../store';
-import type { CosmologyMode } from '../model/monteCarlo';
 
 interface MastheadProps {
   presenter: boolean;
@@ -14,10 +10,6 @@ interface MastheadProps {
 }
 
 export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
-  const cosmology = useStore((s) => s.cosmology);
-  const setCosmology = useStore((s) => s.setCosmology);
-  const worldview = useStore((s) => s.worldview);
-  const patchWorldview = useStore((s) => s.patchWorldview);
   const resetAll = useStore((s) => s.resetAll);
   const seedMode = useStore((s) => s.seedMode);
   const setSeedMode = useStore((s) => s.setSeedMode);
@@ -89,58 +81,6 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
       </p>
 
       <div className="flex gap-6 mt-8 items-center flex-wrap">
-        <Segmented<CosmologyMode>
-          ariaLabel="Cosmological model"
-          value={cosmology}
-          onChange={setCosmology}
-          options={[
-            { value: 'sdo', label: 'SDO Drake' },
-            { value: 'grabby', label: 'Grabby Aliens' },
-            { value: 'hybrid', label: 'Hybrid' },
-          ]}
-        />
-        <span className="font-mono text-[11px] text-muted tracking-chip uppercase flex items-center gap-1.5">
-          Cosmological model
-          <Tooltip>
-            <p>
-              <strong>SDO Drake</strong> models stationary, communicating civilisations.{' '}
-              <CitationLink cite="sdo2018" text="SDO 2018" />.
-            </p>
-            <p className="mt-2">
-              <strong>Grabby Aliens</strong> models civs as rapidly expanding (the authors&rsquo;
-              fit puts the speed above half the speed of light).{' '}
-              <CitationLink cite="hansonGrabby" text="Hanson et al. 2021" />. Premises are
-              contested — per <CitationLink cite="azad2026" text="Azad 2026" /> we orbit a
-              ~95th-percentile-mass star, which is improbable if low-mass stars host life
-              equally.
-            </p>
-            <p className="mt-2">
-              <strong>Hybrid</strong> draws each MC sample from one branch in proportion to
-              your worldview&rsquo;s grabby credence.
-            </p>
-          </Tooltip>
-        </span>
-        {cosmology === 'hybrid' && (
-          <span className="flex items-center gap-2 font-mono text-[11px] text-muted tracking-chip uppercase">
-            Mix
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={worldview.grabbyCredence}
-              onChange={(e) => {
-                patchWorldview({ grabbyCredence: Number(e.target.value) });
-              }}
-              className="w-[100px]"
-              style={{ accentColor: '#2e6a31' }}
-              aria-label="Grabby credence (hybrid mix)"
-            />
-            <span className="text-ink normal-case tracking-normal">
-              {Math.round(worldview.grabbyCredence * 100)}% grabby
-            </span>
-          </span>
-        )}
         <div className="flex-1" />
         <button
           type="button"

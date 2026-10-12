@@ -2,6 +2,36 @@
 
 A React SPA that evaluates "searching for alien civilisations" as an EA cause area, using the Sandberg–Drexler–Ord (2018) probabilistic Drake formulation, multiple value channels, and worldview dials. Output is cost-effectiveness expressed as a multiplier of the GiveWell top-charity bar, with full Monte Carlo distributions.
 
+## 0. Corrections and changes since the build (October 2026)
+
+**Read this first.** An external review (October 2026) found factual errors in this spec and design choices that the code has since changed. Where this section and the rest of the spec disagree, **this section and the code win**. The body below is kept as the original design record.
+
+**Factual corrections**
+
+| Spec said | Correct | Source |
+|---|---|---|
+| Default bounds give P(N = 0) ≈ 30–50% (§5.1) | Log-uniform f_l over 1e-30–1 gives ≈ 88%. SDO's own model gives 52%. 30% is SDO's *literature-resampling* figure, a different method. | SDO 2018 §2, §3.2 |
+| f_l log-uniform 1e-30–1 is "SDO's headline range" | SDO model f_l = 1 − e^(−λVt) with log10(λVt) ~ N(0, 50). The site now uses this by default (`DEFAULT_FL_DISTRIBUTION`). | SDO 2018 §3.1 |
+| R* "modern observations centre ~1.5–3" stars/yr | ~0.7–1.9 *solar masses*/yr, which is ~6–7 stars/yr | Robitaille & Whitney 2010; Licquia & Newman 2015 |
+| Kepler implies f_p × n_e ≈ 0.4 | ~0.37–0.60 rocky HZ planets per *Sun-like* star | Bryson et al. 2021 |
+| Grabby aliens expand at ~25–50% of c | The authors' fit puts it above 0.5c | Hanson et al. 2021 |
+| V_cosmic_endowment 1e16 = "Bostrom-style astronomical waste numbers" | 1e16 is Bostrom 2013's Earth-only figure, in lives not DALYs. The 2003 paper's figures are 1e38 lives per century (upper) or >1e13 per second (conservative). | Bostrom 2003, 2013 |
+| V_xrisk_info 1e10 is "one order below standard total-view values" | No published anchor. It is ≥6 orders below total-view figures. | — |
+| GiveDirectly ≈ 0.1× the GiveWell bar | ≈ 0.43–0.63× (GiveWell 2024 re-evaluation; bar is 6× benchmark as of May 2026) | GiveWell |
+| "GiveWell bar ≈ $100/DALY" (implied GiveWell figure) | GiveWell doesn't use DALYs. $100/DALY is our approximation. | GiveWell |
+
+**Design changes**
+
+- **No Grabby Aliens / Hybrid cosmology** (§5.1.5 and everywhere else it appears). "P(we are inside a grabby zone)" contradicts Hanson et al. 2021, whose model is fitted on the premise that we are *not*. The "they're already here" scenario lives in the prior overrides (§5.5).
+- **Channel A is always ≤ 0**: −Δ × ϕ × V_xrisk_info. It is not a sign flip around a prior of 0.5 (§5.3).
+- **Risk aversion** options are Average / Typical world / Cautious (mean / median / 25th percentile). Log-utility was dropped (§5.4, §6.4).
+- **Verdict** leads with an "out of 100 worlds" split: more good than GiveWell (> 1×), less difference either way (−1× to 1×), serious harm (< −1×). It does not lead with a single multiplier (§7).
+- **Value uncertainty**: channel magnitudes (±1 OOM) and Channel B shifts (±0.1) are sampled per world, so P(EV < 0) is a real probability.
+- **Probes** (§5.2) cannot detect anything within a decade (travel time ≈ 20 years at 0.2c), so they have zero in-decade detection probability.
+- **RETINA is off by default.** Only SETI is on, as §5.2 originally said.
+- **Presets** use descriptive names (Strong longtermist, Filter pessimist, Moderate longtermist), not people's names. Their dial values aren't sourced from those people (e.g. Ord argues against pure time discounting).
+- **Permalinks** are schema v4.
+
 ## 1. Goal
 
 A genuinely honest interactive tool. The user adjusts:
@@ -70,7 +100,7 @@ Each parameter is sampled from a log-uniform distribution between user-tunable b
 
 Sampling: `x ~ exp(uniform(log(min), log(max)))` for log-uniform; standard for linear.
 
-**Display both sides of the SDO finding prominently.** With default bounds, P(N = 0 in Milky Way) is ~30–50% — but the complement P(N ≥ 1) is ~50–70%. Both are equally valid framings of the same result, and using only the first subtly biases toward "probably alone" — which is not what the SDO finding actually says (cf. Azad, *Contra Fermi Paradox is Not Contra UFOs*, 2026). Show as paired top-of-page stats with neutral framing, neither privileged:
+**Display both sides of the SDO finding prominently.** With default bounds, P(N = 0 in Milky Way) is ~30–50% — but the complement P(N ≥ 1) is ~50–70%. **[Wrong — see §0: ≈ 88% with log-uniform f_l, ≈ 51% with SDO's f_l model.]** Both are equally valid framings of the same result, and using only the first subtly biases toward "probably alone" — which is not what the SDO finding actually says (cf. Azad, *Contra Fermi Paradox is Not Contra UFOs*, 2026). Show as paired top-of-page stats with neutral framing, neither privileged:
 
 - "P(no other civilisation in Milky Way): X%"
 - "P(at least one other civilisation in Milky Way): Y%"
@@ -82,7 +112,7 @@ The pairing is more important than either individual stat.
 
 ### 5.1.5 Cosmological model selector
 
-The SDO Drake formulation models stationary, communicating civilisations. An alternative — Hanson et al.'s *Grabby Aliens* (2021) — models civilisations as rapidly expanding (~25–50% of c) and predicts ~40–50% of observable universe volume is already controlled. Detection implications differ dramatically: if we are inside a grabby zone, artefacts/probes should be ubiquitous and detection sensitivity is much higher.
+The SDO Drake formulation models stationary, communicating civilisations. An alternative — Hanson et al.'s *Grabby Aliens* (2021) — models civilisations as rapidly expanding (~25–50% of c **[wrong — >0.5c; and this mode was removed, see §0]**) and predicts ~40–50% of observable universe volume is already controlled. Detection implications differ dramatically: if we are inside a grabby zone, artefacts/probes should be ubiquitous and detection sensitivity is much higher.
 
 Expose a cosmological-model selector at the top of the Drake panel:
 
@@ -135,7 +165,7 @@ Detection updates our credence about whether the Filter is behind or ahead of us
   - technosig: reduces P(filter behind) by Δ_tech (default 0.3)
   - radio/contact: reduces P(filter behind) by Δ_contact (default 0.4)
 - Translated to DALY-equivalent via "value of information about x-risk." User dial: `V_xrisk_info` in DALYs, default `1e10` (one order of magnitude below standard total-view longtermist x-risk values), log-uniform with wide bounds.
-- Channel A value = `−Δ × V_xrisk_info` (negative because bad news; sign can flip if user sets P(filter behind) > 0.5)
+- Channel A value = `−Δ × V_xrisk_info` (negative because bad news; sign can flip if user sets P(filter behind) > 0.5) **[Superseded — see §0: −Δ × ϕ × V, never positive.]**
 
 **Channel B: Astronomical waste update**
 

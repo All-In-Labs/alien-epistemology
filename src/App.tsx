@@ -125,7 +125,6 @@ export default function App() {
           Sources ·{' '}
           <CitationLink cite="sdo2018" text="SDO 2018" /> ·{' '}
           <CitationLink cite="bostromAstroWaste" text="Bostrom 2003" /> ·{' '}
-          <CitationLink cite="hansonGrabby" text="Hanson 2021" /> ·{' '}
           <CitationLink cite="ordPrecipice" text="Ord 2020" /> ·{' '}
           <CitationLink cite="azad2026" text="Azad 2026" /> ·{' '}
           <CitationLink cite="giveWell" text="GiveWell" />

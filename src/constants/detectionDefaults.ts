@@ -4,6 +4,14 @@ export type DetectionType = 'radio' | 'technosig' | 'biosig' | 'probe' | 'passiv
 
 export type DetectionMethodId = 'seti' | 'tech' | 'bio' | 'probe' | 'retina';
 
+/**
+ * Detection types that cannot produce a detection within the decade this model scores.
+ * A Breakthrough Starshot-style probe at ~20% of light speed needs ~20 years to reach
+ * Alpha Centauri, plus 4.4 years for its signal to come back. Funding these adds cost
+ * but no in-decade chance of detection.
+ */
+export const NO_IN_DECADE_DETECTION: readonly DetectionType[] = ['probe'];
+
 export interface SensitivityBound {
   min: number;
   max: number;
@@ -68,7 +76,7 @@ export const DETECTION_DEFAULTS: Record<DetectionMethodId, DetectionMethodConfig
     costMax: 5000,
     sensitivity: { min: 1e-6, default: 1e-5, max: 1e-4 },
     defaultOn: false,
-    note: 'Breakthrough Starshot-style; multi-decade payoff, decadal R&D spend.',
+    note: 'Breakthrough Starshot-style R&D. Cannot detect anything within the decade (travel time), so it adds cost only.',
   },
   retina: {
     id: 'retina',

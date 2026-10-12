@@ -11,10 +11,8 @@ import {
   type ValueUncertainty,
 } from './model/value';
 import { defaultWorldview, type WorldviewDials } from './model/worldview';
-import { defaultGrabbyState, type GrabbyState } from './model/grabby';
 import { applyPreset, PRESETS, type PresetId } from './presets/worldviews';
 import type {
-  CosmologyMode,
   DrakeMCOutput,
   PriorOverrides,
 } from './model/monteCarlo';
@@ -33,8 +31,6 @@ interface AppState {
   methods: DetectionMethodState[];
   channels: ChannelsState;
   worldview: WorldviewDials;
-  cosmology: CosmologyMode;
-  grabby: GrabbyState;
   overrides: PriorOverrides;
   /** Per-sample uncertainty on value magnitudes and Channel B shifts. */
   valueUncertainty: ValueUncertainty;
@@ -60,8 +56,6 @@ interface AppState {
   patchChannelC: (patch: Partial<ChannelsState['C']>) => void;
   patchChannelD: (patch: Partial<ChannelsState['D']>) => void;
   patchWorldview: (patch: Partial<WorldviewDials>) => void;
-  setCosmology: (mode: CosmologyMode) => void;
-  patchGrabby: (patch: Partial<GrabbyState>) => void;
   patchOverrides: (patch: Partial<PriorOverrides>) => void;
   patchValueUncertainty: (patch: Partial<ValueUncertainty>) => void;
   setFlDistribution: (d: FlDistribution) => void;
@@ -81,8 +75,6 @@ export const useStore = create<AppState>()((set) => ({
   methods: defaultDetectionState(),
   channels: defaultChannelState(),
   worldview: defaultWorldview(),
-  cosmology: 'sdo',
-  grabby: defaultGrabbyState(),
   overrides: {},
   valueUncertainty: defaultValueUncertainty(),
   flDistribution: DEFAULT_FL_DISTRIBUTION,
@@ -149,23 +141,15 @@ export const useStore = create<AppState>()((set) => ({
     set((s) => ({
       worldview: applied.worldview,
       channels: applied.channels,
-      // Full-state demo presets also reset Drake / methods / cosmology / overrides.
+      // Full-state demo presets also reset Drake / methods / overrides.
       drakeRanges: applied.drakeRanges ?? s.drakeRanges,
       methods: applied.methods ?? s.methods,
-      cosmology: applied.cosmology ?? s.cosmology,
-      grabby: applied.grabby ?? s.grabby,
       overrides: applied.overrides ?? s.overrides,
       activePreset: id,
     }));
   },
   resetWorldview: () => {
     set({ worldview: defaultWorldview(), activePreset: null });
-  },
-  setCosmology: (mode) => {
-    set({ cosmology: mode });
-  },
-  patchGrabby: (patch) => {
-    set((s) => ({ grabby: { ...s.grabby, ...patch } }));
   },
   patchOverrides: (patch) => {
     set((s) => ({ overrides: { ...s.overrides, ...patch } }));
@@ -182,8 +166,6 @@ export const useStore = create<AppState>()((set) => ({
       methods: defaultDetectionState(),
       channels: defaultChannelState(),
       worldview: defaultWorldview(),
-      cosmology: 'sdo',
-      grabby: defaultGrabbyState(),
       overrides: {},
       valueUncertainty: defaultValueUncertainty(),
       flDistribution: DEFAULT_FL_DISTRIBUTION,
@@ -218,13 +200,11 @@ export const useStore = create<AppState>()((set) => ({
 export function getSerializedState(): SerializedState {
   const s = useStore.getState();
   return {
-    v: 3,
+    v: 4,
     drakeRanges: s.drakeRanges,
     methods: s.methods,
     channels: s.channels,
     worldview: s.worldview,
-    cosmology: s.cosmology,
-    grabby: s.grabby,
     overrides: s.overrides,
     valueUncertainty: s.valueUncertainty,
     flDistribution: s.flDistribution,
@@ -238,8 +218,6 @@ export function applySerializedState(state: SerializedState): void {
     methods: state.methods,
     channels: state.channels,
     worldview: state.worldview,
-    cosmology: state.cosmology,
-    grabby: state.grabby,
     overrides: state.overrides,
     valueUncertainty: state.valueUncertainty,
     flDistribution: state.flDistribution,

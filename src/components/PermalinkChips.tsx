@@ -11,9 +11,9 @@ interface ChipDef {
 }
 
 const CHIPS: ChipDef[] = [
-  { presetId: 'bostrom', label: 'Bostrom view', desc: 'long-term, total-view' },
+  { presetId: 'bostrom', label: 'Strong longtermist', desc: 'long-term, total-view' },
   { presetId: 'near', label: 'Neartermist view', desc: 'person-affecting, 3% disc.' },
-  { presetId: 'hanson', label: 'Hanson Filter view', desc: 'filter likely ahead' },
+  { presetId: 'hanson', label: 'Filter pessimist', desc: 'filter likely ahead' },
   { presetId: 'max-aliens', label: 'Maximum-aliens', desc: 'every dial toward "rules"' },
   { presetId: 'min-aliens', label: 'Minimum-aliens', desc: 'every dial toward "catastrophic"' },
 ];

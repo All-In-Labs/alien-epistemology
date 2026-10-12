@@ -5,18 +5,15 @@ import { defaultDrakeRanges } from '../../src/model/drake';
 import { defaultDetectionState } from '../../src/model/detection';
 import { defaultChannelState, defaultValueUncertainty } from '../../src/model/value';
 import { defaultWorldview } from '../../src/model/worldview';
-import { defaultGrabbyState } from '../../src/model/grabby';
 import type { SerializedState } from '../../src/lib/permalink';
 
 function defaultState(): SerializedState {
   return {
-    v: 3,
+    v: 4,
     drakeRanges: defaultDrakeRanges(),
     methods: defaultDetectionState(),
     channels: defaultChannelState(),
     worldview: defaultWorldview(),
-    cosmology: 'sdo',
-    grabby: defaultGrabbyState(),
     overrides: {},
     valueUncertainty: defaultValueUncertainty(),
     flDistribution: 'log-uniform',
@@ -24,31 +21,41 @@ function defaultState(): SerializedState {
   };
 }
 
+/** Encode an arbitrary (e.g. legacy-version) payload the way the app does. */
+function encodeRaw(payload: unknown): string {
+  const compressed = pako.deflate(JSON.stringify(payload));
+  let binary = '';
+  for (const b of compressed) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** The legacy Grabby fields that v1–v3 links carried. */
+const LEGACY_GRABBY = {
+  cosmology: 'hybrid',
+  grabby: { zoneCredenceMin: 0.05, zoneCredenceMax: 0.5 },
+};
+const legacyWorldview = () => ({ ...defaultWorldview(), grabbyCredence: 0.1 });
+
 describe('permalink encode / decode', () => {
   it('round-trips default state', () => {
     const s = defaultState();
-    const enc = encodeState(s);
-    const dec = decodeState(enc);
-    expect(dec).toEqual(s);
+    expect(decodeState(encodeState(s))).toEqual(s);
   });
 
   it('round-trips a non-default state including astroLocked', () => {
     const s = defaultState();
     s.drakeRanges.fl = { min: 1e-10, max: 0.5 };
-    s.cosmology = 'hybrid';
+    s.flDistribution = 'sdo-lognormal';
     s.overrides = { overridePNGteOne: 0.7 };
     s.astroLocked = true;
-    const enc = encodeState(s);
-    const dec = decodeState(enc);
-    expect(dec).toEqual(s);
+    expect(decodeState(encodeState(s))).toEqual(s);
   });
 
   it('buildHash and readHashState round-trip', () => {
     const s = defaultState();
     const hash = buildHash(s);
     expect(hash.startsWith('#s=')).toBe(true);
-    const decoded = readHashState(hash);
-    expect(decoded).toEqual(s);
+    expect(readHashState(hash)).toEqual(s);
   });
 
   it('readHashState returns null for invalid hash', () => {
@@ -58,54 +65,52 @@ describe('permalink encode / decode', () => {
   });
 
   it('produces a hash short enough to share (<2000 chars for default state)', () => {
-    const hash = buildHash(defaultState());
-    expect(hash.length).toBeLessThan(2000);
+    expect(buildHash(defaultState()).length).toBeLessThan(2000);
   });
 
-  it('migrates v=1 hashes to v=3 with astroLocked=false and no value uncertainty', () => {
-    // Build a v=1 payload by hand (the SerializedState type is now v=3 only).
+  it('migrates v=1 hashes to v=4 with astroLocked=false, no value uncertainty, no Grabby fields', () => {
     const v1 = {
-      v: 1 as const,
+      v: 1,
       drakeRanges: defaultDrakeRanges(),
       methods: defaultDetectionState(),
       channels: defaultChannelState(),
-      worldview: defaultWorldview(),
-      cosmology: 'sdo',
-      grabby: defaultGrabbyState(),
+      worldview: legacyWorldview(),
       overrides: {},
+      ...LEGACY_GRABBY,
     };
-    const json = JSON.stringify(v1);
-    const compressed = pako.deflate(json);
-    let binary = '';
-    for (const b of compressed) binary += String.fromCharCode(b);
-    const b64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const decoded = decodeState(b64);
-    expect(decoded.v).toBe(3);
+    const decoded = decodeState(encodeRaw(v1));
+    expect(decoded.v).toBe(4);
     expect(decoded.astroLocked).toBe(false);
     expect(decoded.valueUncertainty).toEqual({ magnitudeOOM: 0, shiftPM: 0 });
     expect(decoded.flDistribution).toBe('log-uniform');
+    expect('cosmology' in decoded).toBe(false);
+    expect('grabbyCredence' in decoded.worldview).toBe(false);
   });
 
-  it('migrates v=2 hashes to v=3 without value uncertainty, so old links keep their maths', () => {
+  it('migrates v=2 hashes without value uncertainty, mapping old risk-dial names', () => {
     const { valueUncertainty: _vu, flDistribution: _fd, ...rest } = defaultState();
     void _vu;
     void _fd;
     const v2 = {
       ...rest,
-      v: 2 as const,
+      v: 2,
       astroLocked: true,
-      // Older links used technical names for the risk dial.
-      worldview: { ...rest.worldview, riskAversion: 'difference-making' },
+      worldview: { ...legacyWorldview(), riskAversion: 'difference-making' },
+      ...LEGACY_GRABBY,
     };
-    const compressed = pako.deflate(JSON.stringify(v2));
-    let binary = '';
-    for (const b of compressed) binary += String.fromCharCode(b);
-    const b64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const decoded = decodeState(b64);
-    expect(decoded.v).toBe(3);
+    const decoded = decodeState(encodeRaw(v2));
+    expect(decoded.v).toBe(4);
     expect(decoded.astroLocked).toBe(true);
     expect(decoded.worldview.riskAversion).toBe('cautious');
     expect(decoded.valueUncertainty).toEqual({ magnitudeOOM: 0, shiftPM: 0 });
-    expect(decoded.flDistribution).toBe('log-uniform');
+  });
+
+  it('migrates v=3 hashes by dropping the removed Grabby mode and keeping everything else', () => {
+    const s = defaultState();
+    s.flDistribution = 'sdo-lognormal';
+    s.astroLocked = true;
+    const v3 = { ...s, v: 3, worldview: legacyWorldview(), ...LEGACY_GRABBY };
+    const decoded = decodeState(encodeRaw(v3));
+    expect(decoded).toEqual(s);
   });
 });
