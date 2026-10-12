@@ -33,7 +33,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     distribution: 'log-uniform',
     defaults: { min: 1.5, max: 10 },
     floor: 1.0,
-    note: 'Milky Way star formation rate; modern observations centre ~1.5–3.',
+    note: 'Milky Way star formation rate, in stars per year. Measured at ~0.7–1.9 solar masses/yr (Robitaille & Whitney 2010; Licquia & Newman 2015); most new stars are low-mass, so ~6–7 stars/yr.',
   },
   fp: {
     id: 'fp',
@@ -54,7 +54,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     distribution: 'log-uniform',
     defaults: { min: 0.1, max: 1.0 },
     floor: 0.01,
-    note: 'Kepler implies fₚ × nₑ ≈ 0.4 for sun-like stars.',
+    note: 'Kepler: ~0.37–0.60 rocky habitable-zone planets per Sun-like star (Bryson et al. 2021); R* counts all stars, most of them M dwarfs.',
   },
   fl: {
     id: 'fl',
@@ -64,7 +64,7 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     distribution: 'log-uniform',
     defaults: { min: 1e-30, max: 1.0 },
     ceiling: 1.0,
-    note: 'Genuine wide uncertainty; SDO’s headline range.',
+    note: 'Genuine wide uncertainty. Log-uniform over 1e-30–1 is this tool’s choice, not SDO’s: SDO model f_l = 1 − exp(−λVt) with λVt log-normal (median 1, ~50 OOM spread).',
   },
   fi: {
     id: 'fi',

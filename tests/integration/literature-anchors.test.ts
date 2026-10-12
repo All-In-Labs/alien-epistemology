@@ -31,8 +31,10 @@ describe('literature anchor: SDO 2018 (arXiv:1806.02404)', () => {
   //   f_c   log-uniform     0.01  to 1
   //   L     log-uniform     100   to 1e10
   //
-  // Our model uses log-uniform throughout (no log-normal sampling). We approximate
-  // SDO's log-normal f_l with a log-uniform of similar total width centred on 1.
+  // Note: SDO's f_l is 1 - exp(-λVt) with λVt log-normal, so f_l itself is bounded by 1
+  // and sits near 1 about half the time. Our model uses log-uniform throughout (no
+  // log-normal sampling). The test below approximates SDO with a log-uniform f_l running
+  // up to 1e30, i.e. letting the "fraction" exceed 1, which the UI does not allow.
 
   it('reproduces SDO\'s pre-Fermi pNZero ≈ 0.52 within 10pp when fed SDO parameter ranges', () => {
     const ranges = defaultDrakeRanges();
@@ -49,11 +51,10 @@ describe('literature anchor: SDO 2018 (arXiv:1806.02404)', () => {
     expect(out.pNZero).toBeLessThan(0.60);
   });
 
-  it('documents the tool\'s default-bounds pNZero (~0.87) — higher than SDO because we cap f_l ≤ 1', () => {
-    // The default UI bounds enforce f_l ≤ 1 (a fraction can't exceed 1 by definition,
-    // unlike SDO's "abiogenesis-events-per-planet" rate that admits values above 1).
-    // This is a substantive modeling difference, documented in the Assumptions modal.
-    // It yields a more conservative (higher) pNZero than SDO's headline.
+  it('documents the tool\'s default-bounds pNZero (~0.87) — higher than SDO\'s 0.52', () => {
+    // SDO's f_l is also bounded by 1. The gap comes from distribution shape: log-uniform
+    // over 1e-30–1 puts ~3% of mass above 0.1, whereas SDO's log-normal rate puts f_l
+    // near 1 about half the time. Documented in the Assumptions modal.
     const out = runDrakeMC({
       ranges: defaultDrakeRanges(),
       n: 100_000,
@@ -101,18 +102,17 @@ describe('literature anchor: Hanson 2021 Grabby Aliens — uncalibrated regressi
 });
 
 describe('literature anchor: Bostrom 2003 Astronomical Waste (Channel B)', () => {
-  // Bostrom (2003), "Astronomical Waste," nickbostrom.com/astronomical/waste.html.
+  // Bostrom (2003), "Astronomical Waste," nickbostrom.com/papers/astronomical-waste/.
   //
-  // Bostrom's conservative biological estimate of the cosmic endowment:
-  //   ~10^13 potential human lives PER SECOND of delayed colonisation
-  //   ~10^38 potential human lives over the cosmic endowment total
+  // Bostrom's figures for delayed colonisation of the Virgo Supercluster:
+  //   ~10^38 potential lives lost per CENTURY of delay (simulation-based upper estimate)
+  //   >10^13 potential lives lost per SECOND of delay (conservative, biological humans)
   //
-  // Our tool's default V_cosmic_endowment = 10^16 DALYs — roughly 22 OOM below Bostrom's
-  // published figure. This is a deliberate epistemic-neutrality choice: feeding Bostrom's
-  // literal number makes alien-finding ≈ 10^29 × GiveWell under almost any preset,
-  // violating CLAUDE.md's "no preset is obviously a top EA cause" rule. The anchor here
-  // documents the consequence of using Bostrom's literal number, so future readers can
-  // see why we chose the conservatism we did.
+  // Our default V_cosmic_endowment = 10^16 DALYs matches Bostrom (2013)'s conservative
+  // Earth-only figure of 10^16 lives, and is far below the 2003 numbers. It was chosen for
+  // its effect on the verdict: feeding in the 2003 numbers makes alien-finding look
+  // overwhelmingly cost-effective under almost any preset. The anchor here documents
+  // the consequence of using 10^38, so future readers can see why we chose 10^16.
 
   it('with V_cosmic_endowment at Bostrom\'s literal 10^38, mean EV is 22 OOM above default', () => {
     const { worldview, channels } = applyPreset(BOSTROM_PRESET);
