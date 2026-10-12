@@ -132,7 +132,7 @@ export function Ch05Verdict() {
       num="05"
       eyebrow="The verdict"
       title="A distribution, not a number."
-      kicker="Cost-effectiveness expressed as a multiplier of an approximate GiveWell top-charity bar (~$100 per DALY averted; GiveWell itself uses its own units). Log x-axis. Vertical line marks the bar. The 95th percentile reflects rare scenarios where N is very large; the typical case is the median given detection."
+      kicker="Cost-effectiveness expressed as a multiplier of an approximate GiveWell top-charity bar (~$100 per DALY averted; GiveWell itself uses its own units). Log x-axis. Vertical line marks the bar. The 95th percentile reflects rare scenarios where N is very large."
     >
       <div className="bg-paper border border-ink px-7 py-6">
         <div className="flex justify-between items-end mb-3.5">
