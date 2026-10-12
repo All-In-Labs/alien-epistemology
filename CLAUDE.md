@@ -74,15 +74,24 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   The Ch.2 italic block-quote says so.
 - The verdict histogram only shows positive multipliers. P(EV<0) is shown as a separate stat
   (in accent) so non-trivial negative-EV worldviews aren't hidden by the log axis.
-- The Ch.5 headline follows the worldview's risk-aversion dial (`src/model/summary.ts`):
-  EV-max → mean, log-utility → geometric mean (null if any sample is a loss),
-  difference-making → 25th percentile. On defaults the mean sits >10 orders of magnitude
-  above the median, because a few samples with large N carry almost all the EV.
+- **Grokkability is a goal**: a visitor who hasn't dug into the numbers should get the
+  verdict at a glance. Prefer plain words and "out of 100 worlds" framing over statistics.
+- The Ch.5 headline is the 100-world split (`outcomeSplit` in `src/model/summary.ts`):
+  more good than GiveWell (multiplier > 1) / less difference either way (−1 to 1) / serious
+  harm (< −1), drawn as a 10×10 dot grid. Symmetric on purpose: many negative worlds are
+  only ≈ −10⁻¹², which isn't harm worth a red dot. No single number works as a headline: on defaults the mean sits >10
+  orders of magnitude above the median. The risk dial (average / typical / cautious →
+  mean / median / 25th percentile) only picks the secondary GiveWell number underneath.
+  Old permalinks' 'EV-max' / 'log-utility' / 'difference-making' are mapped on decode.
 - Channel A is always ≤ 0: −Δ × ϕ × V_xrisk_info (Hanson: finding life is bad news). It is
   not a sign flip around ϕ = 0.5.
 - `valueUncertainty` makes P(EV<0) a real probability. Without it, V(detection) is one number
   per config, so every sample shares its sign. Tests that call `runDrakeMC` without it get the
   point-value model (`NO_VALUE_UNCERTAINTY`).
+- The site defaults fₗ to SDO 2018's model (`DEFAULT_FL_DISTRIBUTION`); dragging the fₗ
+  slider switches to a custom log-uniform range. `runDrakeMC` itself still defaults to
+  log-uniform, so tests that want what visitors see must pass `flDistribution` and
+  `valueUncertainty` explicitly (see `neutrality.test.ts`, "at the site defaults").
 - Permalinks are schema v3. v1/v2 links migrate to zero value uncertainty and log-uniform fₗ,
   so old links keep their maths.
 - `pnpm` is via corepack (Node 22 bundles it). `.npmrc` disables `verifyDepsBeforeRun` and

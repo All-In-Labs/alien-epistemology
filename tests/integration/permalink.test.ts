@@ -90,7 +90,13 @@ describe('permalink encode / decode', () => {
     const { valueUncertainty: _vu, flDistribution: _fd, ...rest } = defaultState();
     void _vu;
     void _fd;
-    const v2 = { ...rest, v: 2 as const, astroLocked: true };
+    const v2 = {
+      ...rest,
+      v: 2 as const,
+      astroLocked: true,
+      // Older links used technical names for the risk dial.
+      worldview: { ...rest.worldview, riskAversion: 'difference-making' },
+    };
     const compressed = pako.deflate(JSON.stringify(v2));
     let binary = '';
     for (const b of compressed) binary += String.fromCharCode(b);
@@ -98,6 +104,7 @@ describe('permalink encode / decode', () => {
     const decoded = decodeState(b64);
     expect(decoded.v).toBe(3);
     expect(decoded.astroLocked).toBe(true);
+    expect(decoded.worldview.riskAversion).toBe('cautious');
     expect(decoded.valueUncertainty).toEqual({ magnitudeOOM: 0, shiftPM: 0 });
     expect(decoded.flDistribution).toBe('log-uniform');
   });

@@ -182,9 +182,9 @@ export function Ch03Value() {
           Value uncertainty
         </div>
         <p className="font-serif italic text-[13.5px] text-muted max-w-[780px] mb-3">
-          Each Monte Carlo sample draws its own channel values around the settings above, so the
-          sign of the outcome can vary between samples. Without this, P(EV &lt; 0) can only be
-          0% or 100%. Both spreads keep the settings above as the expected values.
+          Each world in the verdict draws its own channel values around the settings above, so
+          some worlds can come out good and others bad. Without this, every world has the same
+          sign. Both spreads keep the settings above as the expected values.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
           <RangeSlider
@@ -207,7 +207,7 @@ export function Ch03Value() {
             onChange={(v) => {
               patchValueUncertainty({ shiftPM: v });
             }}
-            hint="each B shift drawn within ± this · drives P(EV < 0)"
+            hint="each B shift drawn within ± this · drives how many worlds do harm"
           />
         </div>
       </div>

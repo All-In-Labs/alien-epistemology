@@ -71,7 +71,9 @@ export function useDrakeMCRunner(): void {
               drakeRanges,
               methods,
               channels,
-              worldview,
+              // The risk dial only picks which summary number to show; leaving it out of
+              // the seed means flipping it doesn't reshuffle the verdict's dots.
+              worldview: { ...worldview, riskAversion: undefined },
               cosmology,
               grabby,
               overrides,

@@ -9,7 +9,7 @@ import type { DrakeRanges } from '../model/drake';
 import type { DetectionMethodState } from '../model/detection';
 import { NO_VALUE_UNCERTAINTY, type ChannelsState, type ValueUncertainty } from '../model/value';
 import type { FlDistribution } from '../constants/defaults';
-import type { WorldviewDials } from '../model/worldview';
+import { normalizeRiskAversion, type WorldviewDials } from '../model/worldview';
 import type { GrabbyState } from '../model/grabby';
 import type { CosmologyMode, PriorOverrides } from '../model/monteCarlo';
 
@@ -91,6 +91,18 @@ export function encodeState(state: SerializedState): string {
  * current shape; future versions throw.
  */
 export function decodeState(s: string): SerializedState {
+  const state = decodeAnyVersion(s);
+  // Older links store the risk dial under its old technical names.
+  return {
+    ...state,
+    worldview: {
+      ...state.worldview,
+      riskAversion: normalizeRiskAversion(state.worldview.riskAversion),
+    },
+  };
+}
+
+function decodeAnyVersion(s: string): SerializedState {
   const compressed = base64urlDecode(s);
   const json = pako.inflate(compressed, { to: 'string' });
   const obj = JSON.parse(json) as { v?: number };

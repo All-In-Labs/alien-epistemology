@@ -4,7 +4,11 @@ import { ComparatorBars } from '../charts/ComparatorBars';
 import { useStore } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
 import { COMPARATORS } from '../../constants/comparators';
-import { headlineFor } from '../../model/summary';
+import { summaryFor, outcomeSplit, plainGloss, plainNumber } from '../../model/summary';
+import { OutcomeDots } from '../charts/OutcomeDots';
+import { OUTCOME_COLORS } from '../../constants/outcomeColors';
+import { Segmented } from '../controls/Segmented';
+import type { RiskAversion } from '../../model/worldview';
 
 // Number-only formatter (no trailing × — caller decides whether to add one).
 function fmtMul(v: number): string {
@@ -53,6 +57,7 @@ export function Ch05Verdict() {
   const out = useStore((s) => s.drakeOutput);
   const activePreset = useStore((s) => s.activePreset);
   const riskAversion = useStore((s) => s.worldview.riskAversion);
+  const patchWorldview = useStore((s) => s.patchWorldview);
   const presetName = activePreset
     ? (PRESETS.find((p) => p.id === activePreset)?.name ?? 'Custom')
     : 'Custom';
@@ -65,18 +70,25 @@ export function Ch05Verdict() {
   const pNeg = out?.pNegativeEV ?? 0;
   const pAnyDetection = out?.pAnyDetection ?? 0;
 
-  // The headline statistic follows the risk-aversion dial (spec §5.4): mean for EV-max,
-  // geometric mean for log-utility, 25th percentile for difference-making. Two regimes
-  // have no meaningful headline: no detections at all, or every multiplier exactly 0.
+  // Headline: how 100 plausible worlds split between beating GiveWell, doing less, and
+  // making things worse. No single number describes this distribution honestly (the
+  // median says "about nothing", the mean says "enormous"), so the split leads and the
+  // risk dial picks one GiveWell multiple to show underneath. Two regimes have nothing
+  // to show: no detections at all, or every multiplier exactly 0.
   const noDetections = pAnyDetection === 0;
   const allZeroValue = !noDetections && mean === 0 && p5 === 0 && p95 === 0 && pNeg === 0;
-  const hideHeadlineNumber = noDetections || allZeroValue;
+  const hideHeadline = out === null || noDetections || allZeroValue;
 
-  const headline = out ? headlineFor(out, riskAversion) : null;
-  const headlineValue = headline?.value ?? null;
-  const headlineLabel = `× GiveWell · ${headline?.label ?? 'mean (EV-max)'}`;
-  // For the comparator dot: fall back to the median when the headline is undefined.
-  const dotValue = headlineValue ?? median;
+  const split = outcomeSplit(pAbove, out?.pHarmBeyondGiveWell ?? 0);
+  const summary = summaryFor(
+    {
+      meanMultiplier: mean,
+      medianMultiplier: median,
+      p25Multiplier: out?.p25Multiplier ?? 0,
+    },
+    riskAversion,
+  );
+  const fmtCount = (n: number, underOne: boolean): string => (underOne ? '<1' : String(n));
 
   // For the histogram, use only positive log-finite multipliers.
   const positives = (() => {
@@ -130,40 +142,111 @@ export function Ch05Verdict() {
     <ChapterShell
       num="05"
       eyebrow="The verdict"
-      title="A distribution, not a number."
-      kicker="Cost-effectiveness expressed as a multiplier of an approximate GiveWell top-charity bar (~$100 per DALY averted; GiveWell itself uses its own units). Log x-axis. Vertical line marks the bar. The 95th percentile reflects rare scenarios where N is very large."
+      title="A spread of worlds, not one number."
+      kicker="Each world is one draw of every uncertain input in Chapters 1–4. We run 100,000 and scale to 100. “GiveWell” means an approximate bar for its top charities (~$100 per DALY averted; GiveWell itself uses its own units)."
     >
-      <div className="bg-paper border border-ink px-7 py-6">
-        <div className="flex justify-between items-end mb-3.5">
-          <div>
-            <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
-              Cost-effectiveness · {presetName} preset
+      <div className="bg-paper border border-ink px-4 sm:px-7 py-6">
+        <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
+          Out of 100 plausible worlds · {presetName} preset
+        </div>
+        {hideHeadline ? (
+          <div className="font-serif text-lg text-muted mt-4">
+            {noDetections
+              ? 'No detections in any world — enable at least one detection programme in Ch.2, or raise the detection-floor override.'
+              : allZeroValue
+                ? 'Every detection is worth exactly zero — enable at least one value channel in Ch.3.'
+                : 'Running…'}
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 mt-4 items-start">
+              <OutcomeDots split={split} />
+              <div className="flex flex-col gap-4">
+                {[
+                  {
+                    key: 'better' as const,
+                    count: fmtCount(split.better, split.betterUnderOne),
+                    text: 'do more good than GiveWell’s top charities',
+                    sub: null,
+                  },
+                  {
+                    key: 'less' as const,
+                    count: String(split.less),
+                    text: 'make less difference than GiveWell, either way',
+                    sub: 'mostly close to nothing, because nothing is found',
+                  },
+                  {
+                    key: 'worse' as const,
+                    count: fmtCount(split.worse, split.worseUnderOne),
+                    text: 'do serious harm',
+                    sub: 'at least as much harm as GiveWell’s top charities do good. Finding aliens can be bad news: it may mean the cosmos is already claimed, or draw hostile attention (Ch.3)',
+                  },
+                ].map((row) => (
+                  <div key={row.key} className="flex items-baseline gap-3">
+                    <span
+                      aria-hidden
+                      className="inline-block w-3 h-3 rounded-full flex-shrink-0 self-center"
+                      style={{ background: OUTCOME_COLORS[row.key] }}
+                    />
+                    <span
+                      className="font-display text-4xl leading-none w-[64px] text-right text-ink"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {row.count}
+                    </span>
+                    <span className="font-serif text-lg text-ink leading-snug">
+                      {row.text}
+                      {row.sub !== null && (
+                        <span className="block font-serif text-[13px] text-muted leading-snug mt-0.5 max-w-[460px]">
+                          {row.sub}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div
-              className="font-display text-5xl leading-none mt-1.5"
-              style={{ fontWeight: 600, letterSpacing: '-0.01em' }}
-            >
-              {hideHeadlineNumber ? (
-                <span className="text-muted">n/a</span>
-              ) : headlineValue === null ? (
-                <>
-                  <span className="text-muted">undefined</span>
-                  <span className="font-mono text-lg text-muted ml-1.5">{headlineLabel}</span>
-                </>
-              ) : (
-                <>
-                  {fmtMul(headlineValue)}
-                  <span className="font-mono text-lg text-muted ml-1.5">{headlineLabel}</span>
-                </>
-              )}
+
+            <div className="mt-6 pt-5" style={{ borderTop: '1px dashed #d8d3c8' }}>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="font-mono text-[11px] text-muted tracking-chip uppercase">
+                  In GiveWell terms
+                </span>
+                <Segmented<RiskAversion>
+                  ariaLabel="Which outcome to summarise"
+                  value={riskAversion}
+                  onChange={(v) => {
+                    patchWorldview({ riskAversion: v });
+                  }}
+                  options={[
+                    { value: 'average', label: 'Average' },
+                    { value: 'typical', label: 'Typical world' },
+                    { value: 'cautious', label: 'Cautious' },
+                  ]}
+                />
+              </div>
+              <div className="font-serif text-xl text-ink mt-3">
+                <span className="font-display text-3xl" style={{ fontWeight: 600 }}>
+                  {plainNumber(summary.value)}×
+                </span>{' '}
+                GiveWell — {plainGloss(summary.value)}
+              </div>
+              <div className="font-serif text-[13px] text-muted mt-1 max-w-[780px]">
+                {riskAversion === 'average'
+                  ? 'Average: every world counts in proportion to its value, so a few long shots with huge payoffs can dominate.'
+                  : riskAversion === 'typical'
+                    ? 'Typical world: the middle world (median) — half of worlds do better, half worse.'
+                    : 'Cautious: the world a quarter of the way up from the worst (25th percentile).'}
+              </div>
             </div>
-            <div className="font-mono text-[11px] text-muted mt-1">
-              {noDetections
-                ? 'no detections in any sample — enable at least one method or raise the detection-floor override'
-                : allZeroValue
-                  ? 'every detection has zero value — enable at least one channel to see EV'
-                  : `${headline?.note !== undefined ? `${headline.note} · ` : ''}median: ${fmtX(median)} · mean: ${fmtX(mean)} · headline set by risk aversion (Ch.4)`}
-            </div>
+          </>
+        )}
+      </div>
+
+      <div className="mt-7 bg-paper border border-ink px-4 sm:px-7 py-6">
+        <div className="flex flex-wrap justify-between items-end gap-4 mb-3.5">
+          <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
+            For the numbers people · full distribution (positive outcomes, log scale)
           </div>
           <div className="flex gap-6 font-mono text-[11.5px] text-muted">
             <div>
@@ -171,16 +254,16 @@ export function Ch05Verdict() {
               <div className="font-serif text-lg text-ink">{fmtX(p5)}</div>
             </div>
             <div>
+              <div className="uppercase tracking-[0.12em]">median</div>
+              <div className="font-serif text-lg text-ink">{fmtX(median)}</div>
+            </div>
+            <div>
+              <div className="uppercase tracking-[0.12em]">mean</div>
+              <div className="font-serif text-lg text-ink">{fmtX(mean)}</div>
+            </div>
+            <div>
               <div className="uppercase tracking-[0.12em]">95th</div>
               <div className="font-serif text-lg text-ink">{fmtX(p95)}</div>
-            </div>
-            <div>
-              <div className="uppercase tracking-[0.12em]">P( &gt; GW )</div>
-              <div className="font-serif text-lg text-ink">{fmtPct(pAbove)}</div>
-            </div>
-            <div>
-              <div className="uppercase tracking-[0.12em]">P( EV &lt; 0 )</div>
-              <div className="font-serif text-lg text-accent">{fmtPct(pNeg)}</div>
             </div>
           </div>
         </div>
@@ -196,9 +279,8 @@ export function Ch05Verdict() {
           xTicks={xTicks}
         />
         {pNeg > 0 && (
-          <div className="font-mono text-[11px] text-accent mt-3">
-            ⚠ {fmtPct(pNeg)} of samples have negative EV under this worldview. Histogram shows
-            the positive tail only.
+          <div className="font-mono text-[11px] text-muted mt-3">
+            {fmtPct(pNeg)} of worlds are below zero and not shown on this log-scale chart.
           </div>
         )}
       </div>
@@ -210,9 +292,9 @@ export function Ch05Verdict() {
         <ComparatorBars
           items={[
             {
-              label: `This tool — ${presetName} (${headline?.short ?? 'mean'}${dotValue < 0 ? ', negative' : ''})`,
+              label: `This tool — ${presetName} (${summary.short}${summary.value < 0 ? ', negative' : ''})`,
               lo: Math.max(p5, 1e-9),
-              mid: Math.max(dotValue, 1e-9),
+              mid: Math.max(summary.value, 1e-9),
               hi: Math.max(p95, 1e-9),
               main: true,
             },

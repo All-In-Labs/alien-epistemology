@@ -29,12 +29,13 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <em>fₗ</em> can be sampled two ways (Ch.1). <strong>Log-uniform</strong> between your
-            bounds is the default. <strong>SDO 2018</strong> uses their own model: fₗ = 1 −
-            e<sup>−λVt</sup> with log₁₀(λVt) ~ Normal(0, 50), i.e. a median of one abiogenesis
+            By default <em>fₗ</em> follows <strong>SDO 2018&rsquo;s own model</strong>: fₗ = 1
+            − e<sup>−λVt</sup> with log₁₀(λVt) ~ Normal(0, 50), i.e. a median of one abiogenesis
             event per planet and ~50 orders of magnitude of spread (
-            <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />). Fed SDO&rsquo;s Table 1
-            ranges, it reproduces their 52% probability of no other civilisation.
+            <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />). Life arises on about half of
+            habitable planets; the rest form a long tail of near-zero values. With the
+            tool&rsquo;s other defaults this gives <em>P(no civ)</em> ≈ 51%; fed SDO&rsquo;s
+            Table 1 ranges it reproduces their 52%.
           </>
         ),
       },
@@ -62,13 +63,11 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <em>fₗ</em> is sampled <strong>log-uniform from 10⁻³⁰ to 1</strong>. This is the
-            tool&rsquo;s choice, not SDO&rsquo;s: <CitationLink cite="sdo2018" text="SDO 2018" />{' '}
-            model <em>fₗ = 1 − e<sup>−λVt</sup></em> with <em>λVt</em> log-normal (median 1,
-            ~50 orders of magnitude wide), which puts <em>fₗ</em> near 1 about half the time.
-            Log-uniform puts only ~3% of samples above 0.1. That is why this tool&rsquo;s default{' '}
-            <em>P(no civ)</em> (~88%) is well above SDO&rsquo;s 52%. Narrowing this range moves the
-            headline more than any other Drake parameter.
+            Dragging the <em>fₗ</em> slider switches to <strong>your own range</strong>, sampled
+            log-uniform (default 10⁻³⁰ to 1). That is much more pessimistic than SDO&rsquo;s
+            model: it puts only ~3% of samples above 0.1, and gives <em>P(no civ)</em> ≈ 88%.
+            Either way, <em>fₗ</em> moves the verdict more than any other Drake parameter
+            (see the Ch.6 tornado).
           </>
         ),
       },
@@ -115,11 +114,10 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <strong>Neither branch reproduces its source at default settings.</strong> The SDO
-            branch only gets near <CitationLink cite="sdo2018" text="SDO 2018" />&rsquo;s
-            pre-Fermi 52% (it gives ~44%) when <em>fₗ</em>&rsquo;s upper bound is pushed to
-            10³⁰, which the sliders don&rsquo;t allow (see <em>literature-anchors.test.ts</em>).
-            At default bounds it gives ~88%. The Grabby branch has no anchor at all against{' '}
+            <strong>Only the SDO branch is calibrated.</strong> With SDO&rsquo;s fₗ model and
+            their Table 1 ranges it reproduces <CitationLink cite="sdo2018" text="SDO 2018" />
+            &rsquo;s pre-Fermi 52% (see <em>drake-sdo.test.ts</em>). The Grabby branch has no
+            anchor against{' '}
             <CitationLink cite="hansonGrabby" text="Hanson 2021" />'s published density /
             expansion-rate numbers — our "P(inside zone)" framing doesn't cleanly map to
             them. Treat Grabby-mode output with higher uncertainty than SDO-mode output.
@@ -364,11 +362,10 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Risk aversion picks the <strong>headline statistic</strong> in Ch.5 — not the
-            maths. EV-max → mean; log-utility → geometric mean over all samples (undefined if
-            any sample is a loss, since log utility can&rsquo;t take one; 0 if any sample is
-            0); difference-making → 25th percentile. The MC distribution itself is
-            risk-neutral.
+            Risk aversion picks the <strong>GiveWell number</strong> shown under the 100-world
+            split in Ch.5 — not the maths. Average → mean (long shots count fully);
+            Typical world → median; Cautious → 25th percentile. The split itself, and the MC
+            distribution, are the same whichever you pick.
           </>
         ),
       },
@@ -402,9 +399,12 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            The median and mean are always shown under the headline. On default settings they
-            differ by many orders of magnitude: most samples have almost no chance of a
-            detection, while a few have a large one, so the mean is driven by the tail.
+            The verdict leads with a split of 100 worlds — more good than GiveWell (multiplier
+            &gt; 1), less difference either way (−1 to 1), serious harm (&lt; −1) — rather than
+            one number,
+            because the median and mean differ by many orders of magnitude on default
+            settings: most worlds have almost no chance of a detection, while a few have a
+            large one. Each &ldquo;world&rdquo; is one MC sample of every uncertain input.
           </>
         ),
       },

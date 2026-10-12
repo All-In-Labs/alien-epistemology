@@ -79,21 +79,32 @@ describe('risk-aversion summary statistics', () => {
     expect(out.meanMultiplier).toBeGreaterThan(out.medianMultiplier * 1e6);
   });
 
-  it('geometric mean is null when any sample is a loss', () => {
+  it('all three summaries stay finite when some samples are losses', () => {
     const out = runDrakeMC({
       ...base(),
       valueUncertainty: defaultValueUncertainty(),
       n: 20_000,
-      seed: 'stats-gmean-null',
+      seed: 'stats-lossy',
     });
     expect(out.pNegativeEV).toBeGreaterThan(0);
-    expect(out.gmeanMultiplier).toBeNull();
+    expect(Number.isFinite(out.meanMultiplier)).toBe(true);
+    expect(Number.isFinite(out.medianMultiplier)).toBe(true);
+    expect(Number.isFinite(out.p25Multiplier)).toBe(true);
   });
+});
 
-  it('geometric mean is defined and positive when every sample is a gain', () => {
-    const out = runDrakeMC({ ...base(), n: 20_000, seed: 'stats-gmean' });
-    expect(out.pNegativeEV).toBe(0);
-    expect(out.gmeanMultiplier).not.toBeNull();
-    expect(out.gmeanMultiplier ?? 0).toBeGreaterThan(0);
+describe('serious-harm share (the verdict\'s third group)', () => {
+  it('counts only multipliers below −1, so it is at most the share below zero', () => {
+    const out = runDrakeMC({
+      ...base(),
+      valueUncertainty: defaultValueUncertainty(),
+      n: 20_000,
+      seed: 'harm-share',
+    });
+    let below = 0;
+    for (const v of out.multiplierSamples) if (v < -1) below++;
+    expect(out.pHarmBeyondGiveWell).toBeCloseTo(below / out.multiplierSamples.length, 12);
+    expect(out.pHarmBeyondGiveWell).toBeLessThanOrEqual(out.pNegativeEV);
+    expect(out.pHarmBeyondGiveWell).toBeGreaterThan(0);
   });
 });

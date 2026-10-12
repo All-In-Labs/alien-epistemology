@@ -18,7 +18,7 @@ describe('applyWorldview', () => {
       alienMoralWeight: 1,
       hingeyness: 1,
       filterPriorBehind: 1, // all prior mass on "filter behind", so the full Δ×V is lost
-      riskAversion: 'EV-max',
+      riskAversion: 'average',
     };
     const v = applyWorldview(baseChannels, dials);
     expect(v.A).toBe(-100);

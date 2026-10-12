@@ -18,6 +18,13 @@ export type DrakeDistribution = 'log-uniform' | 'linear-uniform';
  */
 export type FlDistribution = 'log-uniform' | 'sdo-lognormal';
 
+/**
+ * The site's default f_l distribution: SDO 2018's own model, so the tool's headline
+ * P(no other civilisation) lines up with the paper it cites. `runDrakeMC` itself still
+ * defaults to 'log-uniform' when no distribution is passed (tests rely on that).
+ */
+export const DEFAULT_FL_DISTRIBUTION: FlDistribution = 'sdo-lognormal';
+
 /** SDO 2018 abiogenesis-rate parameters: log10(λVt) ~ Normal(mean, sd). */
 export const SDO_FL_LOG10_RATE = { mean: 0, sd: 50 } as const;
 

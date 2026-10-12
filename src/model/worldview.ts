@@ -1,7 +1,29 @@
 // Worldview transforms from spec §5.4. Acts on per-channel value contributions
 // (output of value.ts) before EV is multiplied by P(detect).
 
-export type RiskAversion = 'EV-max' | 'log-utility' | 'difference-making';
+/**
+ * How the Ch.5 verdict summarises outcomes in GiveWell terms.
+ * - 'average': the mean, so long shots count fully (risk-neutral)
+ * - 'typical': the median, the outcome in a typical world
+ * - 'cautious': the 25th percentile, focusing on the worse cases
+ */
+export type RiskAversion = 'average' | 'typical' | 'cautious';
+
+/** Map stored values, including the old technical names in older permalinks. */
+export function normalizeRiskAversion(x: unknown): RiskAversion {
+  switch (x) {
+    case 'average':
+    case 'typical':
+    case 'cautious':
+      return x;
+    case 'log-utility':
+      return 'typical';
+    case 'difference-making':
+      return 'cautious';
+    default:
+      return 'average';
+  }
+}
 
 export interface WorldviewDials {
   /** 0 = neartermist (channels A, B zeroed); 1 = pure total-view longtermism. */
@@ -16,7 +38,7 @@ export interface WorldviewDials {
   hingeyness: number;
   /** P(filter behind us). Channel A's (negative) value scales with it. */
   filterPriorBehind: number;
-  /** Determines which summary stat the UI presents (mean / geom-mean / 25th-pctl). */
+  /** Which secondary GiveWell number the verdict shows (mean / median / 25th percentile). */
   riskAversion: RiskAversion;
   /** Grabby Aliens mixing weight for hybrid cosmology (used in phase 5). */
   grabbyCredence: number;
@@ -41,7 +63,7 @@ export function defaultWorldview(): WorldviewDials {
     alienMoralWeight: 0.1,
     hingeyness: 0.1,
     filterPriorBehind: 0.5,
-    riskAversion: 'EV-max',
+    riskAversion: 'average',
     grabbyCredence: 0.1,
   };
 }

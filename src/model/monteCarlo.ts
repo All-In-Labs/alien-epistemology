@@ -69,6 +69,10 @@ export interface DrakeMCOutput {
   pNegativeEV: number;
   /** P(multiplier > 1× GiveWell). */
   pAboveGiveWell: number;
+  /** P(multiplier < −1× GiveWell): harm at least as large, per dollar, as the good a
+   *  GiveWell top charity does. The verdict's "serious harm" group; the mirror image of
+   *  pAboveGiveWell, so tiny negative values don't count as harm. */
+  pHarmBeyondGiveWell: number;
   /** Cost-effectiveness multiplier samples in × GiveWell-bar units. May be negative. */
   multiplierSamples: Float64Array;
   /** Median × GiveWell of multiplier samples (excluding non-finite). */
@@ -79,13 +83,10 @@ export interface DrakeMCOutput {
   /** Geometric mean of strictly-positive multipliers (a more stable headline than the
    *  unconditional median when the zero-mass dominates). */
   gmeanPositiveMultiplier: number;
-  /** Mean multiplier across all samples, signed — the EV-max summary. */
+  /** Mean multiplier across all samples, signed — the 'average' summary. */
   meanMultiplier: number;
-  /** 25th-percentile multiplier — the difference-making (downside-averse) summary. */
+  /** 25th-percentile multiplier — the 'cautious' summary. */
   p25Multiplier: number;
-  /** Geometric mean over ALL samples — the log-utility summary. 0 if any sample is 0;
-   *  null (undefined) if any sample is negative, since log utility can't take a loss. */
-  gmeanMultiplier: number | null;
   /** 5th and 95th percentile of multiplier samples. */
   p5Multiplier: number;
   p95Multiplier: number;
@@ -331,6 +332,7 @@ export function runDrakeMC({
   const multiplierSamples = new Float64Array(n);
   let pNeg = 0;
   let pAbove = 0;
+  let pHarm = 0;
   if (totalCostUSD > 0 && channels !== undefined) {
     for (let i = 0; i < n; i++) {
       const ev = evSamples[i] ?? 0;
@@ -339,6 +341,7 @@ export function runDrakeMC({
       multiplierSamples[i] = multiplier;
       if (multiplier < 0) pNeg++;
       if (multiplier > 1) pAbove++;
+      if (multiplier < -1) pHarm++;
     }
   }
 
@@ -372,20 +375,10 @@ export function runDrakeMC({
   }
   const gmeanPositive = logCount > 0 ? Math.exp(logSum / logCount) : 0;
 
-  // Risk-aversion summaries over ALL samples (spec §5.4).
+  // Mean over ALL samples, signed — the 'average' summary.
   let multSum = 0;
-  let anyNegative = false;
-  let anyZero = false;
-  for (const v of multiplierSamples) {
-    multSum += v;
-    if (v < 0) anyNegative = true;
-    else if (v === 0) anyZero = true;
-  }
+  for (const v of multiplierSamples) multSum += v;
   const meanMultiplier = totalCostUSD > 0 ? multSum / n : 0;
-  // Log utility is undefined for losses; a zero outcome sends E[log] to −∞, so the
-  // geometric mean is 0. logSum above already covers the all-positive case.
-  const gmeanMultiplier: number | null =
-    totalCostUSD <= 0 ? 0 : anyNegative ? null : anyZero ? 0 : gmeanPositive;
 
   return {
     pNZero: pNZeroSum / n,
@@ -397,13 +390,13 @@ export function runDrakeMC({
     totalCostM,
     pNegativeEV: totalCostUSD > 0 ? pNeg / n : 0,
     pAboveGiveWell: totalCostUSD > 0 ? pAbove / n : 0,
+    pHarmBeyondGiveWell: totalCostUSD > 0 ? pHarm / n : 0,
     multiplierSamples,
     medianMultiplier: pickPctl(0.5),
     medianMultiplierGivenDetection: medianGivenDetection,
     gmeanPositiveMultiplier: gmeanPositive,
     meanMultiplier,
     p25Multiplier: pickPctl(0.25),
-    gmeanMultiplier,
     p5Multiplier: pickPctl(0.05),
     p95Multiplier: pickPctl(0.95),
     samples,

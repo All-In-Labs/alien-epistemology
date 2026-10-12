@@ -19,7 +19,12 @@ import type {
   PriorOverrides,
 } from './model/monteCarlo';
 import type { SerializedState } from './lib/permalink';
-import type { DrakeBound, DrakeParamId, FlDistribution } from './constants/defaults';
+import {
+  DEFAULT_FL_DISTRIBUTION,
+  type DrakeBound,
+  type DrakeParamId,
+  type FlDistribution,
+} from './constants/defaults';
 import type { DetectionMethodId } from './constants/detectionDefaults';
 import type { ValueChannelId } from './constants/valueDefaults';
 
@@ -80,13 +85,17 @@ export const useStore = create<AppState>()((set) => ({
   grabby: defaultGrabbyState(),
   overrides: {},
   valueUncertainty: defaultValueUncertainty(),
-  flDistribution: 'log-uniform',
+  flDistribution: DEFAULT_FL_DISTRIBUTION,
   activePreset: null,
   astroLocked: false,
   seedMode: 'deterministic',
   drakeOutput: null,
   setDrakeRange: (id, bound) => {
-    set((s) => ({ drakeRanges: { ...s.drakeRanges, [id]: bound } }));
+    // Setting f_l bounds means the user wants their own range rather than SDO's model.
+    set((s) => ({
+      drakeRanges: { ...s.drakeRanges, [id]: bound },
+      ...(id === 'fl' ? { flDistribution: 'log-uniform' as const } : {}),
+    }));
   },
   setMethodOn: (id, on) => {
     set((s) => ({
@@ -107,7 +116,7 @@ export const useStore = create<AppState>()((set) => ({
     set({ drakeOutput: out });
   },
   resetDrakeRanges: () => {
-    set({ drakeRanges: defaultDrakeRanges() });
+    set({ drakeRanges: defaultDrakeRanges(), flDistribution: DEFAULT_FL_DISTRIBUTION });
   },
   resetMethods: () => {
     set({ methods: defaultDetectionState() });
@@ -177,7 +186,7 @@ export const useStore = create<AppState>()((set) => ({
       grabby: defaultGrabbyState(),
       overrides: {},
       valueUncertainty: defaultValueUncertainty(),
-      flDistribution: 'log-uniform',
+      flDistribution: DEFAULT_FL_DISTRIBUTION,
       activePreset: null,
       astroLocked: false,
     });

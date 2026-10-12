@@ -177,16 +177,17 @@ const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'fₗ',
-    label: 'Fraction developing life (lower / upper half of your range)',
-    // Split the user's current fₗ range at its log-midpoint. fₗ is the widest Drake
-    // parameter, so sweeping to its literal endpoints would just saturate the chart.
+    label: 'Fraction developing life (rare vs common)',
+    // "Life is rare" (10⁻³⁰–10⁻¹⁵) vs "life is common" (0.5–1), both sampled log-uniform.
+    // Fixed ranges rather than the user's bounds so the row means the same thing whether
+    // fₗ is on SDO 2018's model (the default, which ignores the bounds) or a custom range.
     setLow: (s) => {
-      const { min, max } = s.drakeRanges.fl;
-      s.drakeRanges.fl = { min, max: Math.sqrt(min * max) };
+      s.flDistribution = 'log-uniform';
+      s.drakeRanges.fl = { min: 1e-30, max: 1e-15 };
     },
     setHigh: (s) => {
-      const { min, max } = s.drakeRanges.fl;
-      s.drakeRanges.fl = { min: Math.sqrt(min * max), max };
+      s.flDistribution = 'log-uniform';
+      s.drakeRanges.fl = { min: 0.5, max: 1 };
     },
   },
   {

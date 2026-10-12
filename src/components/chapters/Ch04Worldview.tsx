@@ -54,9 +54,10 @@ const TT_PERSON_AFFECTING = (
 );
 const TT_RISK = (
   <p>
-    Sets the headline statistic in Ch.5. EV-max takes the mean (risk-neutral); log-utility
-    takes the geometric mean (risk-averse; undefined if any outcome is a loss);
-    difference-making takes the 25th percentile (downside-averse).
+    Picks the GiveWell number shown under the 100-world split in Ch.5.{' '}
+    <strong>Average</strong> is the mean, so long shots count fully (risk-neutral).{' '}
+    <strong>Typical world</strong> is the median. <strong>Cautious</strong> is the 25th
+    percentile, focusing on the worse cases (cf. difference-making risk aversion).
     See <CitationLink cite="rethinkPrioritiesCRAFT" text="Rethink Priorities CRAFT/CURVE" />.
   </p>
 );
@@ -210,14 +211,14 @@ export function Ch04Worldview() {
               patchWorldview({ riskAversion: v });
             }}
             options={[
-              { value: 'EV-max', label: 'EV-max' },
-              { value: 'log-utility', label: 'log-utility' },
-              { value: 'difference-making', label: 'difference-making' },
+              { value: 'average', label: 'Average' },
+              { value: 'typical', label: 'Typical world' },
+              { value: 'cautious', label: 'Cautious' },
             ]}
             ariaLabel="Risk aversion"
           />
           <div className="font-mono text-[10.5px] text-muted">
-            summary stat used: mean / geom-mean / 25th-percentile
+            GiveWell number in Ch.5: mean / median / 25th percentile
           </div>
         </div>
       </div>
