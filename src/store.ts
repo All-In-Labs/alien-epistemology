@@ -144,15 +144,20 @@ export const useStore = create<AppState>()((set) => ({
     const preset = PRESETS.find((p) => p.id === id);
     if (!preset) return;
     const applied = applyPreset(preset);
-    set((s) => ({
+    // A preset is a complete starting point: anything it doesn't set goes back to the
+    // defaults, so the result never depends on what was loaded or edited before. (The
+    // demo presets set Drake bounds, methods and overrides; these used to leak into
+    // whichever preset came next.) Demo presets pin f_l, so they use their own bounds.
+    set({
       worldview: applied.worldview,
       channels: applied.channels,
-      // Full-state demo presets also reset Drake / methods / overrides.
-      drakeRanges: applied.drakeRanges ?? s.drakeRanges,
-      methods: applied.methods ?? s.methods,
-      overrides: applied.overrides ?? s.overrides,
+      drakeRanges: applied.drakeRanges ?? defaultDrakeRanges(),
+      methods: applied.methods ?? defaultDetectionState(),
+      overrides: applied.overrides ?? {},
+      valueUncertainty: defaultValueUncertainty(),
+      flDistribution: applied.drakeRanges ? 'log-uniform' : DEFAULT_FL_DISTRIBUTION,
       activePreset: id,
-    }));
+    });
   },
   resetWorldview: () => {
     set({ worldview: defaultWorldview(), activePreset: null });

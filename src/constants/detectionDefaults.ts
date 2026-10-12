@@ -20,9 +20,10 @@ export interface SensitivityBound {
 /**
  * Survey reach: the share of the galaxy's targets (stars, or for biosignatures, star
  * systems) a method's instruments can actually cover this decade at plausible signal
- * strengths. Built from published survey sizes and sensitivity limits, divided by the
- * Milky Way's 100–400 billion stars. Spending more buys more looks within this reach,
- * not more reach: instruments, not this decade's budget, set how far they can see.
+ * strengths. Built from published survey sizes and sensitivity limits, divided by ~2×10¹¹
+ * stars (the middle of the Milky Way's 100–400 billion) at both ends of each range.
+ * Spending more buys more looks within this reach, not more reach: instruments, not this
+ * decade's budget, set how far they can see.
  */
 export interface ReachBound {
   min: number;
@@ -57,12 +58,15 @@ export const DETECTION_DEFAULTS: Record<DetectionMethodId, DetectionMethodConfig
     costDefault: 50,
     costMax: 500,
     sensitivity: { min: 0.1, default: 3, max: 100 },
-    // Leakage like Earth's: ~3,000 stars within 20 pc (Sheikh 2025, SKA-class receiver)
-    // ÷ 1–4×10¹¹ stars ≈ 10⁻⁸. Galaxy-spanning beacons (≳10¹⁷ W): ~60 million stars in
-    // the galactic-centre beams (Gajjar 2021) ÷ 10¹¹ ≈ 6×10⁻⁴, rounded up to 10⁻³.
-    reach: { min: 1e-8, max: 1e-3 },
+    // Both ends ÷ ~2×10¹¹ stars (the middle of NASA's 100–400 billion), no rounding.
+    // Low: a transmitter as strong as our Deep Space Network, which an SKA-class array
+    // could detect within ~65 ly / 20 pc (Sheikh 2025) — ~3,000 stars at ~0.1 stars/pc³
+    // → 1.5×10⁻⁸. (Earth's everyday leakage, e.g. LTE, only to ~4 ly: no other star.)
+    // High: beacons ≥ 4×10¹⁸ W across the ~60 million stars in Breakthrough Listen's
+    // galactic-centre beams (Gajjar 2021) → 3×10⁻⁴.
+    reach: { min: 1.5e-8, max: 3e-4 },
     defaultOn: true,
-    note: 'Breakthrough Listen, Allen Telescope Array, narrow-band radio surveys. Reach spans Earth-like leakage (~10⁻⁸ of the galaxy) to galaxy-spanning beacons (~10⁻³).',
+    note: 'Breakthrough Listen, Allen Telescope Array, narrow-band radio surveys. Reach spans a Deep-Space-Network-strength transmitter (~1.5×10⁻⁸ of the galaxy) to galaxy-spanning beacons (~3×10⁻⁴).',
   },
   tech: {
     id: 'tech',
@@ -72,11 +76,12 @@ export const DETECTION_DEFAULTS: Record<DetectionMethodId, DetectionMethodConfig
     costDefault: 50,
     costMax: 500,
     sensitivity: { min: 0.1, default: 3, max: 100 },
-    // Lasers: 5,600 stars (Tellis & Marcy 2017) ÷ 1–4×10¹¹ ≈ 10⁻⁸. Waste heat from
-    // star-scale engineering: 2.9×10⁸ stars within 5 kpc (Suazo 2022) ÷ 10¹¹ ≈ 3×10⁻³.
-    reach: { min: 1e-8, max: 3e-3 },
+    // Both ends ÷ ~2×10¹¹ stars. Lasers: 5,600 stars (Tellis & Marcy 2017) → 2.8×10⁻⁸.
+    // Waste heat from star-scale engineering: 2.9×10⁸ stars within 5 kpc (Suazo 2022)
+    // → 1.45×10⁻³.
+    reach: { min: 3e-8, max: 1.5e-3 },
     defaultOn: false,
-    note: 'Optical SETI, Dyson-sphere infrared anomalies, NIR transit anomalies. Reach spans laser searches of ~5,600 stars (~10⁻⁸) to all-sky waste-heat searches (~3×10⁻³).',
+    note: 'Optical SETI, Dyson-sphere infrared anomalies, NIR transit anomalies. Reach spans laser searches of ~5,600 stars (~3×10⁻⁸) to waste-heat searches of ~3×10⁸ stars (~1.5×10⁻³).',
   },
   bio: {
     id: 'bio',
@@ -86,12 +91,13 @@ export const DETECTION_DEFAULTS: Record<DetectionMethodId, DetectionMethodConfig
     costDefault: 5000,
     costMax: 20000,
     sensitivity: { min: 1e-3, default: 0.03, max: 1 },
-    // JWST's Rocky Worlds programme: 9 rocky planets, and it tests for atmospheres, not
-    // life (STScI 2025). ~1–10 systems ÷ 1–4×10¹¹ ≈ 10⁻¹²–10⁻¹⁰; up to 10× more because
-    // targets are pre-selected for habitable-zone planets. HWO launches in the 2040s.
-    reach: { min: 1e-12, max: 1e-9 },
+    // JWST's Rocky Worlds programme: 9 rocky planets in 8 systems, ranked by distance to
+    // the "cosmic shoreline" (not by habitable zone), and it tests for atmospheres, not
+    // life (STScI 2025). ~1–10 systems ÷ ~2×10¹¹ stars → 5×10⁻¹²–5×10⁻¹¹. HWO launches
+    // in the 2040s.
+    reach: { min: 5e-12, max: 5e-11 },
     defaultOn: false,
-    note: 'JWST atmospheric spectroscopy now; the Habitable Worlds Observatory is not due until the 2040s. Reach is ~1–10 star systems of the galaxy’s 100–400 billion.',
+    note: 'JWST atmospheric spectroscopy now; the Habitable Worlds Observatory is not due until the 2040s. Reach is ~1–10 star systems of the galaxy’s ~200 billion.',
   },
   probe: {
     id: 'probe',
@@ -101,8 +107,9 @@ export const DETECTION_DEFAULTS: Record<DetectionMethodId, DetectionMethodConfig
     costDefault: 500,
     costMax: 5000,
     sensitivity: { min: 1e-6, default: 1e-5, max: 1e-4 },
-    // Alpha Centauri's three stars. Unused: probes cannot report back within the decade.
-    reach: { min: 7.5e-12, max: 3e-11 },
+    // Alpha Centauri's three stars ÷ ~2×10¹¹. Unused: probes cannot report back within
+    // the decade.
+    reach: { min: 1.5e-11, max: 1.5e-11 },
     defaultOn: false,
     note: 'Breakthrough Starshot-style R&D. Cannot detect anything within the decade (travel time), so it adds cost only.',
   },

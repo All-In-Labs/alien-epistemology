@@ -11,6 +11,8 @@ export interface ComparatorItem {
   source: string;
   /** Optional URL — when present, the source label renders as a link. */
   sourceUrl?: string;
+  /** Further sources for parts of the figure the main source doesn't cover. */
+  extraLinks?: { text: string; url: string }[];
 }
 
 export const COMPARATORS: ComparatorItem[] = [
@@ -22,27 +24,34 @@ export const COMPARATORS: ComparatorItem[] = [
     lo: 0.43,
     mid: 0.55,
     hi: 0.63,
-    source: 'GiveWell (2024 re-evaluation; bar = 6× benchmark)',
+    source: 'GiveWell 2024 re-evaluation: 2.6–3.8× its cash benchmark',
     sourceUrl:
       'https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/',
+    extraLinks: [
+      {
+        text: 'bar = 6× benchmark (May 2026)',
+        url: 'https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/cost-effectiveness-models',
+      },
+    ],
   },
   {
     label: 'GiveDirectly — RP CCM',
-    // RP CCM's published direct-cash-transfers estimate is ~2 DALYs/$1k ≈ 0.2× this tool's
-    // $100/DALY bar. We widen slightly to reflect parameter-distribution uncertainty
-    // (the CCM is a Monte-Carlo tool, not a point estimate).
-    lo: 0.1,
+    // RP CCM's default direct-cash-transfers output is 2 DALYs/$1k (as reported, Jan 2024)
+    // ≈ 0.2× this tool's $100/DALY bar. A point: no published range.
+    lo: 0.2,
     mid: 0.2,
-    hi: 0.5,
-    source: 'Rethink Priorities CCM (2 DALYs/$1k vs our $100/DALY bar)',
-    sourceUrl: 'https://ccm.rethinkpriorities.org/',
+    hi: 0.2,
+    source: 'Rethink Priorities CCM default: 2 DALYs/$1k (as reported, Jan 2024)',
+    sourceUrl:
+      'https://ea.greaterwrong.com/posts/pniDWyjc9vY5sjGre/rethink-priorities-cross-cause-cost-effectiveness-model',
   },
   {
     label: 'GiveWell top charities',
-    lo: 0.7,
-    mid: 1.0,
-    hi: 1.5,
-    source: 'GiveWell (definitional)',
+    // The bar itself, by definition: a point, not a range.
+    lo: 1,
+    mid: 1,
+    hi: 1,
+    source: 'GiveWell (definitional: the bar itself)',
     sourceUrl: 'https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness',
   },
   {
@@ -54,16 +63,21 @@ export const COMPARATORS: ComparatorItem[] = [
     lo: 1.7,
     mid: 71,
     hi: 200,
-    source:
-      'titotal 2024 (replicating RP): 1.7× with neuron-count weights to 200× with RP’s; dot = RP CCM default, 71×',
+    source: 'titotal 2024 (replicating RP): 1.7× with neuron-count weights to 200× with RP’s',
     sourceUrl: 'https://forum.effectivealtruism.org/posts/qARKFgYhCqmKB2YpF',
+    extraLinks: [
+      {
+        text: 'dot = RP CCM default, 71× (Jan 2024)',
+        url: 'https://ea.greaterwrong.com/posts/pniDWyjc9vY5sjGre/rethink-priorities-cross-cause-cost-effectiveness-model',
+      },
+    ],
   },
   {
     label: 'Biosecurity (x-risk) — Millett & Snyder-Beattie',
     // Table 2: $0.125–$1,600 per life-year across three models, counting future generations
     // and undiscounted, for a hypothetical ~$250B century-long programme. 100 ÷ cost per
-    // life-year = 800× to 0.06×. Excluding future generations (discounted) it is $770 per
-    // life-year or more, i.e. ≤ 0.13×. The dot is the log-midpoint, not a published figure.
+    // life-year = 800× to 0.06×. With a 1% discount rate it is $770 per life-year or more,
+    // i.e. ≤ 0.13×. The dot is the log-midpoint, not a published figure.
     lo: 0.0625,
     mid: 7.1,
     hi: 800,

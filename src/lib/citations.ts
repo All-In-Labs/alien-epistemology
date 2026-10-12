@@ -109,7 +109,8 @@ export const CITATIONS = {
     url: 'https://arxiv.org/abs/2104.14148',
   },
   margot2026: {
-    label: 'Margot et al., Ten years of UCLA SETI searches with the GBT (2026)',
+    label:
+      'Margot, Results of ten years of UCLA SETI searches with the Green Bank Telescope (2026)',
     url: 'https://arxiv.org/abs/2605.05408',
   },
   sheikh2025: {
@@ -127,6 +128,14 @@ export const CITATIONS = {
   stsciRockyWorlds2025: {
     label: 'STScI, Rocky Worlds DDT programme (2025)',
     url: 'https://www.stsci.edu/contents/newsletters/2025-volume-42-issue-02/webb-and-hubbles-rocky-worlds-program-is-fully-underway-what-to-expect',
+  },
+  giveWellBar2026: {
+    label: 'GiveWell, Cost-Effectiveness Analyses (bar: 6× benchmark as of May 2026)',
+    url: 'https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness/cost-effectiveness-models',
+  },
+  giveWellCostPerLife2024: {
+    label: 'GiveWell, How Much Does It Cost To Save a Life? (2024)',
+    url: 'https://www.givewell.org/how-much-does-it-cost-to-save-a-life',
   },
   // Comparator cause areas (Ch.5).
   titotal2024: {

@@ -23,8 +23,8 @@ export function Ch02Detection() {
         style={{ borderLeft: '2px solid #2e6a31' }}
       >
         Reach is the binding limit: even radio SETI&rsquo;s widest view takes in about one star in
-        a thousand, and we could pick up Earth-like leakage from only about one star in a hundred
-        million.
+        three thousand. A transmitter as strong as our Deep Space Network would be visible from
+        about one star in a hundred million, and Earth&rsquo;s everyday radio leakage from none.
         The sensitivities within reach &mdash; is a civilisation in view transmitting, aimed our
         way and in-band when we look? &mdash; are the most uncertain numbers in the model. Their
         defaults are wide placeholder ranges, not community estimates. Adjust them critically;

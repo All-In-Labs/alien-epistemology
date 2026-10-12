@@ -57,7 +57,15 @@ export function sampleDrake(
   const R = sampleParam(rng, 'R', ranges.R);
   const fp = sampleParam(rng, 'fp', ranges.fp);
   const ne = sampleParam(rng, 'ne', ranges.ne);
-  const fl = flDistribution === 'sdo-lognormal' ? sampleFlSDO(rng) : sampleParam(rng, 'fl', ranges.fl);
+  // Both f_l models consume two uniforms (SDO's Box–Muller draw uses two), so switching
+  // between them keeps every later draw in step. The tornado relies on that.
+  let fl: number;
+  if (flDistribution === 'sdo-lognormal') {
+    fl = sampleFlSDO(rng);
+  } else {
+    fl = sampleParam(rng, 'fl', ranges.fl);
+    rng();
+  }
   const fi = sampleParam(rng, 'fi', ranges.fi);
   const fc = sampleParam(rng, 'fc', ranges.fc);
   const L = sampleParam(rng, 'L', ranges.L);

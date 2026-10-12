@@ -61,7 +61,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           >
             i
           </span>
-          hover any of these for a primary-source citation
+          hover any of these for the reasoning and, where there is one, the source
         </span>
       </div>
       <h1

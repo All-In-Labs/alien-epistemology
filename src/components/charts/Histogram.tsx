@@ -1,4 +1,11 @@
-import { binLog10WithOverflow, percentile } from '../../lib/binning';
+import { binLog10WithOverflow, percentiles } from '../../lib/binning';
+import { logFraction } from '../../lib/axis';
+
+export interface AxisTick {
+  /** log10 of the value the tick marks. */
+  log: number;
+  label: string;
+}
 
 interface HistogramProps {
   /** Raw samples; will be log10-binned. */
@@ -15,8 +22,8 @@ interface HistogramProps {
   logMax?: number;
   /** Number of bins. */
   nBins?: number;
-  /** X-axis tick labels (rendered at evenly-spaced positions). */
-  xTicks?: string[];
+  /** X-axis ticks, each placed at its own log10 value. */
+  xTicks?: AxisTick[];
   /** Axis label. */
   xLabel?: string;
 }
@@ -30,7 +37,13 @@ export function Histogram({
   logMin = -6,
   logMax = 6,
   nBins = 60,
-  xTicks = ['10⁻⁶', '10⁻³', '1', '10³', '10⁶'],
+  xTicks = [
+    { log: -6, label: '10⁻⁶' },
+    { log: -3, label: '10⁻³' },
+    { log: 0, label: '1' },
+    { log: 3, label: '10³' },
+    { log: 6, label: '10⁶' },
+  ],
   xLabel = 'cost-effectiveness, × GiveWell bar (log)',
 }: HistogramProps) {
   const padL = 44;
@@ -50,10 +63,7 @@ export function Histogram({
   const bw = innerW / bins.length;
   const overflowW = 14;
 
-  const p5 = percentile(samples, 0.05);
-  const p25 = percentile(samples, 0.25);
-  const p75 = percentile(samples, 0.75);
-  const p95 = percentile(samples, 0.95);
+  const [p5 = 0, p25 = 0, p75 = 0, p95 = 0] = percentiles(samples, [0.05, 0.25, 0.75, 0.95]);
   const range = logMax - logMin;
   const logToX = (v: number): number => {
     if (v <= 0) return 0;
@@ -162,17 +172,17 @@ export function Histogram({
       >
         {refLabel}
       </text>
-      {xTicks.map((t, i) => (
+      {xTicks.map((t) => (
         <text
-          key={i}
-          x={padL + (i / Math.max(1, xTicks.length - 1)) * innerW}
+          key={t.log}
+          x={padL + logFraction(t.log, logMin, logMax) * innerW}
           y={h - padB + 18}
           textAnchor="middle"
           fontSize="10"
           fill="#6e675c"
           fontFamily="IBM Plex Mono, monospace"
         >
-          {t}
+          {t.label}
         </text>
       ))}
       <text

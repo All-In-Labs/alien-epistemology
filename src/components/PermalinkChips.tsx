@@ -1,4 +1,4 @@
-// Three pre-baked "lightning-talk" permalink chips. Each maps to a preset that
+// Five pre-baked "lightning-talk" permalink chips. Each maps to a preset that
 // loads a fully-configured worldview state — useful for live-demo navigation
 // without dragging sliders.
 

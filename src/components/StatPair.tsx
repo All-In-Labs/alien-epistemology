@@ -20,7 +20,7 @@ export function StatPair() {
   return (
     <div className="border border-ink bg-paper">
       <div className="px-8 pt-3 pb-2 border-b border-edge font-mono text-[10.5px] tracking-chip uppercase text-muted">
-        Drake / detection — independent of worldview &amp; presets
+        Drake / detection — set in Ch.1–2, not by the worldview dials
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3">
       <div className="px-4 sm:px-8 py-5 lg:py-7 border-b lg:border-b-0 lg:border-r border-ink">

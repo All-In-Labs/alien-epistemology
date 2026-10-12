@@ -12,8 +12,8 @@
 // which look for life: their N_target is the number of life-bearing planets. Spend buys
 // more looks within reach, never more reach, so p_m ≤ r_m however much is spent.
 //
-// Reach and sensitivity are sampled log-uniformly per call from the user's bounds (no draw
-// when a bound is a single point); costs are user-set point estimates.
+// Reach and sensitivity are sampled log-uniformly per call from the user's bounds; costs are
+// user-set point estimates.
 
 import type { Rng } from '../lib/rng';
 import { logUniform } from '../lib/sampling';
@@ -64,9 +64,14 @@ export function totalDecadalCostMillions(methods: DetectionMethodState[]): numbe
   return total;
 }
 
-/** Log-uniform draw, or the point itself (no RNG draw) when the bounds coincide. */
+/**
+ * Log-uniform draw. Always consumes one uniform, even when the bounds coincide, so a
+ * point range and a wide range keep every later draw in step (the tornado compares runs
+ * that differ only in one input and relies on that).
+ */
 function drawLogUniform(rng: Rng, min: number, max: number): number {
-  return min === max ? min : logUniform(rng, min, max);
+  const v = logUniform(rng, min, max);
+  return min === max ? min : v;
 }
 
 /**

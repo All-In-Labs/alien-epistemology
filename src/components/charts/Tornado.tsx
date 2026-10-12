@@ -1,15 +1,6 @@
-// Tornado / sensitivity plot ported from design's A_Tornado.
+import type { TornadoItem } from '../../model/tornado';
 
-interface TornadoItem {
-  symbol: string;
-  label: string;
-  /** Log10 OoM shift in median multiplier from baseline when the parameter is at its lower bound. */
-  low: number;
-  /** Log10 OoM shift at upper bound. */
-  high: number;
-  lowLabel: string;
-  highLabel: string;
-}
+// Tornado / sensitivity plot ported from design's A_Tornado.
 
 interface TornadoProps {
   items: TornadoItem[];

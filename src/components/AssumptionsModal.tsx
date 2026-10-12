@@ -154,21 +154,23 @@ const CATEGORIES: Category[] = [
         text: (
           <>
             <strong>Reach is sourced</strong>: published survey sizes and sensitivity limits
-            divided by the galaxy&rsquo;s 100&ndash;400 billion stars (
+            divided by ~2×10¹¹ stars, the middle of the galaxy&rsquo;s 100&ndash;400 billion (
             <CitationLink cite="nasaStarCount2015" text="NASA" />
-            ). Radio SETI 10⁻⁸&ndash;10⁻³ (
+            ), at both ends of each range and without rounding up. Radio SETI 1.5×10⁻⁸&ndash;3×10⁻⁴ (
             <CitationLink cite="sheikh2025" text="Sheikh 2025" />,{' '}
             <CitationLink cite="gajjar2021" text="Gajjar 2021" />,{' '}
             <CitationLink cite="margot2026" text="Margot 2026" />
-            ); optical and infrared 10⁻⁸&ndash;3×10⁻³ (
+            ); optical and infrared 3×10⁻⁸&ndash;1.5×10⁻³ (
             <CitationLink cite="tellisMarcy2017" text="Tellis & Marcy 2017" />,{' '}
             <CitationLink cite="suazo2022" text="Suazo 2022" />
-            ); biosignatures 10⁻¹²&ndash;10⁻⁹ (
+            ); biosignatures 5×10⁻¹²&ndash;5×10⁻¹¹ (
             <CitationLink cite="stsciRockyWorlds2025" text="STScI 2025" />
-            ). RETINA&rsquo;s 10⁻¹²&ndash;10⁻⁶ is a guess with no source. The
-            non-detections so far rule out little: Margot 2026&rsquo;s limit (fewer than 6.3×10⁻⁵
-            of stars within 20,000 light years host a transmitter above 5×10¹⁶ W) still allows
-            over a million such beacons, so the tool doesn&rsquo;t use them to cut <em>N</em>.
+            ). RETINA&rsquo;s 10⁻¹²&ndash;10⁻⁶ is a guess with no source. The low radio end
+            is a transmitter as strong as our Deep Space Network; Earth&rsquo;s everyday leakage
+            would reach no other star (Sheikh 2025). Past non-detections aren&rsquo;t used to cut{' '}
+            <em>N</em>. Margot 2026 finds fewer than 6.3×10⁻⁵ of stars within 20,000 light years
+            host an <em>always-on</em> transmitter above 5×10¹⁶ W; by our own rough count of the
+            stars in that volume, that still allows over a million such beacons.
           </>
         ),
       },
@@ -226,9 +228,7 @@ const CATEGORIES: Category[] = [
             credence that the filter is behind us (ϕ, set in Ch.4 and Ch.3) to &ldquo;filter
             ahead&rdquo;, so its value is −Δ × ϕ × V_xrisk_info. It models the news itself, not
             the decision value of learning it (Hanson calls it &ldquo;bad (though
-            valuable)&rdquo;); that second part isn&rsquo;t modelled.{' '}
-            <em>ChannelAState.filterPriorBehind</em> is a vestigial field retained for
-            permalink back-compat — it is not read by the model.
+            valuable)&rdquo;); that second part isn&rsquo;t modelled.
           </>
         ),
       },
@@ -399,8 +399,10 @@ const CATEGORIES: Category[] = [
           <>
             The &ldquo;GiveWell bar&rdquo; is fixed at <strong>1 DALY per $100</strong>. This is
             our approximation: <CitationLink cite="giveWell" text="GiveWell" /> doesn&rsquo;t
-            measure in DALYs (it uses its own units of value, with a funding bar of 6× its cash
-            benchmark as of May 2026), and its top charities save a life for roughly $3,000–5,500.
+            measure in DALYs (it uses its own units of value, with a{' '}
+            <CitationLink cite="giveWellBar2026" text="funding bar of 6× its cash benchmark" /> as
+            of May 2026), and its top charities save a life for{' '}
+            <CitationLink cite="giveWellCostPerLife2024" text="roughly $3,000–5,500" />.
             Multiplier = (EV in DALYs / total cost in $) ÷ (1 / 100). All comparator bars in the verdict are
             in × GiveWell-bar units. Rethink Priorities&rsquo; CCM puts the GiveWell bar higher,
             at 21 DALYs per $1,000 (
@@ -418,8 +420,8 @@ const CATEGORIES: Category[] = [
             &rsquo;s replication of Rethink Priorities&rsquo; model, where moral weights move the
             answer from 1.7× to 200×. Biosecurity:{' '}
             <CitationLink cite="millettSnyderBeattie2017" text="Millett & Snyder-Beattie 2017" />
-            , counting future generations undiscounted (excluding them, it falls to 0.13× or
-            less). There is no AI-safety bar: the only published figures are CCM defaults that
+            , counting future generations without discounting (with a 1% discount rate, it
+            falls to 0.13× or less). There is no AI-safety bar: the only published figures are CCM defaults that
             Rethink Priorities&rsquo; own staff say not to trust, and an invented range would be
             worse than none.
           </>
@@ -475,16 +477,21 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            The tornado plot's aggregate is <strong>geometric mean of positive multipliers</strong>,
-            not the unconditional median (which collapses to 0 whenever P(N=0) &gt; 0.5).
+            The tornado plot compares the <strong>mean multiplier</strong> (signed), not the
+            median, which collapses to ≈ 0 because most worlds find nothing. Each row reruns the
+            model with the same random draws at each end of the input&rsquo;s range, so only the
+            input&rsquo;s effect differs. Answers below a millionth of GiveWell count as ≈ 0.
           </>
         ),
       },
       {
         text: (
           <>
-            Histogram x-axis range is computed dynamically from the 2nd/98th percentiles of the
-            sample, clamped to [10⁻¹², 10¹²], with the GiveWell bar always visible.
+            The histogram&rsquo;s x-axis runs from the smallest positive multiplier to the
+            largest, but never below 10⁻¹² × GiveWell; smaller positive values are counted in
+            the left-edge marker. The GiveWell bar is always visible. Negative worlds are
+            reported in a note under the chart, and in the comparator chart&rsquo;s &ldquo;below
+            0&rdquo; zone.
           </>
         ),
       },
@@ -579,7 +586,7 @@ export function AssumptionsModal({ open, onClose }: AssumptionsModalProps) {
         </div>
 
         <div className="mt-8 pt-5 border-t border-edge font-mono text-[11px] tracking-chip uppercase text-muted text-center">
-          See drake-tool-spec.md §5 for the model definition · §10 for acceptance criteria
+          The full model specification and tests are in the project&rsquo;s source code
         </div>
       </div>
     </dialog>

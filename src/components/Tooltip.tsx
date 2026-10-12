@@ -2,8 +2,8 @@
 //
 // Visibility is CSS-driven (group-hover / group-focus-within) so the tooltip
 // doesn't require client JS to appear. Position is JS-tweaked: on hover/focus
-// the trigger's viewport position is measured and the body anchors left/center/
-// right to avoid clipping at viewport edges.
+// the trigger's viewport position is measured and the body is placed (and on
+// phones, narrowed) so it stays inside the viewport.
 
 import { useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -13,40 +13,41 @@ interface TooltipProps {
   triggerLabel?: string;
 }
 
-type Anchor = 'left' | 'center' | 'right';
+const TOOLTIP_WIDTH = 320;
+const VIEWPORT_MARGIN = 8;
 
-const TOOLTIP_HALF_WIDTH = 170; // 320px body + ~10px buffer / 2
-
-function pickAnchor(rect: DOMRect): Anchor {
+/**
+ * Horizontal placement for the tooltip body, in px relative to the trigger's left edge:
+ * centred on the trigger where possible, clamped to stay inside the viewport, and
+ * narrowed on viewports smaller than the body (phones).
+ */
+function placement(rect: DOMRect): { left: number; width: number } {
   const vw = window.innerWidth;
-  if (rect.left < TOOLTIP_HALF_WIDTH) return 'left';
-  if (vw - rect.right < TOOLTIP_HALF_WIDTH) return 'right';
-  return 'center';
+  const width = Math.min(TOOLTIP_WIDTH, vw - 2 * VIEWPORT_MARGIN);
+  const centred = rect.left + rect.width / 2 - width / 2;
+  const clamped = Math.max(VIEWPORT_MARGIN, Math.min(vw - width - VIEWPORT_MARGIN, centred));
+  return { left: clamped - rect.left, width };
 }
 
 export function Tooltip({ children, triggerLabel = 'i' }: TooltipProps) {
   const id = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const [anchor, setAnchor] = useState<Anchor>('center');
+  const [place, setPlace] = useState<{ left: number; width: number }>({
+    left: 9 - TOOLTIP_WIDTH / 2,
+    width: TOOLTIP_WIDTH,
+  });
 
-  const updateAnchor = (): void => {
+  const updatePlacement = (): void => {
     const el = triggerRef.current;
     if (!el) return;
-    setAnchor(pickAnchor(el.getBoundingClientRect()));
+    setPlace(placement(el.getBoundingClientRect()));
   };
-
-  const positionClass =
-    anchor === 'center'
-      ? 'left-1/2 -translate-x-1/2'
-      : anchor === 'left'
-        ? 'left-0'
-        : 'right-0';
 
   return (
     <span
       className="relative inline-flex group align-middle"
-      onMouseEnter={updateAnchor}
-      onFocusCapture={updateAnchor}
+      onMouseEnter={updatePlacement}
+      onFocusCapture={updatePlacement}
     >
       <button
         ref={triggerRef}
@@ -57,12 +58,19 @@ export function Tooltip({ children, triggerLabel = 'i' }: TooltipProps) {
       >
         {triggerLabel}
       </button>
+      {/* The outer span's top padding bridges the gap to the trigger, so the pointer can
+          move into the tooltip (to click a citation) without it closing. */}
       <span
-        id={id}
-        role="tooltip"
-        className={`absolute top-full z-20 hidden group-hover:block group-focus-within:block mt-2 w-[320px] bg-ink text-paper px-3.5 py-3 font-serif text-[13px] leading-[1.45] shadow-lg pointer-events-auto ${positionClass}`}
+        className="absolute top-full z-20 hidden group-hover:block group-focus-within:block pt-2 pointer-events-auto"
+        style={{ left: place.left, width: place.width }}
       >
-        {children}
+        <span
+          id={id}
+          role="tooltip"
+          className="block bg-ink text-paper px-3.5 py-3 font-serif text-[13px] leading-[1.45] shadow-lg"
+        >
+          {children}
+        </span>
       </span>
     </span>
   );

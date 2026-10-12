@@ -55,15 +55,16 @@ pnpm typecheck    # tsc --noEmit; strict + every extra strictness flag
 pnpm build        # vite build → dist/
 ```
 
-All four gates must pass before any commit per spec §13.7.
+All four gates (plus a visual check, see `CLAUDE.md`) must pass before any commit.
 
 ## Permalinks
 
-The full app state (Drake bounds, methods, channels, worldview, cosmology, prior overrides)
-serialises to the URL hash via deflate + base64url. The address bar reflects state in real time
-(debounced 500ms). Click "Copy permalink ↗" in the masthead to copy a shareable URL; click any
-of the three "Jump to →" chips to teleport to a fully-configured worldview (useful for live
-demos). Schema is versioned (`v: 1`); future changes ship migrations in `src/lib/permalink.ts`.
+The full app state (Drake bounds, f_l model, detection methods, value channels and their
+uncertainty, worldview, prior overrides) serialises to the URL hash via deflate + base64url. The
+address bar reflects state in real time (debounced 500ms). Click "Copy permalink ↗" in the
+masthead to copy a shareable URL; click any of the five "Jump to →" chips to load a preset
+(useful for live demos). The schema is versioned (currently `v: 5`); older links are migrated
+in `src/lib/permalink.ts`.
 
 ## Presenter mode
 
@@ -75,10 +76,10 @@ stats and the chapter counter; **←/→** snap-scroll between the seven chapter
 - Sandberg, Drexler &amp; Ord (2018), *Dissolving the Fermi Paradox* — arXiv:1806.02404
 - Hanson, Martin, McCarter &amp; Paulson (2021), *If Loud Aliens Explain Human Earliness, Quiet
   Aliens Are Also Rare* — arXiv:2102.01522 (Grabby Aliens; explains why the tool has no Grabby mode)
-- Bostrom (2003), *Astronomical Waste* — nickbostrom.com/papers/astronomical-waste/
+- Bostrom (2003), *Astronomical Waste* — nickbostrom.com/astronomical/waste
 - Bostrom (2013), *Existential Risk Prevention as Global Priority* — existential-risk.com/concept.pdf
 - Ord (2020), *The Precipice*
-- Armstrong &amp; Sandberg (2013), *Eternity in Six Hours* — Acta Astronautica 89:1–13
+- Armstrong &amp; Sandberg (2013), *Eternity in Six Hours* — Acta Astronautica (FHI preprint linked in the app)
 - Azad (2026), *Contra Fermi Paradox is Not Contra UFOs* — for the directional-reasoning critique
 - GiveWell cost-effectiveness analysis — GiveWell uses its own units, not DALYs; the tool's
   ~$100/DALY bar is our approximation of its top-charity bar

@@ -4,6 +4,10 @@ import { ComparatorBars } from '../charts/ComparatorBars';
 import { useStore } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
 import { COMPARATORS, COMPARATOR_OMISSIONS } from '../../constants/comparators';
+import { logTicks } from '../../lib/axis';
+
+/** The histogram's x-axis never goes below 10⁻¹² × GiveWell. */
+const HIST_FLOOR_LOG = -12;
 import { summaryFor, outcomeSplit, plainGloss, plainNumber } from '../../model/summary';
 import { OutcomeDots } from '../charts/OutcomeDots';
 import { OUTCOME_COLORS } from '../../constants/outcomeColors';
@@ -103,11 +107,10 @@ export function Ch05Verdict() {
     return buf.slice(0, k);
   })();
 
-  // Pick histogram x-range from the actual min/max of positive samples so all
-  // bins are visible — no off-chart overflow. Previously we clipped to the
-  // 2nd/98th percentiles to keep the chart compact, but that left long tails
-  // hidden in edge markers; now we show the full range, accepting that under
-  // wide-uncertainty presets the chart may span 20+ OoM.
+  // Histogram x-range: from the smallest positive multiplier to the largest, but never
+  // below 10⁻¹² × GiveWell. Smaller positive values are effectively nothing; they are
+  // counted in the hatched left-edge marker rather than stretching the axis across
+  // hundreds of meaningless orders of magnitude.
   const xRange = (() => {
     if (positives.length === 0) return { logMin: -3, logMax: 3 };
     let minLog = Infinity;
@@ -121,22 +124,19 @@ export function Ch05Verdict() {
     if (!Number.isFinite(minLog) || !Number.isFinite(maxLog)) {
       return { logMin: -3, logMax: 3 };
     }
-    let logMin = Math.floor(minLog);
+    let logMin = Math.max(HIST_FLOOR_LOG, Math.floor(minLog));
     let logMax = Math.ceil(maxLog);
     // Always show the GiveWell line.
     logMin = Math.min(logMin, -1);
     logMax = Math.max(logMax, 1);
     return { logMin, logMax };
   })();
-  const xTicks = (() => {
-    const step = Math.ceil((xRange.logMax - xRange.logMin) / 6);
-    const ticks: string[] = [];
-    for (let l = xRange.logMin; l <= xRange.logMax; l += step) {
-      if (l === 0) ticks.push('1');
-      else ticks.push(`10${supScript(l)}`);
-    }
-    return ticks;
-  })();
+  const xTicks = logTicks(xRange.logMin, xRange.logMax).map((l) => ({
+    log: l,
+    label: l === 0 ? '1' : `10${supScript(l)}`,
+  }));
+  let belowFloor = 0;
+  for (const v of positives) if (v < Math.pow(10, xRange.logMin)) belowFloor++;
 
   return (
     <ChapterShell
@@ -267,54 +267,73 @@ export function Ch05Verdict() {
             </div>
           </div>
         </div>
-        <Histogram
-          samples={positives}
-          w={1120}
-          h={300}
-          refLine={0}
-          refLabel="GiveWell bar (1×)"
-          logMin={xRange.logMin}
-          logMax={xRange.logMax}
-          nBins={Math.max(40, (xRange.logMax - xRange.logMin) * 6)}
-          xTicks={xTicks}
-        />
+        {/* On phones the chart keeps a readable minimum width and scrolls sideways. */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[720px] md:min-w-0">
+            <Histogram
+              samples={positives}
+              w={1120}
+              h={300}
+              refLine={0}
+              refLabel="GiveWell bar (1×)"
+              logMin={xRange.logMin}
+              logMax={xRange.logMax}
+              nBins={Math.max(40, (xRange.logMax - xRange.logMin) * 6)}
+              xTicks={xTicks}
+            />
+          </div>
+        </div>
         {pNeg > 0 && (
           <div className="font-mono text-[11px] text-muted mt-3">
             {fmtPct(pNeg)} of worlds are below zero and not shown on this log-scale chart.
+          </div>
+        )}
+        {belowFloor > 0 && (
+          <div className="font-mono text-[11px] text-muted mt-1">
+            {fmtPct(belowFloor / Math.max(1, out?.multiplierSamples.length ?? 1))} of worlds are
+            positive but below 10⁻¹² × GiveWell (effectively nothing); they are counted in the
+            hatched marker at the left edge.
           </div>
         )}
       </div>
 
       <div className="mt-7 bg-paper border border-ink px-7 py-6">
         <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
-          vs reference cause areas — ranges, not points
+          vs reference cause areas — published figures; ranges where the source gives one
         </div>
-        <ComparatorBars
-          items={[
-            {
-              label: `This tool — ${presetName} (${summary.short}${summary.value < 0 ? ', negative' : ''})`,
-              lo: Math.max(p5, 1e-9),
-              mid: Math.max(summary.value, 1e-9),
-              hi: Math.max(p95, 1e-9),
-              main: true,
-            },
-            ...COMPARATORS.map((c) => ({
-              label: c.label,
-              lo: c.lo,
-              mid: c.mid,
-              hi: c.hi,
-            })),
-          ]}
-        />
+        <div className="overflow-x-auto">
+          <div className="min-w-[720px] md:min-w-0">
+            <ComparatorBars
+              items={[
+                {
+                  label: `This tool — ${presetName} (${summary.short}${summary.value < 0 ? ', negative' : ''})`,
+                  lo: p5,
+                  mid: summary.value,
+                  hi: p95,
+                  main: true,
+                },
+                ...COMPARATORS.map((c) => ({
+                  label: c.label,
+                  lo: c.lo,
+                  mid: c.mid,
+                  hi: c.hi,
+                })),
+              ]}
+            />
+          </div>
+        </div>
         <div
           className="mt-5 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 font-mono text-[11px] text-muted"
           style={{ borderTop: '1px dashed #d8d3c8' }}
         >
-          <div className="col-span-2 tracking-chip uppercase mb-1">Sources</div>
+          <div className="sm:col-span-2 tracking-chip uppercase mb-1">Sources</div>
           {COMPARATORS.map((c) => (
-            <div key={c.label} className="flex justify-between gap-3">
-              <span className="text-ink">{c.label}</span>
-              <span className="text-right">
+            <div
+              key={c.label}
+              className="flex flex-col sm:flex-row sm:justify-between gap-0.5 sm:gap-3"
+            >
+              <span className="text-ink shrink-0 sm:max-w-[40%]">{c.label}</span>
+              <span className="sm:text-right">
                 {c.sourceUrl !== undefined ? (
                   <a
                     href={c.sourceUrl}
@@ -327,14 +346,30 @@ export function Ch05Verdict() {
                 ) : (
                   c.source
                 )}
+                {c.extraLinks?.map((l) => (
+                  <span key={l.url + l.text}>
+                    {' · '}
+                    <a
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline decoration-dotted underline-offset-2 hover:text-accent transition-colors"
+                    >
+                      {l.text}
+                    </a>
+                  </span>
+                ))}
               </span>
             </div>
           ))}
-          <div className="col-span-2 tracking-chip uppercase mt-3 mb-1">Not shown</div>
+          <div className="sm:col-span-2 tracking-chip uppercase mt-3 mb-1">Not shown</div>
           {COMPARATOR_OMISSIONS.map((o) => (
-            <div key={o.label} className="flex justify-between gap-3">
-              <span className="text-ink">{o.label}</span>
-              <span className="text-right">
+            <div
+              key={o.label}
+              className="flex flex-col sm:flex-row sm:justify-between gap-0.5 sm:gap-3"
+            >
+              <span className="text-ink shrink-0 sm:max-w-[40%]">{o.label}</span>
+              <span className="sm:text-right">
                 <a
                   href={o.sourceUrl}
                   target="_blank"
