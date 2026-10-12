@@ -16,8 +16,8 @@ import { runDrakeMC, type DrakeMCOutput } from '../../src/model/monteCarlo';
 import { defaultDrakeRanges } from '../../src/model/drake';
 import { defaultDetectionState } from '../../src/model/detection';
 import { applyPreset, PRESETS, type PresetId } from '../../src/presets/worldviews';
-import { summaryFor } from '../../src/model/summary';
-import { defaultValueUncertainty } from '../../src/model/value';
+import { defaultChannelState, defaultValueUncertainty } from '../../src/model/value';
+import { defaultWorldview } from '../../src/model/worldview';
 import { DEFAULT_FL_DISTRIBUTION } from '../../src/constants/defaults';
 
 const N = 30_000;
@@ -76,13 +76,6 @@ describe('epistemic-neutrality calibration — spec §10 #5', () => {
     expect(ord.out.pAboveGiveWell).toBeLessThan(0.8);
   });
 
-  it('Moderate longtermist’s own summary number (typical world) is below the GiveWell bar', () => {
-    const results = runAllPresets();
-    const ord = results.find((r) => r.id === 'ord');
-    const preset = PRESETS.find((p) => p.id === 'ord');
-    if (!ord || !preset) throw new Error('ord preset missing from PRESETS');
-    expect(summaryFor(ord.out, preset.worldview.riskAversion).value).toBeLessThan(1);
-  });
 });
 
 // The same checks at the site's own defaults (SDO f_l, value uncertainty on), i.e.
@@ -119,10 +112,34 @@ describe('epistemic neutrality at the site defaults', () => {
     expect(worse.some((p) => p > 0.05 && p < 0.95)).toBe(true);
   });
 
-  it('Moderate longtermist’s typical-world number is below the GiveWell bar', () => {
+  // These used to check the Moderate longtermist's *median*, which is ≈ 10⁻²² for every
+  // non-negative preset (most worlds find nothing), so they could never fail. The split
+  // can: a biased default that pushed more worlds over the bar, or hid harm, trips them.
+  it('Moderate longtermist: fewer than 40 of 100 worlds beat GiveWell, and at least 5 do serious harm', () => {
     const ord = runSiteDefaults().find((r) => r.id === 'ord');
-    const preset = PRESETS.find((p) => p.id === 'ord');
-    if (!ord || !preset) throw new Error('ord preset missing');
-    expect(summaryFor(ord.out, preset.worldview.riskAversion).value).toBeLessThan(1);
+    if (!ord) throw new Error('ord preset missing');
+    expect(ord.out.pAboveGiveWell).toBeLessThan(0.4);
+    expect(ord.out.pHarmBeyondGiveWell).toBeGreaterThan(0.05);
+  });
+
+  it('the site defaults themselves: fewer than 40 of 100 worlds beat GiveWell, and at least 5 do serious harm', () => {
+    const out = runDrakeMC({
+      ranges: defaultDrakeRanges(),
+      methods: defaultDetectionState(),
+      channels: defaultChannelState(),
+      worldview: defaultWorldview(),
+      flDistribution: DEFAULT_FL_DISTRIBUTION,
+      valueUncertainty: defaultValueUncertainty(),
+      n: N,
+      seed: 'site-neutrality-defaults',
+    });
+    expect(out.pAboveGiveWell).toBeLessThan(0.4);
+    expect(out.pHarmBeyondGiveWell).toBeGreaterThan(0.05);
+  });
+
+  it('the default "In GiveWell terms" number is the typical world, not the average', () => {
+    // The average is dominated by a few worlds with enormous payoffs; leading with it put
+    // "far better than GiveWell" on screen while most worlds find nothing.
+    expect(defaultWorldview().riskAversion).toBe('typical');
   });
 });

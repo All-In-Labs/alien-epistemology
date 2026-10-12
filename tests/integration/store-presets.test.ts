@@ -2,7 +2,12 @@
 // loaded or edited before (previously the demo presets' Drake bounds and overrides leaked
 // into whichever preset came next).
 import { describe, it, expect } from 'vitest';
-import { useStore } from '../../src/store';
+import {
+  useStore,
+  configurationLabel,
+  getSerializedState,
+  applySerializedState,
+} from '../../src/store';
 import type { PresetId } from '../../src/presets/worldviews';
 
 function snapshot() {
@@ -50,5 +55,37 @@ describe('store: presets', () => {
     expect(useStore.getState().flDistribution).toBe('log-uniform');
     useStore.getState().loadPreset('ord');
     expect(useStore.getState().flDistribution).toBe('sdo-lognormal');
+  });
+});
+
+describe('store: configuration label', () => {
+  it('reads "Default settings" when nothing has been changed', () => {
+    useStore.getState().resetAll();
+    expect(configurationLabel(useStore.getState())).toBe('Default settings');
+  });
+
+  it('flipping the risk dial alone still counts as the defaults (it only picks a summary number)', () => {
+    useStore.getState().resetAll();
+    useStore.getState().patchWorldview({ riskAversion: 'average' });
+    expect(configurationLabel(useStore.getState())).toBe('Default settings');
+  });
+
+  it('names the preset, until anything is edited', () => {
+    const s = useStore.getState();
+    s.resetAll();
+    s.loadPreset('ord');
+    expect(configurationLabel(useStore.getState())).toBe('Moderate longtermist preset');
+    useStore.getState().setMethodCost('seti', 120);
+    expect(configurationLabel(useStore.getState())).toBe('Your settings');
+  });
+
+  it('survives a permalink round trip', () => {
+    const s = useStore.getState();
+    s.resetAll();
+    s.loadPreset('near');
+    const serialized = getSerializedState();
+    useStore.getState().resetAll();
+    applySerializedState(serialized);
+    expect(configurationLabel(useStore.getState())).toBe('Neartermist preset');
   });
 });

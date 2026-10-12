@@ -1,35 +1,28 @@
 import { ChapterShell } from '../ChapterShell';
 import { Histogram } from '../charts/Histogram';
 import { ComparatorBars } from '../charts/ComparatorBars';
-import { useStore } from '../../store';
-import { PRESETS } from '../../presets/worldviews';
+import { useStore, configurationLabel } from '../../store';
 import { COMPARATORS, COMPARATOR_OMISSIONS } from '../../constants/comparators';
 import { logTicks } from '../../lib/axis';
 
 /** The histogram's x-axis never goes below 10⁻¹² × GiveWell. */
 const HIST_FLOOR_LOG = -12;
-import { summaryFor, outcomeSplit, plainGloss, plainNumber } from '../../model/summary';
+import {
+  summaryFor,
+  outcomeSplit,
+  plainGloss,
+  plainNumber,
+  worldsThatFind,
+} from '../../model/summary';
 import { OutcomeDots } from '../charts/OutcomeDots';
 import { OUTCOME_COLORS } from '../../constants/outcomeColors';
 import { Segmented } from '../controls/Segmented';
 import type { RiskAversion } from '../../model/worldview';
 
 // Number-only formatter (no trailing × — caller decides whether to add one).
-function fmtMul(v: number): string {
-  if (!Number.isFinite(v)) return '—';
-  if (v === 0) return '0';
-  const abs = Math.abs(v);
-  // Round near-zero magnitudes so we don't show "-8.3e-5" as a headline.
-  // Prefix "≈" makes the rounding visible without breaking the "× GiveWell" suffix.
-  if (abs < 1e-3) return v < 0 ? '≈ −0' : '≈ 0';
-  if (abs < 1) return v.toFixed(3).replace(/\.?0+$/, '');
-  if (abs < 100) return v.toFixed(2);
-  if (abs < 1e6) return v.toFixed(0);
-  return v.toExponential(1);
-}
-
+/** Same plain format as the headline number ("−3,136", "1.7 million", "≈ 0"). */
 function fmtX(v: number): string {
-  return `${fmtMul(v)}×`;
+  return `${plainNumber(v)}×`;
 }
 
 function fmtPct(p: number): string {
@@ -59,12 +52,9 @@ function supScript(n: number): string {
 
 export function Ch05Verdict() {
   const out = useStore((s) => s.drakeOutput);
-  const activePreset = useStore((s) => s.activePreset);
+  const configLabel = useStore(configurationLabel);
   const riskAversion = useStore((s) => s.worldview.riskAversion);
   const patchWorldview = useStore((s) => s.patchWorldview);
-  const presetName = activePreset
-    ? (PRESETS.find((p) => p.id === activePreset)?.name ?? 'Custom')
-    : 'Custom';
 
   const median = out?.medianMultiplier ?? 0;
   const mean = out?.meanMultiplier ?? 0;
@@ -147,7 +137,7 @@ export function Ch05Verdict() {
     >
       <div className="bg-paper border border-ink px-4 sm:px-7 py-6">
         <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
-          Out of 100 plausible worlds · {presetName} preset
+          Out of 100 plausible worlds · {configLabel}
         </div>
         {hideHeadline ? (
           <div className="font-serif text-lg text-muted mt-4">
@@ -166,19 +156,19 @@ export function Ch05Verdict() {
                   {
                     key: 'better' as const,
                     count: fmtCount(split.better, split.betterUnderOne),
-                    text: 'do more good than GiveWell’s top charities',
-                    sub: null,
+                    text: 'are worth more than GiveWell’s top charities, on average',
+                    sub: 'usually a small chance of a find with a very large payoff, not a find itself',
                   },
                   {
                     key: 'less' as const,
                     count: String(split.less),
                     text: 'make less difference than GiveWell, either way',
-                    sub: 'mostly close to nothing, because nothing is found',
+                    sub: 'mostly close to nothing, because a find is very unlikely in that world',
                   },
                   {
                     key: 'worse' as const,
                     count: fmtCount(split.worse, split.worseUnderOne),
-                    text: 'do serious harm',
+                    text: 'do serious harm, on average',
                     sub: 'at least as much harm as GiveWell’s top charities do good. Finding aliens can be bad news: it may mean the cosmos is already claimed, or draw hostile attention (Ch.3)',
                   },
                 ].map((row) => (
@@ -196,16 +186,19 @@ export function Ch05Verdict() {
                     </span>
                     <span className="font-serif text-lg text-ink leading-snug">
                       {row.text}
-                      {row.sub !== null && (
-                        <span className="block font-serif text-[13px] text-muted leading-snug mt-0.5 max-w-[460px]">
-                          {row.sub}
-                        </span>
-                      )}
+                      <span className="block font-serif text-[13px] text-muted leading-snug mt-0.5 max-w-[460px]">
+                        {row.sub}
+                      </span>
                     </span>
                   </div>
                 ))}
               </div>
             </div>
+            <p className="font-serif text-[14px] text-muted mt-5 max-w-[780px]">
+              Each dot is one world&rsquo;s value <em>on average</em>, over whether the search
+              finds anything. The search actually finds something this decade in{' '}
+              <span className="text-ink">{worldsThatFind(pAnyDetection)}</span> of 100 worlds.
+            </p>
 
             <div className="mt-6 pt-5" style={{ borderTop: '1px dashed #d8d3c8' }}>
               <div className="flex flex-wrap items-center gap-3">
@@ -306,7 +299,7 @@ export function Ch05Verdict() {
             <ComparatorBars
               items={[
                 {
-                  label: `This tool — ${presetName} (${summary.short}${summary.value < 0 ? ', negative' : ''})`,
+                  label: `This tool — ${configLabel} (${summary.short}${summary.value < 0 ? ', negative' : ''})`,
                   lo: p5,
                   mid: summary.value,
                   hi: p95,
@@ -321,6 +314,12 @@ export function Ch05Verdict() {
               ]}
             />
           </div>
+        </div>
+        <div className="font-mono text-[11px] text-muted mt-2">
+          This tool&rsquo;s whisker runs from its 5th to its 95th percentile world; the dot is the
+          number chosen under &ldquo;In GiveWell terms&rdquo;.
+          {(summary.value > p95 || summary.value < p5) &&
+            ' The dot sits outside the whisker because a few worlds with enormous payoffs (or losses) dominate the average.'}
         </div>
         <div
           className="mt-5 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 font-mono text-[11px] text-muted"

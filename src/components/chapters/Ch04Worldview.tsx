@@ -5,7 +5,7 @@ import { Segmented } from '../controls/Segmented';
 import { Toggle } from '../controls/Toggle';
 import { Tooltip } from '../Tooltip';
 import { CitationLink } from '../CitationLink';
-import { useStore } from '../../store';
+import { useStore, configurationLabel } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
 import type { RiskAversion } from '../../model/worldview';
 
@@ -65,6 +65,7 @@ const TT_RISK = (
 export function Ch04Worldview() {
   const worldview = useStore((s) => s.worldview);
   const activePreset = useStore((s) => s.activePreset);
+  const configLabel = useStore(configurationLabel);
   const patchWorldview = useStore((s) => s.patchWorldview);
   const loadPreset = useStore((s) => s.loadPreset);
 
@@ -76,9 +77,8 @@ export function Ch04Worldview() {
       kicker="Worldview dials act as transforms on the value channels before EV is computed. No preset is privileged: the Strong longtermist and Neartermist presets sit side by side. Loading a preset resets everything it doesn’t set to the defaults."
     >
       <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
-        {activePreset === null
-          ? 'Active configuration · Custom (no preset selected)'
-          : 'Active configuration · click another preset to switch, or tweak any dial below'}
+        Active configuration · {configLabel}
+        {activePreset !== null && ' · click another preset to switch, or tweak any dial below'}
       </div>
       <div role="radiogroup" aria-label="Worldview preset" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {PRESETS.map((p, idx) => (

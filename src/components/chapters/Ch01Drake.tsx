@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ChapterShell } from '../ChapterShell';
 import { LogRangeSlider } from '../controls/LogRangeSlider';
+import { Segmented } from '../controls/Segmented';
 import { useStore } from '../../store';
 import {
   DRAKE_DEFAULTS,
@@ -11,6 +12,7 @@ import { makeRng } from '../../lib/rng';
 import { logUniform, linearUniform } from '../../lib/sampling';
 import { binLog10 } from '../../lib/binning';
 import type { DrakeRanges } from '../../model/drake';
+import type { FlDistribution } from '../../constants/defaults';
 import type { ReactNode } from 'react';
 import { CitationLink } from '../CitationLink';
 import { sampleFlSDO } from '../../model/drake';
@@ -185,32 +187,38 @@ export function Ch01Drake() {
               onChange={(lo, hi) => {
                 setDrakeRange(id, { min: lo, max: hi });
               }}
-              disabled={astroLocked && isAstro}
+              // In SDO mode the fₗ bounds aren't used, so the slider is off until the
+              // reader picks "Your own range" (it used to switch models on one keypress).
+              disabled={(astroLocked && isAstro) || (id === 'fl' && flIsSDO)}
               tooltip={TOOLTIPS[id]}
             />
           );
         })}
       </div>
-      <p className="font-serif text-[13.5px] text-muted mt-4 max-w-[780px]">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <span className="font-mono text-[11px] text-muted tracking-chip uppercase">fₗ model</span>
+        <Segmented<FlDistribution>
+          ariaLabel="Model for the fraction of planets that develop life"
+          value={flDistribution}
+          onChange={setFlDistribution}
+          options={[
+            { value: 'sdo-lognormal', label: 'SDO 2018’s model' },
+            { value: 'log-uniform', label: 'Your own range' },
+          ]}
+        />
+      </div>
+      <p className="font-serif text-[13.5px] text-muted mt-2 max-w-[780px]">
         {flIsSDO ? (
           <>
             <strong className="text-ink">fₗ follows SDO 2018&rsquo;s model:</strong> life arises on
             about half of habitable planets, with a long tail of planets where it almost never
-            does. Drag the fₗ slider to use your own range instead.
+            does. The fₗ slider is off; choose &ldquo;Your own range&rdquo; to set bounds.
           </>
         ) : (
           <>
-            <strong className="text-ink">fₗ uses your range</strong>, sampled log-uniform — which
-            puts only ~3% of samples above 0.1, far more pessimistic than SDO&rsquo;s model.{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setFlDistribution('sdo-lognormal');
-              }}
-              className="underline decoration-dotted underline-offset-2 text-ink hover:text-accent cursor-pointer bg-transparent border-0 p-0"
-            >
-              Switch back to SDO 2018&rsquo;s model
-            </button>
+            <strong className="text-ink">fₗ uses your range</strong>, sampled log-uniform. The
+            default 10⁻³⁰&ndash;1 puts only ~3% of samples above 0.1, far more pessimistic than
+            SDO&rsquo;s model, so the chance we are alone jumps.
           </>
         )}
       </p>

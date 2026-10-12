@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { defaultChannelState, valueOnDetection } from '../../src/model/value';
+import {
+  defaultChannelState,
+  valueOnDetection,
+  channelValuesForTypeSet,
+} from '../../src/model/value';
 
 describe('valueOnDetection', () => {
   it('returns 0 when all channels are off', () => {
@@ -58,5 +62,23 @@ describe('valueOnDetection', () => {
     const d = valueOnDetection('radio', { ...ch, A: { ...ch.A, on: false }, B: { ...ch.B, on: false }, C: { ...ch.C, on: false } });
     const total = valueOnDetection('radio', ch);
     expect(total).toBeCloseTo(a + b + c + d, 1);
+  });
+});
+
+// A microbe tells us nothing about whether interstellar technology works or whether the
+// cosmos is already claimed, so the astronomical-waste channel needs a technosignature.
+describe('astronomical-waste channel (B) needs evidence of technology', () => {
+  it('does not fire for a biosignature-only detection', () => {
+    expect(channelValuesForTypeSet(['biosig'], defaultChannelState()).B).toBe(0);
+  });
+
+  it('fires for radio, technosignatures, passive radar and probes', () => {
+    for (const t of ['radio', 'technosig', 'passive_radar', 'probe'] as const) {
+      expect(channelValuesForTypeSet([t], defaultChannelState()).B).not.toBe(0);
+    }
+  });
+
+  it('fires when a biosignature comes with a technosignature', () => {
+    expect(channelValuesForTypeSet(['biosig', 'radio'], defaultChannelState()).B).not.toBe(0);
   });
 });

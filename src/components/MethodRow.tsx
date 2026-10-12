@@ -113,17 +113,18 @@ function fmtCost(costM: number): string {
   return `$${costM.toFixed(0)}M`;
 }
 
-/** 3e-3 → "3×10⁻³", 1e-8 → "10⁻⁸", 30 → "30". One significant figure. */
+/** 3e-3 → "3×10⁻³", 1.5e-8 → "1.5×10⁻⁸", 1e-8 → "10⁻⁸", 30 → "30". Two significant figures. */
 function fmtPow(x: number): string {
   if (!(x > 0)) return '0';
   let e = Math.floor(Math.log10(x) + 1e-9);
-  let m = Math.round(x / Math.pow(10, e));
+  let m = Math.round((x / Math.pow(10, e)) * 10) / 10;
   if (m >= 10) {
     m = 1;
     e += 1;
   }
-  if (e >= 0 && e <= 3) return String(m * Math.pow(10, e));
-  return m === 1 ? `10${supScript(e)}` : `${String(m)}×10${supScript(e)}`;
+  if (e >= 0 && e <= 3) return String(Math.round(m * Math.pow(10, e) * 10) / 10);
+  const ms = Number.isInteger(m) ? String(m) : m.toFixed(1);
+  return m === 1 ? `10${supScript(e)}` : `${ms}×10${supScript(e)}`;
 }
 
 /** Methods whose reach range has no published source behind it. */
@@ -156,7 +157,7 @@ export function MethodRow({ method }: MethodRowProps) {
         onChange={(v) => {
           setMethodOn(cfg.id, v);
         }}
-        label={cfg.id}
+        label={`Fund ${labelFor(cfg.id)}`}
       />
       <div>
         <div className="flex items-center gap-1.5">
@@ -214,6 +215,7 @@ export function MethodRow({ method }: MethodRowProps) {
                 }}
                 ariaLabelLo={`${cfg.id} reach minimum`}
                 ariaLabelHi={`${cfg.id} reach maximum`}
+                formatValue={(v) => `${fmtPow(v)} of the galaxy`}
                 fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
               />
             </div>
@@ -239,6 +241,7 @@ export function MethodRow({ method }: MethodRowProps) {
                 }}
                 ariaLabelLo={`${cfg.id} sensitivity minimum`}
                 ariaLabelHi={`${cfg.id} sensitivity maximum`}
+                formatValue={(v) => `${fmtPow(v)} per target in reach per $1B-decade`}
                 fillColor={cfg.on ? '#2e6a31' : '#c8c4bc'}
               />
             </div>

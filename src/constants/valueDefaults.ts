@@ -18,7 +18,9 @@ export interface ChannelBDefaults {
   techViabilityShift: number;
   /** Lightcone-claim evidence shift on detection (negative). */
   lightconeClaimShift: number;
-  /** V_cosmic_endowment in DALYs (Bostrom-style astronomical waste). */
+  /** V_cosmic_endowment, used as DALY-equivalents. The default 10¹⁶ is Bostrom (2013)'s
+   *  count of *lives*; a life is many DALYs, so treating it as 10¹⁶ DALYs understates the
+   *  figure ~50–80× (a deliberately conservative reading). */
   vCosmicEndowment: number;
 }
 
@@ -35,6 +37,13 @@ export interface ChannelDDefaults {
   vHostileDisvalue: number;
   fires: DetectionType[];
 }
+
+/**
+ * Detection types that fire Channel B (astronomical waste). B is about whether interstellar
+ * technology works and whether the cosmos is already claimed; a biosignature (microbes)
+ * says nothing about either, so it needs a technosignature to fire.
+ */
+export const B_FIRES: readonly DetectionType[] = ['radio', 'technosig', 'passive_radar', 'probe'];
 
 export const VALUE_DEFAULTS = {
   A: {

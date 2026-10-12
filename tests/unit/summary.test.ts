@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { summaryFor, outcomeSplit, plainGloss, plainNumber } from '../../src/model/summary';
+import {
+  summaryFor,
+  outcomeSplit,
+  plainGloss,
+  plainNumber,
+  worldsThatFind,
+} from '../../src/model/summary';
 import { normalizeRiskAversion } from '../../src/model/worldview';
 
 const out = { meanMultiplier: 1000, medianMultiplier: 0.01, p25Multiplier: 0.001 };
@@ -70,7 +76,9 @@ describe('plainGloss — words for a GiveWell multiple', () => {
     expect(plainGloss(0.2)).toBe('less than GiveWell');
     expect(plainGloss(1.1)).toBe('about as good as GiveWell');
     expect(plainGloss(30)).toBe('better than GiveWell');
-    expect(plainGloss(2e5)).toBe('far better than GiveWell');
+    // No "far better": the number beside it already says how much, and the extra
+    // adjective read as a sales pitch.
+    expect(plainGloss(2e5)).toBe('better than GiveWell');
   });
 });
 
@@ -84,5 +92,14 @@ describe('plainNumber — no scientific notation for lay readers', () => {
     expect(plainNumber(-4e6)).toBe('−4 million');
     expect(plainNumber(2.5e9)).toBe('2.5 billion');
     expect(plainNumber(3e17)).toBe('10¹⁷');
+  });
+});
+
+describe('worldsThatFind', () => {
+  it('says how many of 100 worlds actually find something, in plain words', () => {
+    expect(worldsThatFind(0.0326)).toBe('about 3');
+    expect(worldsThatFind(0.004)).toBe('fewer than 1');
+    expect(worldsThatFind(0)).toBe('none');
+    expect(worldsThatFind(0.5)).toBe('about 50');
   });
 });

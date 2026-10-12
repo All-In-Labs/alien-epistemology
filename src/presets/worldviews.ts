@@ -79,14 +79,17 @@ export const PRESETS: Preset[] = [
     id: 'hanson',
     name: 'Filter pessimist',
     short: 'Great Filter probably ahead; aliens’ welfare counts little',
+    // Differs from the defaults only in what its name and description say: ϕ = 0.2 (the
+    // filter is probably ahead). It used to also raise longtermism, hingeyness and drop the
+    // discount, unannounced, which made it ~19× kinder to the search than the defaults.
     worldview: {
-      longtermismStrength: 0.7,
-      timeDiscount: 0,
+      longtermismStrength: 0.3,
+      timeDiscount: 0.001,
       personAffecting: false,
       alienMoralWeight: 0.1,
-      hingeyness: 0.3,
+      hingeyness: 0.1,
       filterPriorBehind: 0.2,
-      riskAversion: 'average',
+      riskAversion: 'typical',
     },
   },
   {

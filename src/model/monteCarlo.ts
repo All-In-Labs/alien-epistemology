@@ -15,6 +15,7 @@ import { applyWorldview, defaultWorldview, type WorldviewDials } from './worldvi
 import type { FlDistribution } from '../constants/defaults';
 import { makeRng } from '../lib/rng';
 import type { DetectionType } from '../constants/detectionDefaults';
+import { B_FIRES } from '../constants/valueDefaults';
 
 export interface PriorOverrides {
   /** When set, P(N≥1) is replaced by this value, bypassing Drake for the partition stat.
@@ -68,9 +69,6 @@ export interface DrakeMCOutput {
   multiplierSamples: Float64Array;
   /** Median × GiveWell of multiplier samples (excluding non-finite). */
   medianMultiplier: number;
-  /** Median of multiplier samples conditional on a detection occurring (more honest
-   *  when most samples have no detection and the unconditional median collapses on 0). */
-  medianMultiplierGivenDetection: number;
   /** Geometric mean of strictly-positive multipliers (a more stable headline than the
    *  unconditional median when the zero-mass dominates). */
   gmeanPositiveMultiplier: number;
@@ -270,39 +268,40 @@ export function runDrakeMC({
           active.push({ id: mm.id, type: mm.type, pm });
         }
         const k = active.length;
-        if (k > 0) {
-          let ev = 0;
-          for (let s = 1; s < 1 << k; s++) {
-            let prob = 1;
-            let typeMask = 0;
-            for (let j = 0; j < k; j++) {
-              const a = active[j];
-              if (a === undefined) continue;
-              if ((s & (1 << j)) !== 0) {
-                prob *= a.pm;
-                typeMask |= typeBit(a.type);
-              } else {
-                prob *= 1 - a.pm;
-              }
+        let ev = 0;
+        for (let s = 1; s < 1 << k; s++) {
+          let prob = 1;
+          let typeMask = 0;
+          for (let j = 0; j < k; j++) {
+            const a = active[j];
+            if (a === undefined) continue;
+            if ((s & (1 << j)) !== 0) {
+              prob *= a.pm;
+              typeMask |= typeBit(a.type);
+            } else {
+              prob *= 1 - a.pm;
             }
-            ev += prob * vOf(typeMask);
           }
-          // Apply detection-floor as a value-weighted blend if it's set: floor
-          // the implied detection probability up to the floor by treating the
-          // missing mass as "average-type detection."
-          if (per.combined < floorHere) {
-            const missing = floorHere - per.combined;
-            // Average V across enabled-method type singletons as a fallback.
-            let avgSingleV = 0;
-            for (const a of active) {
-              avgSingleV += vOf(typeBit(a.type));
-            }
-            avgSingleV /= active.length;
-            ev += missing * avgSingleV;
-          }
-          evSamples[i] = ev;
-          evSum += ev;
+          ev += prob * vOf(typeMask);
         }
+        // Apply detection-floor as a value-weighted blend if it's set: floor the implied
+        // detection probability up to the floor by treating the missing mass as an
+        // "average-type detection" over the FUNDED methods' types. (Funded, not just
+        // detecting: with only probes funded nothing detects this decade, but the floor
+        // still says aliens are evident, and that news has value.)
+        if (per.combined < floorHere) {
+          const missing = floorHere - per.combined;
+          let sumV = 0;
+          let count = 0;
+          for (const mm of m) {
+            if (!mm.on || mm.costM <= 0) continue;
+            sumV += vOf(typeBit(mm.type));
+            count++;
+          }
+          if (count > 0) ev += (missing * sumV) / count;
+        }
+        evSamples[i] = ev;
+        evSum += ev;
       }
     }
   }
@@ -336,15 +335,6 @@ export function runDrakeMC({
     return sortedMultipliers[idx] ?? 0;
   };
 
-  const positiveSorted: number[] = [];
-  for (const v of sortedMultipliers) {
-    if (v !== 0) positiveSorted.push(v);
-  }
-  const medianGivenDetection =
-    positiveSorted.length > 0
-      ? (positiveSorted[Math.floor(positiveSorted.length / 2)] ?? 0)
-      : 0;
-
   let logSum = 0;
   let logCount = 0;
   for (const v of multiplierSamples) {
@@ -373,7 +363,6 @@ export function runDrakeMC({
     pHarmBeyondGiveWell: totalCostUSD > 0 ? pHarm / n : 0,
     multiplierSamples,
     medianMultiplier: pickPctl(0.5),
-    medianMultiplierGivenDetection: medianGivenDetection,
     gmeanPositiveMultiplier: gmeanPositive,
     meanMultiplier,
     p25Multiplier: pickPctl(0.25),
@@ -419,8 +408,9 @@ function channelValueComponentsForTypeSet(
   }
   // Channel B per UNIT of net evidence shift — the caller multiplies by the (possibly
   // sampled) net shift. Unlike value.ts's channelValuesForTypeSet, which includes it.
+  // Needs a technosignature: microbes say nothing about interstellar tech (B_FIRES).
   let B = 0;
-  if (ch.B.on && types.length > 0) {
+  if (ch.B.on && types.some((t) => B_FIRES.includes(t))) {
     B = ch.B.vCosmicEndowment;
   }
   let C = 0;

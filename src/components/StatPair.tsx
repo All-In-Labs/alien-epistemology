@@ -15,6 +15,7 @@ export function StatPair() {
   const pZero = out ? fmtPct(out.pNZero) : '—';
   const pGteOne = out ? fmtPct(out.pNGteOne) : '—';
   const pGtOne = out ? fmtPct(out.pNGtOne) : '—';
+  const pOne = out ? fmtPct(out.pNExactlyOne) : '—';
   const pAnyDetection = out ? fmtPct(out.pAnyDetection) : '—';
 
   return (
@@ -34,7 +35,7 @@ export function StatPair() {
           {pZero}
         </div>
         <div className="font-mono text-[11.5px] text-muted mt-2.5">
-          P( more than one ): <span className="text-ink">{pGtOne}</span>
+          The pairing matters more than either side.
         </div>
       </div>
       <div className="px-4 sm:px-8 py-5 lg:py-7 border-b lg:border-b-0 lg:border-r border-ink">
@@ -48,7 +49,8 @@ export function StatPair() {
           {pGteOne}
         </div>
         <div className="font-mono text-[11.5px] text-muted mt-2.5">
-          The pairing matters more than either side.
+          exactly one: <span className="text-ink">{pOne}</span> · more than one:{' '}
+          <span className="text-ink">{pGtOne}</span>
         </div>
       </div>
       <div className="px-4 sm:px-8 py-5 lg:py-7">

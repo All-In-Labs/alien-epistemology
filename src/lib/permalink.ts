@@ -11,6 +11,7 @@ import { NO_VALUE_UNCERTAINTY, type ChannelsState, type ValueUncertainty } from 
 import type { FlDistribution } from '../constants/defaults';
 import { normalizeRiskAversion, type WorldviewDials } from '../model/worldview';
 import type { PriorOverrides } from '../model/monteCarlo';
+import type { PresetId } from '../presets/worldviews';
 
 /**
  * A detection method as v1–v4 links stored it: no survey reach, and sensitivities on the
@@ -60,9 +61,12 @@ interface SerializedStateV4 {
   astroLocked: boolean;
 }
 
-/** v=5: detection methods gain survey reach; sensitivities become per target in reach. */
+/** v=5: detection methods gain survey reach; sensitivities become per target in reach.
+ *  `preset` (optional, added later in v5) names the preset the state came from, so a
+ *  shared link says "Moderate longtermist preset" rather than "Your settings". */
 export interface SerializedState {
   v: 5;
+  preset?: PresetId | undefined;
   drakeRanges: DrakeRanges;
   methods: DetectionMethodState[];
   channels: ChannelsState;
