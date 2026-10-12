@@ -109,9 +109,9 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   so old links keep their maths for features that were added. Error corrections do change old
   links: v1–v3 drop Grabby mode; v1–v4 keep each method's on/off and cost but take the new
   reach and sensitivity defaults (old sensitivities were on a different scale).
-- `pnpm` is via corepack (Node 22 bundles it). `.npmrc` disables `verifyDepsBeforeRun` and
-  `ignored-builds-check` because `esbuild`'s build script is approved via
-  `package.json` `pnpm.onlyBuiltDependencies` but pnpm 11's verify-deps check still flags it.
+- `pnpm` is via corepack (Node 22 bundles it). pnpm 11 settings live in `pnpm-workspace.yaml`,
+  not `package.json`'s `pnpm` field (no longer read): `esbuild`'s build script is approved via
+  `allowBuilds`, and `verifyDepsBeforeRun: false` stops every script re-running an install.
 
 ## When stuck
 
