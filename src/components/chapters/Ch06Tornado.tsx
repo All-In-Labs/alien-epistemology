@@ -176,6 +176,20 @@ const SWEEPS: SweepDef[] = [
     },
   },
   {
+    symbol: 'fₗ',
+    label: 'Fraction developing life (lower / upper half of your range)',
+    // Split the user's current fₗ range at its log-midpoint. fₗ is the widest Drake
+    // parameter, so sweeping to its literal endpoints would just saturate the chart.
+    setLow: (s) => {
+      const { min, max } = s.drakeRanges.fl;
+      s.drakeRanges.fl = { min, max: Math.sqrt(min * max) };
+    },
+    setHigh: (s) => {
+      const { min, max } = s.drakeRanges.fl;
+      s.drakeRanges.fl = { min: Math.sqrt(min * max), max };
+    },
+  },
+  {
     symbol: 'R*',
     label: 'Star formation rate',
     setLow: (s) => {
@@ -186,6 +200,32 @@ const SWEEPS: SweepDef[] = [
     },
   },
 ];
+
+function spreadOf(items: TornadoItem[], symbol: string): string {
+  const it = items.find((x) => x.symbol === symbol);
+  return it ? Math.abs(it.high - it.low).toFixed(1) : '—';
+}
+
+/** Captions computed from the sweep results, so they can't contradict the chart. */
+function captionsFor(items: TornadoItem[]): { h: string; b: string }[] {
+  const top = items[0];
+  return [
+    {
+      h: top ? `${top.label.replace(/\s*\(.*\)$/, '')} moves the answer most.` : 'Computing…',
+      b: top
+        ? `At your current settings its row spans about ${Math.abs(top.high - top.low).toFixed(1)} orders of magnitude on the chart. The ranking changes as you move other dials, so this caption is computed from the chart, not written in advance.`
+        : '',
+    },
+    {
+      h: 'Philosophy is a lever too.',
+      b: 'Longtermism strength, time discount and the size of the cosmic endowment are parameters of philosophy, not nature. Reasonable people set them differently.',
+    },
+    {
+      h: 'What we can measure matters least.',
+      b: `R*, the best-measured input, spans ${spreadOf(items, 'R*')} orders of magnitude; fₗ, the least-measured, spans ${spreadOf(items, 'fₗ')}. SETI sensitivity spans ${spreadOf(items, 's_seti')} — and its default range is a placeholder guess, not a community estimate.`,
+    },
+  ];
+}
 
 function logShift(reference: number, sweep: number): number {
   // Sign-aware log10 OoM shift. Bar position represents the direction and magnitude
@@ -328,7 +368,7 @@ export function Ch06Tornado() {
       num="06"
       eyebrow="What changes the answer most?"
       title="The tornado plot."
-      kicker="Each row shows how the mean cost-effectiveness multiplier shifts (as a ratio to baseline) when one input is swept to the bottom or top of its plausible range. Dark bars on the left = that endpoint pushes the verdict below baseline (worse); orange bars on the right = above baseline (better) — independent of whether it came from the low or high sweep, so inversely-correlated inputs (e.g. time discount) read consistently. Endpoints marked “(flips)” cross zero. Order is by total spread."
+      kicker="Each row shows how the mean cost-effectiveness multiplier shifts (as a ratio to baseline) when one input is swept to the bottom or top of its plausible range. Dark bars on the left = that endpoint pushes the verdict below baseline (worse); green bars on the right = above baseline (better) — independent of whether it came from the low or high sweep, so inversely-correlated inputs (e.g. time discount) read consistently. Endpoints marked “neg” flip the sign of the verdict (each flip adds 2 to the bar length). Order is by total spread."
     >
       <div className="bg-paper border border-ink px-4 sm:px-7 py-7">
         {items ? (
@@ -349,20 +389,7 @@ export function Ch06Tornado() {
           className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6 pt-5"
           style={{ borderTop: '1px dashed #d8d3c8' }}
         >
-          {[
-            {
-              h: 'Sensitivities dominate.',
-              b: 'The single biggest lever is per-method detection sensitivity — five orders of magnitude of community disagreement. This is where domain expertise belongs.',
-            },
-            {
-              h: 'Worldview is second.',
-              b: 'Longtermism strength and channel-D hostile probability are not parameters of nature; they are parameters of philosophy. Reasonable people pick differently.',
-            },
-            {
-              h: 'Astrophysics barely matters.',
-              b: 'R*, fₚ and nₑ — the parameters we know best — barely move the answer. Locking them does not collapse the distribution. The SDO finding shows up here too.',
-            },
-          ].map((card, i) => (
+          {(items ? captionsFor(items) : []).map((card, i) => (
             <div key={i}>
               <div
                 className="font-subhead text-lg text-ink"

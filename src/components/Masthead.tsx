@@ -107,7 +107,8 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
               <CitationLink cite="sdo2018" text="SDO 2018" />.
             </p>
             <p className="mt-2">
-              <strong>Grabby Aliens</strong> models civs as rapidly expanding (~25–50% of c).{' '}
+              <strong>Grabby Aliens</strong> models civs as rapidly expanding (the authors&rsquo;
+              fit puts the speed above half the speed of light).{' '}
               <CitationLink cite="hansonGrabby" text="Hanson et al. 2021" />. Premises are
               contested — per <CitationLink cite="azad2026" text="Azad 2026" /> we orbit a
               ~95th-percentile-mass star, which is improbable if low-mass stars host life

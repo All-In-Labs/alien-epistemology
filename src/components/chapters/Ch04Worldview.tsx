@@ -13,28 +13,29 @@ const TT_LONGTERMISM = (
   <p>
     Multiplier on channels A and B. 0 = pure neartermist (only persons-now matter); 1 = total-view
     longtermism (all future persons matter equally).{' '}
-    <CitationLink cite="ordPrecipice" text="Ord 2020 §10" />;{' '}
+    <CitationLink cite="ordPrecipice" text="Ord 2020" />;{' '}
     <CitationLink cite="macAskill2022" text="MacAskill 2022" />.
   </p>
 );
 const TT_DISCOUNT = (
   <p>
     Pure time-preference rate (Ramsey 1928). Discounts channels A and B by (1+r)^-T over their
-    horizon. 0% = no time preference; 3%/yr ≈ Stern Review; 10% = aggressive markets-style.
+    horizon. 0% = no time preference; 0.1%/yr = the Stern Review&rsquo;s (2006) pure time
+    preference; higher values discount the far future steeply.
   </p>
 );
 const TT_ALIEN_WEIGHT = (
   <p>
     Multiplier on channel C (direct-contact value). 0 = alien welfare doesn&rsquo;t count; 1 =
-    counts equally to humans.{' '}
+    counts equally to humans. For the analogous argument about artificial minds, see{' '}
     <CitationLink cite="schwitzgebelGarza" text="Schwitzgebel & Garza 2015" />.
   </p>
 );
 const TT_HINGEYNESS = (
   <p>
     Probability our actions today materially shift the cosmic endowment trajectory.{' '}
-    <CitationLink cite="macAskill2020" text="MacAskill 2020" /> on the &ldquo;hinge of
-    history&rdquo; hypothesis. High hingeyness amplifies channel B.
+    <CitationLink cite="macAskill2019" text="MacAskill 2019" /> on whether we live at the
+    &ldquo;hinge of history&rdquo;. High hingeyness amplifies channel B.
   </p>
 );
 const TT_FILTER_PRIOR = (

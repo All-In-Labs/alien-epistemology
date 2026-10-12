@@ -31,13 +31,17 @@ export const CITATIONS = {
     label: 'Azad, Contra Fermi Paradox is Not Contra UFOs (2026)',
     url: 'https://www.jehanazad.com/p/contra-fermi-paradox-is-not-contra',
   },
-  sandbergArmstrong: {
-    label: 'Sandberg & Armstrong (2013)',
-    url: 'https://arxiv.org/abs/1303.5040',
+  armstrongSandberg: {
+    label: 'Armstrong & Sandberg, Eternity in Six Hours (2013)',
+    url: 'https://www.fhi.ox.ac.uk/wp-content/uploads/intergalactic-spreading.pdf',
   },
   giveWell: {
     label: 'GiveWell — cost-effectiveness analysis',
     url: 'https://www.givewell.org/how-we-work/our-criteria/cost-effectiveness',
+  },
+  giveWellCash2024: {
+    label: 'GiveWell, Re-evaluating unconditional cash transfers (2024)',
+    url: 'https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/',
   },
   cassan2012: {
     label: 'Cassan et al. (2012)',
@@ -47,6 +51,22 @@ export const CITATIONS = {
     label: 'Petigura et al. (2013)',
     url: 'https://arxiv.org/abs/1311.6806',
   },
+  bryson2021: {
+    label: 'Bryson et al. (2021)',
+    url: 'https://arxiv.org/abs/2010.14812',
+  },
+  robitailleWhitney2010: {
+    label: 'Robitaille & Whitney (2010)',
+    url: 'https://arxiv.org/abs/1001.3672',
+  },
+  licquiaNewman2015: {
+    label: 'Licquia & Newman (2015)',
+    url: 'https://arxiv.org/abs/1407.1078',
+  },
+  bostrom2013: {
+    label: 'Bostrom, Existential Risk Prevention as Global Priority (2013)',
+    url: 'https://existential-risk.com/concept.pdf',
+  },
   wright2014: {
     label: 'Wright et al. (2014) — G-HAT',
     url: 'https://arxiv.org/abs/1408.1133',
@@ -55,12 +75,12 @@ export const CITATIONS = {
     label: 'MacAskill, What We Owe the Future (2022)',
     url: 'https://whatweowethefuture.com',
   },
-  macAskill2020: {
-    label: 'MacAskill, Are We Living at the Hinge of History? (2020)',
+  macAskill2019: {
+    label: 'MacAskill, Are We Living at the Most Influential Time in History? (2019)',
     url: 'https://forum.effectivealtruism.org/posts/XXLf6FmWujkxna3E6',
   },
   schwitzgebelGarza: {
-    label: 'Schwitzgebel & Garza (2015)',
+    label: 'Schwitzgebel & Garza, A Defense of the Rights of Artificial Intelligences (2015)',
     url: 'https://faculty.ucr.edu/~eschwitz/SchwitzAbs/AIRights.htm',
   },
   parfit1984: {

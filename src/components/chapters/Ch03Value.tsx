@@ -15,8 +15,9 @@ const CHANNEL_A_TOOLTIP = (
 const CHANNEL_B_TOOLTIP = (
   <p>
     Astronomical Waste (<CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />). Two-sided:
-    detection raises P(tech-viability) but lowers P(unclaimed lightcone). Default magnitudes
-    target ~10¹⁶ DALYs of cosmic endowment; move the two shifts independently.
+    detection raises P(tech-viability) but lowers P(unclaimed lightcone). The default cosmic
+    endowment of 10¹⁶ DALYs is far below Bostrom&rsquo;s own figures (see View assumptions);
+    move the two shifts independently.
   </p>
 );
 const CHANNEL_C_TOOLTIP = (
@@ -56,7 +57,7 @@ export function Ch03Value() {
         <ChannelCard
           id="A"
           title="Great Filter information"
-          tag="Hanson 2008"
+          tag="Hanson 1998"
           sign="-"
           description="Detection updates our credence about whether the Great Filter is behind or ahead of us. Generically: finding life is bad news."
           defaultV="1×10¹⁰ DALY"

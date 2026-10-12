@@ -14,22 +14,25 @@ export interface ComparatorItem {
 export const COMPARATORS: ComparatorItem[] = [
   {
     label: 'GiveDirectly — GiveWell',
-    lo: 0.05,
-    mid: 0.1,
-    hi: 0.3,
-    source: 'GiveWell',
+    // GiveWell's Nov 2024 re-evaluation puts GiveDirectly at 2.6–3.8× its cash benchmark
+    // (by country). GiveWell's funding bar is 6× that benchmark (as of May 2026), so
+    // GiveDirectly sits at ~0.43–0.63× the bar.
+    lo: 0.43,
+    mid: 0.55,
+    hi: 0.63,
+    source: 'GiveWell (2024 re-evaluation; bar = 6× benchmark)',
     sourceUrl:
-      'https://www.givewell.org/international/technical/programs/givedirectly-cash-for-poverty-relief-program',
+      'https://blog.givewell.org/2024/11/12/re-evaluating-the-impact-of-unconditional-cash-transfers/',
   },
   {
     label: 'GiveDirectly — RP CCM',
-    // RP CCM's published direct-cash-transfers estimate is ~2 DALYs/$1k ≈ 0.2× the
-    // GiveWell bar. We widen slightly to reflect parameter-distribution uncertainty
+    // RP CCM's published direct-cash-transfers estimate is ~2 DALYs/$1k ≈ 0.2× this tool's
+    // $100/DALY bar. We widen slightly to reflect parameter-distribution uncertainty
     // (the CCM is a Monte-Carlo tool, not a point estimate).
     lo: 0.1,
     mid: 0.2,
     hi: 0.5,
-    source: 'Rethink Priorities CCM',
+    source: 'Rethink Priorities CCM (2 DALYs/$1k vs our $100/DALY bar)',
     sourceUrl: 'https://ccm.rethinkpriorities.org/',
   },
   {
@@ -42,10 +45,12 @@ export const COMPARATORS: ComparatorItem[] = [
   },
   {
     label: 'Cage-free campaigns — Rethink Priorities',
+    // The source estimates 9–120 chicken-years affected per dollar; it gives no GiveWell
+    // multiple. Converting needs a chicken moral weight, so this range is our own conversion.
     lo: 5,
     mid: 80,
     hi: 1000,
-    source: 'Rethink Priorities',
+    source: 'Rethink Priorities, 9–120 chicken-years/$ (× GiveWell conversion is ours)',
     sourceUrl:
       'https://rethinkpriorities.org/research-area/corporate-campaigns-affect-9-to-120-years-of-chicken-life-per-dollar-spent/',
   },
@@ -57,15 +62,17 @@ export const COMPARATORS: ComparatorItem[] = [
     lo: 0.01,
     mid: 10,
     hi: 10000,
-    source: 'Rethink Priorities CCM',
+    source: 'Rethink Priorities CCM (range is illustrative, not a CCM output)',
     sourceUrl: 'https://ccm.rethinkpriorities.org/',
   },
   {
     label: 'Biosecurity — Founders Pledge',
+    // The report gives qualitative "impact multipliers", not a GiveWell multiple, so this
+    // range is our own judgement informed by it.
     lo: 0.1,
     mid: 10,
     hi: 1000,
-    source: 'Founders Pledge — GCBR report',
+    source: 'Founders Pledge GCBR guide (no × GiveWell figure given; range is ours)',
     sourceUrl:
       'https://www.founderspledge.com/research/global-catastrophic-biological-risks-a-guide-for-philanthropists',
   },
@@ -76,7 +83,7 @@ export const COMPARATORS: ComparatorItem[] = [
     lo: 1,
     mid: 100,
     hi: 5000,
-    source: 'Rethink Priorities CCM',
+    source: 'Rethink Priorities CCM (range is illustrative, not a CCM output)',
     sourceUrl: 'https://ccm.rethinkpriorities.org/',
   },
 ];

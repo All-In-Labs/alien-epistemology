@@ -53,18 +53,22 @@ const CATEGORIES: Category[] = [
           <>
             Each Drake parameter is sampled <strong>log-uniform</strong> between user-set bounds,
             except <em>fₚ</em> which is sampled <strong>linear-uniform</strong> (Kepler/microlensing
-            data clusters at the upper end, so log-uniform would over-weight low values). Per{' '}
-            <CitationLink cite="sdo2018" text="SDO 2018 §3" />.
+            data clusters at the upper end, so log-uniform would over-weight low values). This
+            departs from <CitationLink cite="sdo2018" text="SDO 2018 Table 1" />, which uses
+            log-uniform 0.1–1 for <em>fₚ</em>.
           </>
         ),
       },
       {
         text: (
           <>
-            <em>fₗ</em>'s default lower bound is <strong>10⁻³⁰</strong> — extremely permissive.
-            This dominates the wide-tail behaviour of <em>P(N=0)</em>; SDO chose it to reflect
-            genuine wide uncertainty in abiogenesis. If you tighten this bound, the headline
-            "P(no civ)" stat can shift substantially.
+            <em>fₗ</em> is sampled <strong>log-uniform from 10⁻³⁰ to 1</strong>. This is the
+            tool&rsquo;s choice, not SDO&rsquo;s: <CitationLink cite="sdo2018" text="SDO 2018" />{' '}
+            model <em>fₗ = 1 − e<sup>−λVt</sup></em> with <em>λVt</em> log-normal (median 1,
+            ~50 orders of magnitude wide), which puts <em>fₗ</em> near 1 about half the time.
+            Log-uniform puts only ~3% of samples above 0.1. That is why this tool&rsquo;s default{' '}
+            <em>P(no civ)</em> (~88%) is well above SDO&rsquo;s 52%. Narrowing this range moves the
+            headline more than any other Drake parameter.
           </>
         ),
       },
@@ -74,7 +78,8 @@ const CATEGORIES: Category[] = [
             <em>N</em> from the Drake equation is the <strong>expected count</strong>, not the
             actual count. We treat the actual count as Poisson(<em>N</em>): so{' '}
             <em>P(no civ) = E[exp(−N)]</em>, <em>P(=1) = E[N · exp(−N)]</em>, etc. SDO 2018
-            uses the same continuous-rate framing.
+            report <em>Pr[N &lt; 1]</em> instead and note in a footnote that the Poisson version
+            differs little.
           </>
         ),
       },
@@ -94,6 +99,8 @@ const CATEGORIES: Category[] = [
             simplified per spec §11.6: a single <em>P(we are inside a grabby zone)</em> sampled
             log-uniformly between user bounds, rather than Hanson's full expansion-rate dynamics.
             When inside a grabby zone, <em>N_detectable</em> is treated as saturated (1×10⁶).
+            Note that Hanson et al. fit their expansion speed on the premise that we are{' '}
+            <em>not</em> inside a grabby volume, so this framing departs from their model.
           </>
         ),
       },
@@ -108,10 +115,11 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <strong>Grabby is not externally calibrated.</strong> The SDO branch reproduces{' '}
-            <CitationLink cite="sdo2018" text="SDO 2018" />'s pre-Fermi pNZero within ~10pp
-            when fed SDO's parameter ranges (see <em>literature-anchors.test.ts</em>). The
-            Grabby branch has no equivalent anchor against{' '}
+            <strong>Neither branch reproduces its source at default settings.</strong> The SDO
+            branch only gets near <CitationLink cite="sdo2018" text="SDO 2018" />&rsquo;s
+            pre-Fermi 52% (it gives ~44%) when <em>fₗ</em>&rsquo;s upper bound is pushed to
+            10³⁰, which the sliders don&rsquo;t allow (see <em>literature-anchors.test.ts</em>).
+            At default bounds it gives ~88%. The Grabby branch has no anchor at all against{' '}
             <CitationLink cite="hansonGrabby" text="Hanson 2021" />'s published density /
             expansion-rate numbers — our "P(inside zone)" framing doesn't cleanly map to
             them. Treat Grabby-mode output with higher uncertainty than SDO-mode output.
@@ -248,25 +256,29 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <strong>V_xrisk_info = 10¹⁰ DALYs</strong> (Channel A). Loosely inspired by
-            longtermist x-risk valuations (cf. <CitationLink cite="ordPrecipice" text="Ord 2020" />);
-            roughly one order of magnitude below the standard total-view figure (~10¹¹ DALYs per
-            unit of probability shift). Tornado bounds: 10⁶ to 10¹⁴.
+            <strong>V_xrisk_info = 10¹⁰ DALYs</strong> (Channel A). A placeholder with no
+            published anchor; loosely inspired by longtermist x-risk valuations (cf.{' '}
+            <CitationLink cite="ordPrecipice" text="Ord 2020" />), but far below total-view
+            figures, which start around 10¹⁶ lives (
+            <CitationLink cite="bostrom2013" text="Bostrom 2013" />). It is six orders of
+            magnitude below V_cosmic_endowment. Tornado bounds: 10⁶ to 10¹⁴.
           </>
         ),
       },
       {
         text: (
           <>
-            <strong>V_cosmic_endowment = 10¹⁶ DALYs</strong> (Channel B). Inspired by{' '}
-            <CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />, but{' '}
-            <strong>~22 OOM below</strong> his published conservative biological estimate
-            (~10³⁸ lives over the cosmic endowment, or ~10¹³ lives per second of delay).
-            The compression is deliberate: feeding Bostrom's literal number makes alien-finding
-            ≈ 10²⁹ × GiveWell under almost any preset, violating the spec's epistemic-neutrality
-            requirement. 10¹⁶ keeps Channel B as the dominant contributor under longtermism
-            (~99% of EV mass) while leaving room for other channels to matter at the margin.
-            Tornado bounds: 10¹² to 10²⁰ — the upper end is still 18 OOM below Bostrom.
+            <strong>V_cosmic_endowment = 10¹⁶ DALYs</strong> (Channel B). The number matches{' '}
+            <CitationLink cite="bostrom2013" text="Bostrom 2013" />&rsquo;s conservative
+            Earth-only estimate of 10¹⁶ future lives (lives of normal duration, not DALYs). It is
+            far below <CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />&rsquo;s
+            astronomical-waste figures: ~10³⁸ potential lives lost per century of delay
+            (simulation-based upper estimate) or over 10¹³ lives per second of delay (conservative,
+            biological). <strong>This value was chosen for its effect on the verdict, not from
+            evidence</strong>: feeding in Bostrom&rsquo;s 2003 numbers makes alien-finding look
+            overwhelmingly cost-effective under almost any preset. Even at 10¹⁶, Channel B is the
+            dominant contributor under longtermism (~99% of EV mass). Tornado bounds: 10¹² to
+            10²⁰.
           </>
         ),
       },
@@ -283,9 +295,10 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <strong>V_hostile_disvalue = −10¹² DALYs</strong> (Channel D). Roughly two orders
-            of magnitude above current-population × per-life-disvalue (~10¹⁰) — reflects
-            multi-generation harm if hostile contact ≈ extinction. Tornado bounds: −10⁸ to −10¹⁶.
+            <strong>V_hostile_disvalue = −10¹² DALYs</strong> (Channel D). About three times the
+            remaining life-years of everyone alive today (~8×10⁹ people × ~40 years ≈ 3×10¹¹) —
+            a placeholder for hostile contact that is roughly as bad as extinction of the current
+            generation. Tornado bounds: −10⁸ to −10¹⁶.
           </>
         ),
       },
@@ -368,8 +381,11 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <CitationLink cite="giveWell" text="GiveWell" /> bar fixed at 1 DALY per $100. Multiplier
-            = (EV in DALYs / total cost in $) ÷ (1 / 100). All comparator bars in the verdict are
+            The &ldquo;GiveWell bar&rdquo; is fixed at <strong>1 DALY per $100</strong>. This is
+            our approximation: <CitationLink cite="giveWell" text="GiveWell" /> doesn&rsquo;t
+            measure in DALYs (it uses its own units of value, with a funding bar of 6× its cash
+            benchmark as of May 2026), and its top charities save a life for roughly $3,000–5,500.
+            Multiplier = (EV in DALYs / total cost in $) ÷ (1 / 100). All comparator bars in the verdict are
             in × GiveWell-bar units. Comparator ranges are{' '}
             <strong>community estimates</strong>, not posteriors of any particular model.
           </>
