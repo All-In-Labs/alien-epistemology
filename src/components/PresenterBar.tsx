@@ -41,6 +41,12 @@ export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
       <span>Presenter mode · ←/→ chapter · P to exit</span>
       <span className="flex gap-5 items-baseline">
         <span>
+          P( N=0 ){' '}
+          <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">
+            {out ? fmtPct(out.pNZero) : '—'}
+          </span>
+        </span>
+        <span>
           P( N≥1 ){' '}
           <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">
             {out ? fmtPct(out.pNGteOne) : '—'}

@@ -68,11 +68,15 @@ stats and the chapter counter; **←/→** snap-scroll between the seven chapter
 - Sandberg, Drexler &amp; Ord (2018), *Dissolving the Fermi Paradox* — arXiv:1806.02404
 - Hanson, Martin, McCarter &amp; Paulson (2021), *If Loud Aliens Explain Human Earliness, Quiet
   Aliens Are Also Rare* — arXiv:2102.01522 (Grabby Aliens)
-- Bostrom (2003), *Astronomical Waste* — nickbostrom.com/astronomical/waste.html
+- Bostrom (2003), *Astronomical Waste* — nickbostrom.com/papers/astronomical-waste/
+- Bostrom (2013), *Existential Risk Prevention as Global Priority* — existential-risk.com/concept.pdf
 - Ord (2020), *The Precipice*
-- Sandberg &amp; Armstrong (2013), *Eternity in Six Hours*
+- Armstrong &amp; Sandberg (2013), *Eternity in Six Hours* — Acta Astronautica 89:1–13
 - Azad (2026), *Contra Fermi Paradox is Not Contra UFOs* — for the directional-reasoning critique
-- GiveWell cost-effectiveness analysis — for the bar (~$100/DALY)
+- GiveWell cost-effectiveness analysis — GiveWell uses its own units, not DALYs; the tool's
+  ~$100/DALY bar is our approximation of its top-charity bar
+- Robitaille &amp; Whitney (2010); Licquia &amp; Newman (2015) — Milky Way star formation rate
+- Cassan et al. (2012); Bryson et al. (2021) — planet and habitable-zone occurrence
 
 ## Spec-to-code map
 

@@ -15,7 +15,10 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         <strong>SETI radio.</strong> Breakthrough Listen + Allen Telescope Array; narrow-band
         radio surveys of nearby stars and the galactic plane.
       </p>
-      <p className="mt-2">Cost band reflects BL annual reports (~$10M/yr ATA + BL operations).</p>
+      <p className="mt-2">
+        For scale: Breakthrough Listen was funded at $100M over 10 years (2015). Costs here are
+        marginal additional spend per decade.
+      </p>
     </>
   ),
   tech: (
@@ -30,8 +33,9 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
   bio: (
     <>
       <p>
-        <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now; Habitable
-        Worlds Observatory in the 2030s. Detects microbial life via O₂/CH₄ disequilibria. Channel
+        <strong>Biosignature astrobiology.</strong> JWST atmospheric spectroscopy now; the
+        Habitable Worlds Observatory is proposed for launch in the 2040s. Detects microbial life
+        via O₂/CH₄ disequilibria. Channel
         C and D do not fire under biosig detection (per spec §5.3).
       </p>
     </>
@@ -41,8 +45,9 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
       <p>
         <strong>Interstellar probe R&amp;D.</strong> Breakthrough Starshot-style; multi-decade
         payoff. Decadal R&amp;D spend.{' '}
-        <CitationLink cite="sandbergArmstrong" text="Sandberg & Armstrong 2013" /> on
-        probe-feasibility.
+        <CitationLink cite="armstrongSandberg" text="Armstrong & Sandberg 2013" /> on
+        probe-feasibility. A probe launched now would not return results within the decade this
+        model scores.
       </p>
     </>
   ),
@@ -50,8 +55,8 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
     <>
       <p>
         <strong>RETINA passive radar.</strong> Multistatic passive radar reusing terrestrial
-        illumination — much cheaper than active scanning. Project namesake. Detects probe-scale
-        artefacts in the inner solar system.
+        broadcast illumination — much cheaper than active scanning. Built for aircraft detection,
+        so it can only see artefacts that enter the airspace its transmitters illuminate.
       </p>
     </>
   ),

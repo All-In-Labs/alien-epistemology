@@ -71,45 +71,54 @@ function buildPreviews(ranges: DrakeRanges): Record<DrakeParamId, number[]> {
 const TOOLTIPS: Record<DrakeParamId, ReactNode> = {
   R: (
     <p>
-      Milky Way star formation rate. Modern observations centre 1.5–3 stars/yr.{' '}
-      <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />.
+      Milky Way star formation rate, in stars per year. Measured at roughly 0.7–1.9 solar masses
+      per year (<CitationLink cite="robitailleWhitney2010" text="Robitaille & Whitney 2010" />,{' '}
+      <CitationLink cite="licquiaNewman2015" text="Licquia & Newman 2015" />); because most new
+      stars are low-mass, that is around 6–7 stars per year. SDO&rsquo;s Table 1 uses 1–100 (
+      <CitationLink cite="sdo2018" text="SDO 2018" />).
     </p>
   ),
   fp: (
     <p>
-      Fraction of stars hosting planets. Kepler &amp; microlensing strongly favour values near 1
-      (<CitationLink cite="cassan2012" text="Cassan et al. 2012" />,{' '}
-      <CitationLink cite="petigura2013" text="Petigura et al. 2013" />).
+      Fraction of stars hosting planets. Microlensing suggests one or more bound planets per star
+      on average (<CitationLink cite="cassan2012" text="Cassan et al. 2012" />).
     </p>
   ),
   ne: (
     <p>
-      Habitable planets per system. Kepler implies fₚ × nₑ ≈ 0.4 for sun-like stars (
-      <CitationLink cite="petigura2013" text="Petigura 2013" />).
+      Habitable planets per system. Kepler finds roughly 0.37–0.60 rocky habitable-zone planets per
+      Sun-like star (<CitationLink cite="bryson2021" text="Bryson et al. 2021" />; earlier,{' '}
+      <CitationLink cite="petigura2013" text="Petigura et al. 2013" /> found 11 ± 4% for Earth-size
+      planets at 1–4× Earth&rsquo;s insolation). Sun-like stars are a minority; most stars counted
+      in R* are M dwarfs.
     </p>
   ),
   fl: (
     <p>
       Fraction of habitable planets where life arises. Genuine wide uncertainty — this is the
-      single biggest spread in the model. <CitationLink cite="sdo2018" text="SDO 2018 §3.4" />.
+      single biggest spread in the model. The default log-uniform 10⁻³⁰–1 is this tool&rsquo;s
+      choice: <CitationLink cite="sdo2018" text="SDO 2018 §3.1" /> instead model fₗ = 1 −
+      e<sup>−λVt</sup> with λVt log-normal (median 1, ~50 orders of magnitude wide), which puts
+      fₗ near 1 about half the time.
     </p>
   ),
   fi: (
     <p>
       Fraction of life-bearing planets where intelligence emerges. Wide and contested.{' '}
-      <CitationLink cite="sdo2018" text="SDO 2018 §3.5" />.
+      <CitationLink cite="sdo2018" text="SDO 2018 §3.1, Table 1" />.
     </p>
   ),
   fc: (
     <p>
       Fraction of intelligent species that emit detectable signals. Wide.{' '}
-      <CitationLink cite="sdo2018" text="SDO 2018 §3.6" />.
+      <CitationLink cite="sdo2018" text="SDO 2018 Table 1" />.
     </p>
   ),
   L: (
     <p>
-      Average lifetime of a communicating civilisation. Bounds span "short-lived" (decades) to
-      "galactic-timescale" (10¹⁰ yr). <CitationLink cite="sdo2018" text="SDO 2018 §3.7" />.
+      Average lifetime of a communicating civilisation. Bounds span &ldquo;short-lived&rdquo;
+      (centuries) to &ldquo;galactic-timescale&rdquo; (10¹⁰ yr).{' '}
+      <CitationLink cite="sdo2018" text="SDO 2018 Table 1" />.
     </p>
   ),
   fd: (
@@ -185,7 +194,7 @@ export function Ch01Drake() {
           }}
           className="px-3.5 py-2 bg-transparent border border-ink text-ink cursor-pointer hover:bg-ink hover:text-paper transition-colors"
         >
-          Reset to SDO defaults
+          Reset to defaults
         </button>
         <div className="flex-1" />
         <span>Distribution previews update on slider release</span>
