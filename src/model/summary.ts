@@ -1,0 +1,125 @@
+// Plain-language summaries of the Monte Carlo output for the Ch.5 verdict.
+//
+// The verdict leads with an "out of 100 worlds" split (beats GiveWell / does less /
+// makes things worse) because no single number describes this distribution honestly:
+// the median says "about nothing" and the mean says "enormous", and both are true.
+// The risk dial then picks one secondary GiveWell multiple to show underneath.
+
+import type { DrakeMCOutput } from './monteCarlo';
+import type { RiskAversion } from './worldview';
+
+export interface SummaryStat {
+  /** × GiveWell-bar units. Always defined. */
+  value: number;
+  /** Long label, e.g. "average — long shots count fully". */
+  label: string;
+  /** Short label for compact displays. */
+  short: string;
+}
+
+type SummaryInputs = Pick<DrakeMCOutput, 'meanMultiplier' | 'medianMultiplier' | 'p25Multiplier'>;
+
+export function summaryFor(out: SummaryInputs, risk: RiskAversion): SummaryStat {
+  switch (risk) {
+    case 'average':
+      return {
+        value: out.meanMultiplier,
+        label: 'average — long shots count fully',
+        short: 'average',
+      };
+    case 'typical':
+      return { value: out.medianMultiplier, label: 'typical world (median)', short: 'typical' };
+    case 'cautious':
+      return { value: out.p25Multiplier, label: 'cautious (25th percentile)', short: 'cautious' };
+  }
+}
+
+export interface OutcomeSplit {
+  /** Whole worlds out of 100; the three always sum to 100. */
+  better: number;
+  less: number;
+  worse: number;
+  /** True when a bucket has a real but sub-0.5% share, so it rounds to 0 worlds. */
+  betterUnderOne: boolean;
+  worseUnderOne: boolean;
+}
+
+/**
+ * Split 100 worlds by outcome, symmetric around zero at GiveWell scale: more good than
+ * a GiveWell top charity (multiplier > 1), at least as much harm as it does good
+ * (multiplier < −1), and everything in between (mostly ≈ 0). Largest-remainder rounding
+ * so the counts always sum to 100.
+ */
+export function outcomeSplit(pBetter: number, pWorse: number): OutcomeSplit {
+  const b = Math.min(1, Math.max(0, pBetter));
+  const w = Math.min(1 - b, Math.max(0, pWorse));
+  const raw = [b * 100, (1 - b - w) * 100, w * 100];
+  const floors = raw.map((x) => Math.floor(x));
+  let remaining = 100 - floors.reduce((a, c) => a + c, 0);
+  const order = raw.map((x, i) => ({ i, frac: x - Math.floor(x) })).sort((p, q) => q.frac - p.frac);
+  for (const { i } of order) {
+    if (remaining <= 0) break;
+    floors[i] = (floors[i] ?? 0) + 1;
+    remaining--;
+  }
+  const [better = 0, less = 0, worse = 0] = floors;
+  return {
+    better,
+    less,
+    worse,
+    betterUnderOne: better === 0 && b > 0,
+    worseUnderOne: worse === 0 && w > 0,
+  };
+}
+
+/** Plain words for a GiveWell multiple, for readers who don't want to parse 10⁻¹⁰. */
+export function plainGloss(multiplier: number): string {
+  // Same thresholds as the dot groups: |x| < 1e-3 reads as "about nothing" whatever its
+  // sign, and only x ≤ −1 counts as harm on GiveWell's scale.
+  if (multiplier <= -1) return 'more harm than GiveWell does good';
+  if (multiplier <= -1e-3) return 'slightly worse than doing nothing';
+  if (multiplier < 1e-3) return 'about nothing';
+  if (multiplier < 0.5) return 'less than GiveWell';
+  if (multiplier < 2) return 'about as good as GiveWell';
+  if (multiplier < 100) return 'better than GiveWell';
+  return 'far better than GiveWell';
+}
+
+const SUPERSCRIPT: Record<string, string> = {
+  '-': '⁻',
+  '0': '⁰',
+  '1': '¹',
+  '2': '²',
+  '3': '³',
+  '4': '⁴',
+  '5': '⁵',
+  '6': '⁶',
+  '7': '⁷',
+  '8': '⁸',
+  '9': '⁹',
+};
+
+/** A GiveWell multiple in plain words-and-digits, e.g. "1.7 million", "≈ 0", "−4 million". */
+export function plainNumber(v: number): string {
+  if (!Number.isFinite(v)) return '—';
+  const a = Math.abs(v);
+  const sign = v < 0 ? '−' : '';
+  if (a < 1e-3) return '≈ 0';
+  if (a < 10) return sign + a.toFixed(a < 1 ? 2 : 1).replace(/\.?0+$/, '');
+  if (a < 1e6) return sign + Math.round(a).toLocaleString('en-GB');
+  const units: [number, string][] = [
+    [1e12, 'trillion'],
+    [1e9, 'billion'],
+    [1e6, 'million'],
+  ];
+  if (a < 1e15) {
+    for (const [u, name] of units) {
+      if (a >= u) return `${sign}${(a / u).toFixed(1).replace(/\.0$/, '')} ${name}`;
+    }
+  }
+  const exp = String(Math.round(Math.log10(a)))
+    .split('')
+    .map((c) => SUPERSCRIPT[c] ?? c)
+    .join('');
+  return `${sign}10${exp}`;
+}

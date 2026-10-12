@@ -9,7 +9,7 @@ import {
 const baseChannels: ChannelContributions = { A: 100, B: 200, C: 50, D: -10 };
 
 describe('applyWorldview', () => {
-  it('with all dials neutral (and filter-prior off 0.5), returns the sum unchanged for the relevant channels', () => {
+  it('with all dials neutral and ϕ = 1, passes each channel through (A as bad news)', () => {
     const dials: WorldviewDials = {
       ...defaultWorldview(),
       longtermismStrength: 1,
@@ -17,15 +17,15 @@ describe('applyWorldview', () => {
       personAffecting: false,
       alienMoralWeight: 1,
       hingeyness: 1,
-      filterPriorBehind: 0, // signA = +1, so v.A passes through
-      riskAversion: 'EV-max',
+      filterPriorBehind: 1, // all prior mass on "filter behind", so the full Δ×V is lost
+      riskAversion: 'average',
     };
     const v = applyWorldview(baseChannels, dials);
-    expect(v.A).toBe(100);
+    expect(v.A).toBe(-100);
     expect(v.B).toBe(200);
     expect(v.C).toBe(50);
     expect(v.D).toBe(-10);
-    expect(v.total).toBe(340);
+    expect(v.total).toBe(140);
   });
 
   it('longtermism strength multiplies channels A and B', () => {
@@ -33,29 +33,31 @@ describe('applyWorldview', () => {
       ...defaultWorldview(),
       longtermismStrength: 0.5,
       timeDiscount: 0,
-      filterPriorBehind: 0, // signA = +1 so the channel-A multiplier is visible
+      filterPriorBehind: 1,
     };
     const v = applyWorldview(baseChannels, dials);
-    expect(v.A).toBe(50);
+    expect(v.A).toBe(-50);
     // hingeyness=0.1 default → B = 200 * 0.5 * 0.1 = 10
     expect(v.B).toBeCloseTo(10, 6);
   });
 
-  it('channel A sign tracks WorldviewDials.filterPriorBehind (Finding B fix)', () => {
+  it('channel A is bad news whatever the filter prior, scaling continuously with ϕ (Hanson 1998)', () => {
     const dials = (filterPriorBehind: number): WorldviewDials => ({
       ...defaultWorldview(),
       longtermismStrength: 1,
       timeDiscount: 0,
       filterPriorBehind,
     });
-    const filterAhead = applyWorldview(baseChannels, dials(0.2));
-    const neutral = applyWorldview(baseChannels, dials(0.5));
-    const filterBehind = applyWorldview(baseChannels, dials(0.8));
-    expect(filterAhead.A).toBeGreaterThan(0); // sign +1
-    expect(neutral.A).toBe(0); // sign 0
-    expect(filterBehind.A).toBeLessThan(0); // sign -1
-    // Symmetric around 0.5 in magnitude.
-    expect(filterAhead.A).toBeCloseTo(-filterBehind.A, 6);
+    // Detection moves a fraction of the "filter behind us" credence to "filter ahead":
+    // never good news, and zero only when there is no such credence to move.
+    expect(applyWorldview(baseChannels, dials(0)).A).toBe(-0);
+    expect(applyWorldview(baseChannels, dials(0.2)).A).toBeCloseTo(-20, 9);
+    expect(applyWorldview(baseChannels, dials(0.5)).A).toBeCloseTo(-50, 9);
+    expect(applyWorldview(baseChannels, dials(0.8)).A).toBeCloseTo(-80, 9);
+    // No discontinuity around 0.5 (the old step function jumped from +50 to −50).
+    const below = applyWorldview(baseChannels, dials(0.49)).A;
+    const above = applyWorldview(baseChannels, dials(0.51)).A;
+    expect(Math.abs(above - below)).toBeLessThan(3);
   });
 
   it('person-affecting view zeros channel B', () => {
@@ -82,14 +84,14 @@ describe('applyWorldview', () => {
     const a = applyWorldview(baseChannels, {
       ...defaultWorldview(),
       timeDiscount: 0,
-      filterPriorBehind: 0, // sign +1 so the discount on A is visible
+      filterPriorBehind: 1,
     });
     const b = applyWorldview(baseChannels, {
       ...defaultWorldview(),
       timeDiscount: 0.05,
-      filterPriorBehind: 0,
+      filterPriorBehind: 1,
     });
-    expect(b.A).toBeLessThan(a.A);
+    expect(Math.abs(b.A)).toBeLessThan(Math.abs(a.A));
     expect(b.B).toBeLessThan(a.B);
   });
 

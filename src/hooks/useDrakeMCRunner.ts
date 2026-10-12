@@ -19,6 +19,8 @@ function deterministicSeed(state: {
   cosmology: unknown;
   grabby: unknown;
   overrides: unknown;
+  valueUncertainty: unknown;
+  flDistribution: unknown;
   astroLocked: unknown;
 }): string {
   // JSON.stringify is good enough; we hash to keep the seed compact.
@@ -40,6 +42,8 @@ export function useDrakeMCRunner(): void {
   const cosmology = useStore((s) => s.cosmology);
   const grabby = useStore((s) => s.grabby);
   const overrides = useStore((s) => s.overrides);
+  const valueUncertainty = useStore((s) => s.valueUncertainty);
+  const flDistribution = useStore((s) => s.flDistribution);
   const seedMode = useStore((s) => s.seedMode);
   const setDrakeOutput = useStore((s) => s.setDrakeOutput);
 
@@ -67,10 +71,14 @@ export function useDrakeMCRunner(): void {
               drakeRanges,
               methods,
               channels,
-              worldview,
+              // The risk dial only picks which summary number to show; leaving it out of
+              // the seed means flipping it doesn't reshuffle the verdict's dots.
+              worldview: { ...worldview, riskAversion: undefined },
               cosmology,
               grabby,
               overrides,
+              valueUncertainty,
+              flDistribution,
               astroLocked: false, // not part of MC math; excluded from seed for stability
             })
           : `drake-${(++seedRef.current).toString()}`;
@@ -83,6 +91,8 @@ export function useDrakeMCRunner(): void {
           cosmology,
           grabby,
           overrides,
+          valueUncertainty,
+          flDistribution,
           n: MC_SAMPLES,
           seed,
         })
@@ -93,5 +103,17 @@ export function useDrakeMCRunner(): void {
     return () => {
       window.clearTimeout(timer.current);
     };
-  }, [drakeRanges, methods, channels, worldview, cosmology, grabby, overrides, seedMode, setDrakeOutput]);
+  }, [
+    drakeRanges,
+    methods,
+    channels,
+    worldview,
+    cosmology,
+    grabby,
+    overrides,
+    valueUncertainty,
+    flDistribution,
+    seedMode,
+    setDrakeOutput,
+  ]);
 }

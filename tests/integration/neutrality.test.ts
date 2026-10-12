@@ -16,6 +16,9 @@ import { runDrakeMC, type DrakeMCOutput } from '../../src/model/monteCarlo';
 import { defaultDrakeRanges } from '../../src/model/drake';
 import { defaultDetectionState } from '../../src/model/detection';
 import { applyPreset, PRESETS, type PresetId } from '../../src/presets/worldviews';
+import { summaryFor } from '../../src/model/summary';
+import { defaultValueUncertainty } from '../../src/model/value';
+import { DEFAULT_FL_DISTRIBUTION } from '../../src/constants/defaults';
 
 const N = 30_000;
 
@@ -71,5 +74,55 @@ describe('epistemic-neutrality calibration — spec §10 #5', () => {
     // The Ord Moderate preset MUST land short of that — the spec's most important
     // honesty check. If this fails, defaults are biased.
     expect(ord.out.pAboveGiveWell).toBeLessThan(0.8);
+  });
+
+  it('Ord Moderate’s own summary number (typical world) is below the GiveWell bar', () => {
+    const results = runAllPresets();
+    const ord = results.find((r) => r.id === 'ord');
+    const preset = PRESETS.find((p) => p.id === 'ord');
+    if (!ord || !preset) throw new Error('ord preset missing from PRESETS');
+    expect(summaryFor(ord.out, preset.worldview.riskAversion).value).toBeLessThan(1);
+  });
+});
+
+// The same checks at the site's own defaults (SDO f_l, value uncertainty on), i.e.
+// what a visitor actually sees, not just the bare model.
+describe('epistemic neutrality at the site defaults', () => {
+  function runSiteDefaults(): PresetResult[] {
+    return PRESETS.slice(0, 6).map((p) => {
+      const { worldview, channels } = applyPreset(p);
+      const out = runDrakeMC({
+        ranges: defaultDrakeRanges(),
+        methods: defaultDetectionState(),
+        channels,
+        worldview,
+        flDistribution: DEFAULT_FL_DISTRIBUTION,
+        valueUncertainty: defaultValueUncertainty(),
+        n: N,
+        seed: `site-neutrality-${p.id}`,
+      });
+      return { id: p.id, out };
+    });
+  }
+
+  it('no worldview preset puts most worlds above the GiveWell bar', () => {
+    for (const r of runSiteDefaults()) {
+      expect(r.out.pAboveGiveWell).toBeLessThan(0.5);
+    }
+  });
+
+  it('presets disagree, and at least one shows a real chance of serious harm', () => {
+    const results = runSiteDefaults();
+    const above = results.map((r) => r.out.pAboveGiveWell);
+    expect(Math.max(...above) - Math.min(...above)).toBeGreaterThan(0.05);
+    const worse = results.map((r) => r.out.pHarmBeyondGiveWell);
+    expect(worse.some((p) => p > 0.05 && p < 0.95)).toBe(true);
+  });
+
+  it('Ord Moderate’s typical-world number is below the GiveWell bar', () => {
+    const ord = runSiteDefaults().find((r) => r.id === 'ord');
+    const preset = PRESETS.find((p) => p.id === 'ord');
+    if (!ord || !preset) throw new Error('ord preset missing');
+    expect(summaryFor(ord.out, preset.worldview.riskAversion).value).toBeLessThan(1);
   });
 });

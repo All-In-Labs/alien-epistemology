@@ -3,14 +3,14 @@ import pako from 'pako';
 import { encodeState, decodeState, buildHash, readHashState } from '../../src/lib/permalink';
 import { defaultDrakeRanges } from '../../src/model/drake';
 import { defaultDetectionState } from '../../src/model/detection';
-import { defaultChannelState } from '../../src/model/value';
+import { defaultChannelState, defaultValueUncertainty } from '../../src/model/value';
 import { defaultWorldview } from '../../src/model/worldview';
 import { defaultGrabbyState } from '../../src/model/grabby';
 import type { SerializedState } from '../../src/lib/permalink';
 
 function defaultState(): SerializedState {
   return {
-    v: 2,
+    v: 3,
     drakeRanges: defaultDrakeRanges(),
     methods: defaultDetectionState(),
     channels: defaultChannelState(),
@@ -18,6 +18,8 @@ function defaultState(): SerializedState {
     cosmology: 'sdo',
     grabby: defaultGrabbyState(),
     overrides: {},
+    valueUncertainty: defaultValueUncertainty(),
+    flDistribution: 'log-uniform',
     astroLocked: false,
   };
 }
@@ -60,8 +62,8 @@ describe('permalink encode / decode', () => {
     expect(hash.length).toBeLessThan(2000);
   });
 
-  it('migrates v=1 hashes to v=2 with astroLocked=false', () => {
-    // Build a v=1 payload by hand (the SerializedState type is now v=2 only).
+  it('migrates v=1 hashes to v=3 with astroLocked=false and no value uncertainty', () => {
+    // Build a v=1 payload by hand (the SerializedState type is now v=3 only).
     const v1 = {
       v: 1 as const,
       drakeRanges: defaultDrakeRanges(),
@@ -78,7 +80,32 @@ describe('permalink encode / decode', () => {
     for (const b of compressed) binary += String.fromCharCode(b);
     const b64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const decoded = decodeState(b64);
-    expect(decoded.v).toBe(2);
+    expect(decoded.v).toBe(3);
     expect(decoded.astroLocked).toBe(false);
+    expect(decoded.valueUncertainty).toEqual({ magnitudeOOM: 0, shiftPM: 0 });
+    expect(decoded.flDistribution).toBe('log-uniform');
+  });
+
+  it('migrates v=2 hashes to v=3 without value uncertainty, so old links keep their maths', () => {
+    const { valueUncertainty: _vu, flDistribution: _fd, ...rest } = defaultState();
+    void _vu;
+    void _fd;
+    const v2 = {
+      ...rest,
+      v: 2 as const,
+      astroLocked: true,
+      // Older links used technical names for the risk dial.
+      worldview: { ...rest.worldview, riskAversion: 'difference-making' },
+    };
+    const compressed = pako.deflate(JSON.stringify(v2));
+    let binary = '';
+    for (const b of compressed) binary += String.fromCharCode(b);
+    const b64 = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const decoded = decodeState(b64);
+    expect(decoded.v).toBe(3);
+    expect(decoded.astroLocked).toBe(true);
+    expect(decoded.worldview.riskAversion).toBe('cautious');
+    expect(decoded.valueUncertainty).toEqual({ magnitudeOOM: 0, shiftPM: 0 });
+    expect(decoded.flDistribution).toBe('log-uniform');
   });
 });

@@ -67,8 +67,8 @@ describe('invariant: EV is linear in channel A value coefficient', () => {
       ...baseChannels,
       A: { ...baseChannels.A, vXriskInfo: baseChannels.A.vXriskInfo * 2 },
     };
-    // Channel A is sign-free at the channel layer post-Finding-B; the worldview's
-    // filterPriorBehind controls the sign. Use 0.3 (filter-ahead) so A is non-zero.
+    // Channel A is unsigned at the channel layer; applyWorldview scales it by the filter
+    // prior and makes it negative. Any ϕ > 0 gives a non-zero A.
     const worldview = { ...defaultWorldview(), filterPriorBehind: 0.3 };
     const seed = 'inv-A-linearity';
     const ranges = defaultDrakeRanges();

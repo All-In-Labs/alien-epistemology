@@ -1,7 +1,29 @@
 // Worldview transforms from spec §5.4. Acts on per-channel value contributions
 // (output of value.ts) before EV is multiplied by P(detect).
 
-export type RiskAversion = 'EV-max' | 'log-utility' | 'difference-making';
+/**
+ * How the Ch.5 verdict summarises outcomes in GiveWell terms.
+ * - 'average': the mean, so long shots count fully (risk-neutral)
+ * - 'typical': the median, the outcome in a typical world
+ * - 'cautious': the 25th percentile, focusing on the worse cases
+ */
+export type RiskAversion = 'average' | 'typical' | 'cautious';
+
+/** Map stored values, including the old technical names in older permalinks. */
+export function normalizeRiskAversion(x: unknown): RiskAversion {
+  switch (x) {
+    case 'average':
+    case 'typical':
+    case 'cautious':
+      return x;
+    case 'log-utility':
+      return 'typical';
+    case 'difference-making':
+      return 'cautious';
+    default:
+      return 'average';
+  }
+}
 
 export interface WorldviewDials {
   /** 0 = neartermist (channels A, B zeroed); 1 = pure total-view longtermism. */
@@ -14,9 +36,9 @@ export interface WorldviewDials {
   alienMoralWeight: number;
   /** Multiplier on channel B (does our action shift cosmic endowment?). */
   hingeyness: number;
-  /** P(filter behind us) — used inside channel A's value calc, surfaced here for the panel. */
+  /** P(filter behind us). Channel A's (negative) value scales with it. */
   filterPriorBehind: number;
-  /** Determines which summary stat the UI presents (mean / geom-mean / 25th-pctl). */
+  /** Which secondary GiveWell number the verdict shows (mean / median / 25th percentile). */
   riskAversion: RiskAversion;
   /** Grabby Aliens mixing weight for hybrid cosmology (used in phase 5). */
   grabbyCredence: number;
@@ -41,7 +63,7 @@ export function defaultWorldview(): WorldviewDials {
     alienMoralWeight: 0.1,
     hingeyness: 0.1,
     filterPriorBehind: 0.5,
-    riskAversion: 'EV-max',
+    riskAversion: 'average',
     grabbyCredence: 0.1,
   };
 }
@@ -59,11 +81,12 @@ export function applyWorldview(
   const discountA = Math.pow(1 + d.timeDiscount, -HORIZON_A);
   const discountB = Math.pow(1 + d.timeDiscount, -HORIZON_B);
 
-  // Channel A sign tracks the user's filter prior. > 0.5 ⇒ detection challenges optimism
-  // (negative information value); < 0.5 ⇒ detection confirms pessimism (positive); = 0.5
-  // ⇒ neutral (no directional component, magnitude collapses to zero).
-  const signA = d.filterPriorBehind > 0.5 ? -1 : d.filterPriorBehind < 0.5 ? 1 : 0;
-  const A = v.A * signA * d.longtermismStrength * discountA;
+  // Channel A: news about the Great Filter. Finding life elsewhere is evidence that the
+  // steps behind us were easy, which moves credence from "filter behind us" to "filter
+  // ahead" — bad news whatever your prior (Hanson 1998). v.A is the unsigned Δ × V; the
+  // update can only move credence that exists, so it scales with ϕ = P(filter behind).
+  // It is zero only if you already put no weight on the filter being behind us.
+  const A = -v.A * d.filterPriorBehind * d.longtermismStrength * discountA;
   let B = v.B * d.longtermismStrength * d.hingeyness * discountB;
   if (d.personAffecting) B = 0;
   const C = v.C * d.alienMoralWeight;

@@ -13,6 +13,7 @@ import { binLog10 } from '../../lib/binning';
 import type { DrakeRanges } from '../../model/drake';
 import type { ReactNode } from 'react';
 import { CitationLink } from '../CitationLink';
+import { sampleFlSDO } from '../../model/drake';
 
 const PREVIEW_SAMPLES = 1000;
 const PREVIEW_BINS = 32;
@@ -53,12 +54,23 @@ function sliderRange(id: DrakeParamId): [number, number] {
   return [Math.max(lo, 1e-40), cappedHi];
 }
 
-function buildPreviews(ranges: DrakeRanges): Record<DrakeParamId, number[]> {
+// Preview of SDO 2018's f_l distribution over the f_l slider's span. binLog10 clamps
+// out-of-range values into the edge bins, so the long near-zero tail shows as a spike on
+// the left and the half of samples near 1 as a spike on the right.
+function previewForSDO(): number[] {
+  const rng = makeRng('preview-fl-sdo');
+  const samples = new Float64Array(PREVIEW_SAMPLES);
+  for (let i = 0; i < PREVIEW_SAMPLES; i++) samples[i] = sampleFlSDO(rng);
+  const [lo, hi] = sliderRange('fl');
+  return binLog10(samples, Math.log10(lo), Math.log10(hi), PREVIEW_BINS);
+}
+
+function buildPreviews(ranges: DrakeRanges, flIsSDO: boolean): Record<DrakeParamId, number[]> {
   return {
     R: previewFor('R', ranges.R.min, ranges.R.max),
     fp: previewFor('fp', ranges.fp.min, ranges.fp.max),
     ne: previewFor('ne', ranges.ne.min, ranges.ne.max),
-    fl: previewFor('fl', ranges.fl.min, ranges.fl.max),
+    fl: flIsSDO ? previewForSDO() : previewFor('fl', ranges.fl.min, ranges.fl.max),
     fi: previewFor('fi', ranges.fi.min, ranges.fi.max),
     fc: previewFor('fc', ranges.fc.min, ranges.fc.max),
     L: previewFor('L', ranges.L.min, ranges.L.max),
@@ -95,11 +107,11 @@ const TOOLTIPS: Record<DrakeParamId, ReactNode> = {
   ),
   fl: (
     <p>
-      Fraction of habitable planets where life arises. Genuine wide uncertainty — this is the
-      single biggest spread in the model. The default log-uniform 10⁻³⁰–1 is this tool&rsquo;s
-      choice: <CitationLink cite="sdo2018" text="SDO 2018 §3.1" /> instead model fₗ = 1 −
-      e<sup>−λVt</sup> with λVt log-normal (median 1, ~50 orders of magnitude wide), which puts
-      fₗ near 1 about half the time.
+      Fraction of habitable planets where life arises — the single biggest uncertainty in the
+      model. By default it follows <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />: fₗ =
+      1 − e<sup>−λVt</sup> with λVt log-normal (median 1, ~50 orders of magnitude wide), so life
+      arises on about half of habitable planets, with a long tail of near-zero cases. Drag the
+      slider to use your own range instead (sampled log-uniform).
     </p>
   ),
   fi: (
@@ -136,14 +148,17 @@ export function Ch01Drake() {
   const resetDrakeRanges = useStore((s) => s.resetDrakeRanges);
   const astroLocked = useStore((s) => s.astroLocked);
   const toggleAstroLock = useStore((s) => s.toggleAstroLock);
-  const previews = useMemo(() => buildPreviews(drakeRanges), [drakeRanges]);
+  const flDistribution = useStore((s) => s.flDistribution);
+  const setFlDistribution = useStore((s) => s.setFlDistribution);
+  const flIsSDO = flDistribution === 'sdo-lognormal';
+  const previews = useMemo(() => buildPreviews(drakeRanges, flIsSDO), [drakeRanges, flIsSDO]);
 
   return (
     <ChapterShell
       num="01"
       eyebrow="The equation"
-      title="Seven uncertain factors, one log-uniform multiplication."
-      kicker="Each parameter is sampled from a log-uniform distribution between bounds you set. Astrophysical parameters have established lower bounds; the tool nudges you to respect them. The speculative parameters fₗ, fᵢ, f_c, L are wide on purpose — that is the SDO finding."
+      title="Seven uncertain factors, multiplied together."
+      kicker="Each parameter is sampled between bounds you set — except fₗ, the chance life arises, which by default follows Sandberg, Drexler & Ord’s own model. Astrophysical parameters have established lower bounds; the tool nudges you to respect them. The speculative parameters fₗ, fᵢ, f_c, L are wide on purpose — that is the SDO finding."
     >
       <div className="bg-paper border border-ink px-7 py-2">
         {DRAKE_PARAM_ORDER.map((id) => {
@@ -156,7 +171,9 @@ export function Ch01Drake() {
             <LogRangeSlider
               key={id}
               symbol={cfg.symbol}
-              label={cfg.label}
+              label={
+                id === 'fl' && flIsSDO ? `${cfg.label} (SDO 2018 model)` : cfg.label
+              }
               rangeMin={rangeMin}
               rangeMax={rangeMax}
               loValue={range.min}
@@ -173,6 +190,29 @@ export function Ch01Drake() {
           );
         })}
       </div>
+      <p className="font-serif text-[13.5px] text-muted mt-4 max-w-[780px]">
+        {flIsSDO ? (
+          <>
+            <strong className="text-ink">fₗ follows SDO 2018&rsquo;s model:</strong> life arises on
+            about half of habitable planets, with a long tail of planets where it almost never
+            does. Drag the fₗ slider to use your own range instead.
+          </>
+        ) : (
+          <>
+            <strong className="text-ink">fₗ uses your range</strong>, sampled log-uniform — which
+            puts only ~3% of samples above 0.1, far more pessimistic than SDO&rsquo;s model.{' '}
+            <button
+              type="button"
+              onClick={() => {
+                setFlDistribution('sdo-lognormal');
+              }}
+              className="underline decoration-dotted underline-offset-2 text-ink hover:text-accent cursor-pointer bg-transparent border-0 p-0"
+            >
+              Switch back to SDO 2018&rsquo;s model
+            </button>
+          </>
+        )}
+      </p>
       <div className="flex gap-3 mt-4 font-mono text-[11px] text-muted tracking-chip uppercase items-center">
         <button
           type="button"

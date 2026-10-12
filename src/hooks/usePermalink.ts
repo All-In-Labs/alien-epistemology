@@ -16,6 +16,8 @@ export function usePermalink(): void {
   const cosmology = useStore((s) => s.cosmology);
   const grabby = useStore((s) => s.grabby);
   const overrides = useStore((s) => s.overrides);
+  const valueUncertainty = useStore((s) => s.valueUncertainty);
+  const flDistribution = useStore((s) => s.flDistribution);
   const astroLocked = useStore((s) => s.astroLocked);
   const hydratedRef = useRef(false);
   const writeTimerRef = useRef<number | undefined>(undefined);
@@ -40,5 +42,16 @@ export function usePermalink(): void {
     return () => {
       window.clearTimeout(writeTimerRef.current);
     };
-  }, [drakeRanges, methods, channels, worldview, cosmology, grabby, overrides, astroLocked]);
+  }, [
+    drakeRanges,
+    methods,
+    channels,
+    worldview,
+    cosmology,
+    grabby,
+    overrides,
+    valueUncertainty,
+    flDistribution,
+    astroLocked,
+  ]);
 }

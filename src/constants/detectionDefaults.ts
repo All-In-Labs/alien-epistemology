@@ -78,7 +78,9 @@ export const DETECTION_DEFAULTS: Record<DetectionMethodId, DetectionMethodConfig
     costDefault: 5,
     costMax: 50,
     sensitivity: { min: 1e-6, default: 1e-4, max: 1e-2 },
-    defaultOn: true,
+    // Off by default like every method except SETI (spec §5.2), so RETINA gets no special
+    // billing in the default configuration (CLAUDE.md).
+    defaultOn: false,
     note: 'Passive multistatic radar reusing terrestrial illumination; cheap, novel.',
   },
 };

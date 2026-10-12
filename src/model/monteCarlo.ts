@@ -4,8 +4,15 @@ import {
   totalDecadalCostMillions,
   type DetectionMethodState,
 } from './detection';
-import { valueForTypeSet, type ChannelsState } from './value';
+import {
+  valueForTypeSet,
+  logUniformFactorMean,
+  NO_VALUE_UNCERTAINTY,
+  type ChannelsState,
+  type ValueUncertainty,
+} from './value';
 import { applyWorldview, defaultWorldview, type WorldviewDials } from './worldview';
+import type { FlDistribution } from '../constants/defaults';
 import {
   sampleGrabbyZoneCredence,
   sensitivityBoostFor,
@@ -39,6 +46,10 @@ export interface DrakeMCInput {
   grabby?: GrabbyState;
   /** Optional Bayesian-shortcut prior overrides per spec §5.5. */
   overrides?: PriorOverrides;
+  /** Per-sample uncertainty on value magnitudes and Channel B shifts. Default: none. */
+  valueUncertainty?: ValueUncertainty;
+  /** How f_l is sampled. Default 'log-uniform' between the f_l bounds. */
+  flDistribution?: FlDistribution;
   n: number;
   seed: string;
 }
@@ -58,6 +69,10 @@ export interface DrakeMCOutput {
   pNegativeEV: number;
   /** P(multiplier > 1× GiveWell). */
   pAboveGiveWell: number;
+  /** P(multiplier < −1× GiveWell): harm at least as large, per dollar, as the good a
+   *  GiveWell top charity does. The verdict's "serious harm" group; the mirror image of
+   *  pAboveGiveWell, so tiny negative values don't count as harm. */
+  pHarmBeyondGiveWell: number;
   /** Cost-effectiveness multiplier samples in × GiveWell-bar units. May be negative. */
   multiplierSamples: Float64Array;
   /** Median × GiveWell of multiplier samples (excluding non-finite). */
@@ -68,6 +83,10 @@ export interface DrakeMCOutput {
   /** Geometric mean of strictly-positive multipliers (a more stable headline than the
    *  unconditional median when the zero-mass dominates). */
   gmeanPositiveMultiplier: number;
+  /** Mean multiplier across all samples, signed — the 'average' summary. */
+  meanMultiplier: number;
+  /** 25th-percentile multiplier — the 'cautious' summary. */
+  p25Multiplier: number;
   /** 5th and 95th percentile of multiplier samples. */
   p5Multiplier: number;
   p95Multiplier: number;
@@ -88,6 +107,8 @@ export function runDrakeMC({
   cosmology = 'sdo',
   grabby,
   overrides,
+  valueUncertainty = NO_VALUE_UNCERTAINTY,
+  flDistribution = 'log-uniform',
   n,
   seed,
 }: DrakeMCInput): DrakeMCOutput {
@@ -115,9 +136,10 @@ export function runDrakeMC({
         }))
       : undefined;
 
-  // Pre-compute V(types) for every non-empty subset of detection types so the
-  // per-sample EV calc just looks up the answer. With 5 unique types there are
-  // 31 subsets; we key by a bitmask.
+  // Pre-compute worldview-transformed per-channel values for every non-empty subset of
+  // detection types (31 subsets of 5 types, keyed by bitmask). Channel B is stored per
+  // UNIT of net evidence shift so the shift can be sampled per sample; applyWorldview is
+  // linear in each channel, so scaling afterwards is exact.
   const wv = worldview ?? defaultWorldview();
   const TYPE_ORDER: readonly DetectionType[] = [
     'radio',
@@ -126,26 +148,40 @@ export function runDrakeMC({
     'probe',
     'passive_radar',
   ];
-  const vByMask: number[] | null = channels
-    ? (() => {
-        const out = new Array<number>(1 << TYPE_ORDER.length).fill(0);
-        for (let mask = 1; mask < 1 << TYPE_ORDER.length; mask++) {
-          const types: DetectionType[] = [];
-          for (let i = 0; i < TYPE_ORDER.length; i++) {
-            const t = TYPE_ORDER[i];
-            if (t !== undefined && (mask & (1 << i)) !== 0) types.push(t);
+  const nMasks = 1 << TYPE_ORDER.length;
+  const comps: { A: Float64Array; B: Float64Array; C: Float64Array; D: Float64Array } | null =
+    channels
+      ? (() => {
+          const out = {
+            A: new Float64Array(nMasks),
+            B: new Float64Array(nMasks),
+            C: new Float64Array(nMasks),
+            D: new Float64Array(nMasks),
+          };
+          for (let mask = 1; mask < nMasks; mask++) {
+            const types: DetectionType[] = [];
+            for (let i = 0; i < TYPE_ORDER.length; i++) {
+              const t = TYPE_ORDER[i];
+              if (t !== undefined && (mask & (1 << i)) !== 0) types.push(t);
+            }
+            const w = applyWorldview(channelValueComponentsForTypeSet(types, channels), wv);
+            out.A[mask] = w.A;
+            out.B[mask] = w.B;
+            out.C[mask] = w.C;
+            out.D[mask] = w.D;
           }
-          out[mask] = applyWorldview(
-            // valueForTypeSet returns components; we use channelValuesForTypeSet
-            // through valueForTypeSet's returned scalar — but applyWorldview
-            // needs per-channel components. Build them inline:
-            channelValueComponentsForTypeSet(types, channels),
-            wv,
-          ).total;
-        }
-        return out;
-      })()
-    : null;
+          return out;
+        })()
+      : null;
+  const netShiftPoint = channels
+    ? channels.B.techViabilityShift + channels.B.lightconeClaimShift
+    : 0;
+  const magOOM = Math.max(0, valueUncertainty.magnitudeOOM);
+  const magNorm = logUniformFactorMean(magOOM);
+  const shiftPM = Math.max(0, valueUncertainty.shiftPM);
+  /** Log-uniform factor over ±magOOM orders of magnitude, normalised to mean 1. */
+  const magFactor = (): number =>
+    magOOM > 0 ? Math.pow(10, (2 * rng() - 1) * magOOM) / magNorm : 1;
 
   // Map detection-method id → bit position in the type mask.
   const typeBit = (type: DetectionType): number => {
@@ -170,7 +206,7 @@ export function runDrakeMC({
       N = inside ? 1e6 : 0;
       N_detectable = N;
     } else {
-      const s = sampleDrake(rng, ranges);
+      const s = sampleDrake(rng, ranges, flDistribution);
       N = s.N;
       N_detectable = s.N_detectable;
     }
@@ -215,7 +251,26 @@ export function runDrakeMC({
       detectionProbSamples[i] = pCombined;
       detectionSum += pCombined;
 
-      if (vByMask) {
+      if (comps) {
+        // Per-sample value uncertainty. Draws are skipped entirely when the spreads are
+        // zero, so the zero-uncertainty model reproduces the original RNG stream exactly.
+        const kA = magFactor();
+        const kB = magFactor();
+        const kC = magFactor();
+        const kD = magFactor();
+        let net = netShiftPoint;
+        if (shiftPM > 0 && channels) {
+          net =
+            channels.B.techViabilityShift +
+            (2 * rng() - 1) * shiftPM +
+            channels.B.lightconeClaimShift +
+            (2 * rng() - 1) * shiftPM;
+        }
+        const vOf = (mask: number): number =>
+          kA * (comps.A[mask] ?? 0) +
+          kB * net * (comps.B[mask] ?? 0) +
+          kC * (comps.C[mask] ?? 0) +
+          kD * (comps.D[mask] ?? 0);
         // Subset enumeration: for each non-empty subset S of enabled methods,
         // P(exactly S detects) = Π_{m∈S} P_m × Π_{m∉S} (1 − P_m). We compute
         // EV = Σ_S P(exactly S) × V(types_in_S).
@@ -246,8 +301,7 @@ export function runDrakeMC({
                 prob *= 1 - a.pm;
               }
             }
-            const v = vByMask[typeMask] ?? 0;
-            ev += prob * v;
+            ev += prob * vOf(typeMask);
           }
           // Apply detection-floor as a value-weighted blend if it's set: floor
           // the implied detection probability up to the floor by treating the
@@ -261,7 +315,7 @@ export function runDrakeMC({
             // Average V across enabled-method type singletons as a fallback.
             let avgSingleV = 0;
             for (const a of active) {
-              avgSingleV += vByMask[typeBit(a.type)] ?? 0;
+              avgSingleV += vOf(typeBit(a.type));
             }
             avgSingleV /= active.length;
             ev += missing * avgSingleV;
@@ -278,6 +332,7 @@ export function runDrakeMC({
   const multiplierSamples = new Float64Array(n);
   let pNeg = 0;
   let pAbove = 0;
+  let pHarm = 0;
   if (totalCostUSD > 0 && channels !== undefined) {
     for (let i = 0; i < n; i++) {
       const ev = evSamples[i] ?? 0;
@@ -286,6 +341,7 @@ export function runDrakeMC({
       multiplierSamples[i] = multiplier;
       if (multiplier < 0) pNeg++;
       if (multiplier > 1) pAbove++;
+      if (multiplier < -1) pHarm++;
     }
   }
 
@@ -319,6 +375,11 @@ export function runDrakeMC({
   }
   const gmeanPositive = logCount > 0 ? Math.exp(logSum / logCount) : 0;
 
+  // Mean over ALL samples, signed — the 'average' summary.
+  let multSum = 0;
+  for (const v of multiplierSamples) multSum += v;
+  const meanMultiplier = totalCostUSD > 0 ? multSum / n : 0;
+
   return {
     pNZero: pNZeroSum / n,
     pNExactlyOne: pNOneSum / n,
@@ -329,10 +390,13 @@ export function runDrakeMC({
     totalCostM,
     pNegativeEV: totalCostUSD > 0 ? pNeg / n : 0,
     pAboveGiveWell: totalCostUSD > 0 ? pAbove / n : 0,
+    pHarmBeyondGiveWell: totalCostUSD > 0 ? pHarm / n : 0,
     multiplierSamples,
     medianMultiplier: pickPctl(0.5),
     medianMultiplierGivenDetection: medianGivenDetection,
     gmeanPositiveMultiplier: gmeanPositive,
+    meanMultiplier,
+    p25Multiplier: pickPctl(0.25),
     p5Multiplier: pickPctl(0.05),
     p95Multiplier: pickPctl(0.95),
     samples,
@@ -373,10 +437,11 @@ function channelValueComponentsForTypeSet(
     // filterPriorBehind dial.
     A = totalDelta * ch.A.vXriskInfo;
   }
+  // Channel B per UNIT of net evidence shift — the caller multiplies by the (possibly
+  // sampled) net shift. Unlike value.ts's channelValuesForTypeSet, which includes it.
   let B = 0;
   if (ch.B.on && types.length > 0) {
-    const net = ch.B.techViabilityShift + ch.B.lightconeClaimShift;
-    B = net * ch.B.vCosmicEndowment;
+    B = ch.B.vCosmicEndowment;
   }
   let C = 0;
   if (ch.C.on && types.some((t) => ch.C.fires.includes(t))) {

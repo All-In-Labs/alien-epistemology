@@ -29,6 +29,19 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
+            By default <em>fₗ</em> follows <strong>SDO 2018&rsquo;s own model</strong>: fₗ = 1
+            − e<sup>−λVt</sup> with log₁₀(λVt) ~ Normal(0, 50), i.e. a median of one abiogenesis
+            event per planet and ~50 orders of magnitude of spread (
+            <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />). Life arises on about half of
+            habitable planets; the rest form a long tail of near-zero values. With the
+            tool&rsquo;s other defaults this gives <em>P(no civ)</em> ≈ 51%; fed SDO&rsquo;s
+            Table 1 ranges it reproduces their 52%.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
             The seven Drake factors{' '}
             <em>R★, fₚ, nₑ, fₗ, fᵢ, f_c, L</em> are <strong>independently distributed</strong>.
             Real-world correlations (e.g. denser star regions might produce both more planets and
@@ -50,13 +63,11 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <em>fₗ</em> is sampled <strong>log-uniform from 10⁻³⁰ to 1</strong>. This is the
-            tool&rsquo;s choice, not SDO&rsquo;s: <CitationLink cite="sdo2018" text="SDO 2018" />{' '}
-            model <em>fₗ = 1 − e<sup>−λVt</sup></em> with <em>λVt</em> log-normal (median 1,
-            ~50 orders of magnitude wide), which puts <em>fₗ</em> near 1 about half the time.
-            Log-uniform puts only ~3% of samples above 0.1. That is why this tool&rsquo;s default{' '}
-            <em>P(no civ)</em> (~88%) is well above SDO&rsquo;s 52%. Narrowing this range moves the
-            headline more than any other Drake parameter.
+            Dragging the <em>fₗ</em> slider switches to <strong>your own range</strong>, sampled
+            log-uniform (default 10⁻³⁰ to 1). That is much more pessimistic than SDO&rsquo;s
+            model: it puts only ~3% of samples above 0.1, and gives <em>P(no civ)</em> ≈ 88%.
+            Either way, <em>fₗ</em> moves the verdict more than any other Drake parameter
+            (see the Ch.6 tornado).
           </>
         ),
       },
@@ -103,11 +114,10 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <strong>Neither branch reproduces its source at default settings.</strong> The SDO
-            branch only gets near <CitationLink cite="sdo2018" text="SDO 2018" />&rsquo;s
-            pre-Fermi 52% (it gives ~44%) when <em>fₗ</em>&rsquo;s upper bound is pushed to
-            10³⁰, which the sliders don&rsquo;t allow (see <em>literature-anchors.test.ts</em>).
-            At default bounds it gives ~88%. The Grabby branch has no anchor at all against{' '}
+            <strong>Only the SDO branch is calibrated.</strong> With SDO&rsquo;s fₗ model and
+            their Table 1 ranges it reproduces <CitationLink cite="sdo2018" text="SDO 2018" />
+            &rsquo;s pre-Fermi 52% (see <em>drake-sdo.test.ts</em>). The Grabby branch has no
+            anchor against{' '}
             <CitationLink cite="hansonGrabby" text="Hanson 2021" />'s published density /
             expansion-rate numbers — our "P(inside zone)" framing doesn't cleanly map to
             them. Treat Grabby-mode output with higher uncertainty than SDO-mode output.
@@ -193,11 +203,13 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Channel A's sign comes from <strong>WorldviewDials.filterPriorBehind</strong> (the
-            worldview-level dial, set in Ch.4 — also surfaced as a convenience slider in Ch.3).
-            Prior &gt; 0.5 → finding life is <em>bad news</em>; &lt; 0.5 → <em>good news</em>;
-            = 0.5 → channel zeroed. <em>ChannelAState.filterPriorBehind</em> is a vestigial
-            field retained for permalink back-compat — it is not read by the model.
+            Channel A is always <strong>bad news</strong>: detection moves a fraction Δ of your
+            credence that the filter is behind us (ϕ, set in Ch.4 and Ch.3) to &ldquo;filter
+            ahead&rdquo;, so its value is −Δ × ϕ × V_xrisk_info. It models the news itself, not
+            the decision value of learning it (Hanson calls it &ldquo;bad (though
+            valuable)&rdquo;); that second part isn&rsquo;t modelled.{' '}
+            <em>ChannelAState.filterPriorBehind</em> is a vestigial field retained for
+            permalink back-compat — it is not read by the model.
           </>
         ),
       },
@@ -207,6 +219,19 @@ const CATEGORIES: Category[] = [
             Channel B (<CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />) fires{' '}
             <strong>exactly once</strong> if any detection happens — the cosmic-endowment update
             doesn't double-count across multiple-method detections.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>Value uncertainty</strong> (Ch.3). Each sample scales each channel&rsquo;s
+            magnitude by an independent log-uniform factor (default ±1 order of magnitude,
+            normalised to mean 1), and draws Channel B&rsquo;s two shifts uniformly within ±0.1
+            of their settings by default. Both are mean-preserving, so expected value is
+            unchanged; what changes is that samples can now differ in sign, which is what
+            makes <em>P(EV &lt; 0)</em> a real probability. The ±0.1 shift spread is a
+            judgement call, not a published figure.
           </>
         ),
       },
@@ -337,9 +362,10 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Risk aversion changes the <strong>summary stat displayed</strong> only — not the math.
-            EV-max → mean; log-utility → geometric mean of positives; difference-making → 25th
-            percentile. The MC distribution itself is risk-neutral.
+            Risk aversion picks the <strong>GiveWell number</strong> shown under the 100-world
+            split in Ch.5 — not the maths. Average → mean (long shots count fully);
+            Typical world → median; Cautious → 25th percentile. The split itself, and the MC
+            distribution, are the same whichever you pick.
           </>
         ),
       },
@@ -373,9 +399,12 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            "Median given detection" is used as the headline when the unconditional median
-            collapses on the no-detection mass. That's almost always (because P(N=0) is typically
-            high under realistic priors). The unconditional median is shown as a sub-line.
+            The verdict leads with a split of 100 worlds — more good than GiveWell (multiplier
+            &gt; 1), less difference either way (−1 to 1), serious harm (&lt; −1) — rather than
+            one number,
+            because the median and mean differ by many orders of magnitude on default
+            settings: most worlds have almost no chance of a detection, while a few have a
+            large one. Each &ldquo;world&rdquo; is one MC sample of every uncertain input.
           </>
         ),
       },

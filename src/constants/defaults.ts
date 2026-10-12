@@ -9,6 +9,25 @@ export type DrakeParamId = 'R' | 'fp' | 'ne' | 'fl' | 'fi' | 'fc' | 'L' | 'fd';
 
 export type DrakeDistribution = 'log-uniform' | 'linear-uniform';
 
+/**
+ * How f_l is sampled.
+ * - 'log-uniform': between the user's f_l bounds (the tool's original default).
+ * - 'sdo-lognormal': Sandberg, Drexler & Ord (2018) §3.1 — f_l = 1 − exp(−λVt), with
+ *   log10(λVt) ~ Normal(0, 50): median one abiogenesis event per planet, ~50 orders of
+ *   magnitude of spread. Ignores the f_l bounds. Reproduces SDO's P(N<1) ≈ 52%.
+ */
+export type FlDistribution = 'log-uniform' | 'sdo-lognormal';
+
+/**
+ * The site's default f_l distribution: SDO 2018's own model, so the tool's headline
+ * P(no other civilisation) lines up with the paper it cites. `runDrakeMC` itself still
+ * defaults to 'log-uniform' when no distribution is passed (tests rely on that).
+ */
+export const DEFAULT_FL_DISTRIBUTION: FlDistribution = 'sdo-lognormal';
+
+/** SDO 2018 abiogenesis-rate parameters: log10(λVt) ~ Normal(mean, sd). */
+export const SDO_FL_LOG10_RATE = { mean: 0, sd: 50 } as const;
+
 export interface DrakeParamConfig {
   id: DrakeParamId;
   symbol: string;

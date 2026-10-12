@@ -40,8 +40,9 @@ const TT_HINGEYNESS = (
 );
 const TT_FILTER_PRIOR = (
   <p>
-    P(the Great Filter is behind us). Sets the sign of channel A: when prior &gt; 0.5, finding
-    life is bad news (the filter is ahead); when prior &lt; 0.5, finding life is good news.{' '}
+    P(the Great Filter is behind us). Detection moves part of this credence to &ldquo;filter
+    ahead&rdquo;, so channel A is bad news that scales with ϕ: the more you believe the filter
+    is behind us, the more a detection costs you.{' '}
     <CitationLink cite="hansonFilter" text="Hanson 1998" />.
   </p>
 );
@@ -53,8 +54,10 @@ const TT_PERSON_AFFECTING = (
 );
 const TT_RISK = (
   <p>
-    Decision-theoretic summary stat. EV-max takes the mean (risk-neutral); log-utility takes the
-    geometric mean (risk-averse); difference-making takes the 25th percentile (downside-averse).
+    Picks the GiveWell number shown under the 100-world split in Ch.5.{' '}
+    <strong>Average</strong> is the mean, so long shots count fully (risk-neutral).{' '}
+    <strong>Typical world</strong> is the median. <strong>Cautious</strong> is the 25th
+    percentile, focusing on the worse cases (cf. difference-making risk aversion).
     See <CitationLink cite="rethinkPrioritiesCRAFT" text="Rethink Priorities CRAFT/CURVE" />.
   </p>
 );
@@ -208,14 +211,14 @@ export function Ch04Worldview() {
               patchWorldview({ riskAversion: v });
             }}
             options={[
-              { value: 'EV-max', label: 'EV-max' },
-              { value: 'log-utility', label: 'log-utility' },
-              { value: 'difference-making', label: 'difference-making' },
+              { value: 'average', label: 'Average' },
+              { value: 'typical', label: 'Typical world' },
+              { value: 'cautious', label: 'Cautious' },
             ]}
             ariaLabel="Risk aversion"
           />
           <div className="font-mono text-[10.5px] text-muted">
-            summary stat used: mean / geom-mean / 25th-percentile
+            GiveWell number in Ch.5: mean / median / 25th percentile
           </div>
         </div>
       </div>

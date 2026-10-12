@@ -1,4 +1,5 @@
 import { useStore } from '../store';
+import { summaryFor, outcomeSplit, plainNumber } from '../model/summary';
 
 interface PresenterBarProps {
   chapterIdx: number;
@@ -9,29 +10,15 @@ function fmtPct(p: number): string {
   return `${(p * 100).toFixed(0)}%`;
 }
 
-function fmtX(v: number): string {
-  if (!Number.isFinite(v)) return '—';
-  if (v === 0) return '0×';
-  // Round near-zero values that would otherwise render as ugly scientific notation.
-  if (Math.abs(v) < 1e-3) return '≈0×';
-  if (Math.abs(v) < 100) return `${v.toFixed(2)}×`;
-  return `${v.toFixed(0)}×`;
-}
-
 export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
   const out = useStore((s) => s.drakeOutput);
+  const riskAversion = useStore((s) => s.worldview.riskAversion);
   const idx = String(chapterIdx).padStart(2, '0');
   const max = String(Math.max(0, chapterTitles.length - 1)).padStart(2, '0');
   const title = chapterTitles[chapterIdx] ?? '';
-  // Use the conditional-on-detection median when the unconditional collapses to zero
-  // (which happens whenever P(N=0) > 0.5 — i.e. most realistic configurations).
-  // Otherwise the audience would see "median 0×" for the entire talk.
-  const headlineMedian =
-    out !== null && Math.abs(out.medianMultiplier) < 1e-12
-      ? out.medianMultiplierGivenDetection
-      : (out?.medianMultiplier ?? 0);
-  const headlineLabel =
-    out !== null && Math.abs(out.medianMultiplier) < 1e-12 ? 'median*' : 'median';
+  // Same headline as the Ch.5 verdict: the 100-world split, plus the dial's summary.
+  const split = out !== null ? outcomeSplit(out.pAboveGiveWell, out.pHarmBeyondGiveWell) : null;
+  const summary = out !== null ? summaryFor(out, riskAversion) : null;
 
   return (
     <div
@@ -53,15 +40,17 @@ export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
           </span>
         </span>
         <span>
-          P( EV&lt;0 ){' '}
-          <span className="font-serif text-sm ml-1.5 text-accent normal-case tracking-normal">
-            {out ? fmtPct(out.pNegativeEV) : '—'}
+          of 100 worlds{' '}
+          <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">
+            {split === null
+              ? '—'
+              : `${String(split.better)} beat GiveWell · ${String(split.worse)} serious harm`}
           </span>
         </span>
         <span>
-          {headlineLabel}{' '}
+          {summary?.short ?? 'average'}{' '}
           <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">
-            {out ? fmtX(headlineMedian) : '—'}
+            {summary === null ? '—' : `${plainNumber(summary.value)}×`}
           </span>
         </span>
       </span>
