@@ -23,16 +23,18 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         marginal additional spend per decade.
       </p>
       <p className="mt-2">
-        <strong>Reach 10⁻⁸–10⁻³ of the galaxy</strong>, depending on how loud they are. Low end:
-        Earth-like leakage, which even an SKA-class array could pick up only within ~65 light
-        years (<CitationLink cite="sheikh2025" text="Sheikh et al. 2025" />) &mdash; a few thousand
-        of the galaxy&rsquo;s 100&ndash;400 billion stars (
+        <strong>Reach 1.5×10⁻⁸–3×10⁻⁴ of the galaxy</strong>, depending on how loud they are,
+        out of ~200 billion stars (NASA gives 100&ndash;400 billion:{' '}
         <CitationLink cite="nasaStarCount2015" text="NASA" />
-        ). High end: beacons above ~4×10¹⁸ W, visible across the ~60 million stars in Breakthrough
-        Listen&rsquo;s galactic-centre beams (
+        ). Low end: a transmitter as strong as our Deep Space Network, which an SKA-class array
+        could pick up within ~65 light years (
+        <CitationLink cite="sheikh2025" text="Sheikh et al. 2025" />) &mdash; about 3,000 stars.
+        Earth&rsquo;s everyday leakage (mobile networks) would carry only ~4 light years, which
+        reaches no other star. High end: beacons above ~4×10¹⁸ W, visible across the ~60 million
+        stars in Breakthrough Listen&rsquo;s galactic-centre beams (
         <CitationLink cite="gajjar2021" text="Gajjar et al. 2021" />
         ). In between: an Arecibo-class transmitter is visible to the Green Bank Telescope out to
-        ~127 pc (<CitationLink cite="margot2026" text="Margot et al. 2026" />
+        ~127 pc (<CitationLink cite="margot2026" text="Margot 2026" />
         ); nearby-star surveys have covered ~1,300 stars (
         <CitationLink cite="price2020" text="Price et al. 2020" />) and ~288,000 stars in the
         beams (<CitationLink cite="wlodarczykSroka2020" text="Wlodarczyk-Sroka et al. 2020" />
@@ -48,7 +50,7 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
         <CitationLink cite="wright2014" text="Wright et al. 2014 (G-HAT)" />.
       </p>
       <p className="mt-2">
-        <strong>Reach 10⁻⁸–3×10⁻³ of the galaxy.</strong> Low end: Keck&rsquo;s laser search of
+        <strong>Reach 3×10⁻⁸–1.5×10⁻³ of the galaxy.</strong> Low end: Keck&rsquo;s laser search of
         5,600 stars (<CitationLink cite="tellisMarcy2017" text="Tellis & Marcy 2017" />). High
         end: infrared waste-heat searches of ~2.9×10⁸ stars within 5 kpc (
         <CitationLink cite="suazo2022" text="Suazo et al. 2022" />) &mdash; but only a
@@ -66,11 +68,10 @@ const METHOD_TOOLTIPS: Record<DetectionMethodId, ReactNode> = {
       <p className="mt-2">
         It looks for life, not civilisations, so it counts life-bearing planets: R* × fₚ × nₑ ×
         fₗ × ~3 billion years (about how long Earth has had life).{' '}
-        <strong>Reach 10⁻¹²–10⁻⁹ of the galaxy:</strong> JWST&rsquo;s Rocky Worlds programme is
-        observing 9 rocky planets, and it tests whether they have atmospheres, not whether they
-        have life (<CitationLink cite="stsciRockyWorlds2025" text="STScI 2025" />
-        ). That is ~1&ndash;10 star systems of 100&ndash;400 billion, with up to 10× allowed
-        because targets are chosen for having habitable-zone planets.
+        <strong>Reach 5×10⁻¹²–5×10⁻¹¹ of the galaxy:</strong> JWST&rsquo;s Rocky Worlds
+        programme is observing 9 rocky planets, and it tests whether they have atmospheres, not
+        whether they have life (<CitationLink cite="stsciRockyWorlds2025" text="STScI 2025" />
+        ). That is ~1&ndash;10 star systems of ~200 billion.
       </p>
     </>
   ),

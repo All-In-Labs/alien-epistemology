@@ -72,8 +72,8 @@ export function Ch04Worldview() {
     <ChapterShell
       num="04"
       eyebrow="Your axioms"
-      title="Six dials and one of six presets."
-      kicker="Worldview dials act as transforms on the value channels before EV is computed. No preset is privileged — Bostrom and Neartermist sit in the same dropdown."
+      title="Seven dials, or start from a preset."
+      kicker="Worldview dials act as transforms on the value channels before EV is computed. No preset is privileged: the Strong longtermist and Neartermist presets sit side by side. Loading a preset resets everything it doesn’t set to the defaults."
     >
       <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-3">
         {activePreset === null
@@ -200,7 +200,7 @@ export function Ch04Worldview() {
             zeros channel B (astronomical waste)
           </div>
         </div>
-        <div className="flex flex-col gap-1.5 col-span-2">
+        <div className="flex flex-col gap-1.5 lg:col-span-2">
           <div className="font-sans text-[13px] flex items-center gap-1.5">
             Risk aversion
             <Tooltip>{TT_RISK}</Tooltip>

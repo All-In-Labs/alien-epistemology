@@ -32,11 +32,21 @@ function supScript(n: number): string {
     .join('');
 }
 
+/** Axis floor: 10⁻⁶ × GiveWell. */
+const AXIS_FLOOR_LOG = -6;
+
 export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsProps) {
   const padL = 280;
   const padR = 40;
   const h = items.length * rowH + 36;
-  const innerW = w - padL - padR;
+  // Values at or below zero can't go on a log axis. Rather than clamp them to a tiny
+  // positive number (which made negative results look like "about nothing"), they sit in
+  // a labelled "below 0" zone to the left of the axis.
+  const hasNeg = items.some((it) => it.lo <= 0 || it.mid <= 0 || it.hi <= 0);
+  const negW = hasNeg ? 84 : 0;
+  const axisL = padL + negW;
+  const innerW = w - axisL - padR;
+  const negX = padL + (negW - 16) / 2;
 
   // Auto-extend the axis so the tool's wide-tail bar fits. Default window is
   // [-3, 5] OoM (good for most cause-area comparators); expand whenever a bar
@@ -48,12 +58,16 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
     if (item.lo > 0) minLog = Math.min(minLog, Math.floor(Math.log10(item.lo)));
     if (item.hi > 0) maxLog = Math.max(maxLog, Math.ceil(Math.log10(item.hi)));
   }
+  // Below a millionth of GiveWell is effectively nothing; don't stretch the axis for it.
+  minLog = Math.max(minLog, AXIS_FLOOR_LOG);
   const logSpan = maxLog - minLog;
 
   const mapX = (v: number): number => {
-    const lv = Math.log10(Math.max(v, Math.pow(10, minLog - 1)));
+    const lv = Math.log10(Math.max(v, Math.pow(10, minLog)));
     return ((lv - minLog) / logSpan) * innerW;
   };
+  /** Absolute x for a value: the "below 0" zone for v ≤ 0, else its place on the axis. */
+  const xOf = (v: number): number => (v <= 0 ? negX : axisL + mapX(v));
 
   // Build tick marks across the (possibly-expanded) range. Show every OoM when
   // the span is small, every 2 OoM when larger, so labels don't crowd.
@@ -70,14 +84,14 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
       {ticks.map((l) => (
         <g key={l}>
           <line
-            x1={padL + mapX(Math.pow(10, l))}
-            x2={padL + mapX(Math.pow(10, l))}
+            x1={axisL + mapX(Math.pow(10, l))}
+            x2={axisL + mapX(Math.pow(10, l))}
             y1={20}
             y2={h - 12}
             stroke="rgba(31,29,24,0.06)"
           />
           <text
-            x={padL + mapX(Math.pow(10, l))}
+            x={axisL + mapX(Math.pow(10, l))}
             y={h - 2}
             textAnchor="middle"
             fontSize="10"
@@ -88,10 +102,25 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
           </text>
         </g>
       ))}
+      {hasNeg && (
+        <g>
+          <rect x={padL} y={16} width={negW - 16} height={h - 30} fill="rgba(217,130,43,0.10)" />
+          <text
+            x={negX}
+            y={h - 2}
+            textAnchor="middle"
+            fontSize="10"
+            fill="#6e675c"
+            fontFamily="IBM Plex Mono, monospace"
+          >
+            below 0
+          </text>
+        </g>
+      )}
       {/* GiveWell line at 1× */}
       <line
-        x1={padL + mapX(1)}
-        x2={padL + mapX(1)}
+        x1={axisL + mapX(1)}
+        x2={axisL + mapX(1)}
         y1={16}
         y2={h - 14}
         stroke="#2e6a31"
@@ -100,9 +129,9 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
       />
       {items.map((it, i) => {
         const y = 28 + i * rowH;
-        const x0 = padL + mapX(it.lo);
-        const x1 = padL + mapX(it.hi);
-        const xm = padL + mapX(it.mid);
+        const x0 = xOf(it.lo);
+        const x1 = xOf(it.hi);
+        const xm = xOf(it.mid);
         const isMain = it.main ?? false;
         const stroke = isMain ? '#2e6a31' : '#2a2823';
         const sw = isMain ? 2 : 1.5;

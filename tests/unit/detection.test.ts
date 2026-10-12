@@ -102,10 +102,28 @@ describe('survey reach (share of the galaxy a method can see this decade)', () =
     }
   });
 
-  it('SETI defaults to the sourced range: leakage-only (~10⁻⁸) up to galaxy-spanning beacons (~10⁻³)', () => {
+  it('SETI defaults to the sourced range: a DSN-strength transmitter (~3,000 stars) up to galaxy-spanning beacons (~6×10⁷ stars), over ~2×10¹¹ stars', () => {
     const seti = defaultDetectionState().find((m) => m.id === 'seti');
-    expect(seti?.reachMin).toBe(1e-8);
-    expect(seti?.reachMax).toBe(1e-3);
+    expect(seti?.reachMin).toBe(1.5e-8);
+    expect(seti?.reachMax).toBe(3e-4);
+  });
+
+  it('biosignature reach covers ~1–10 star systems, with no habitable-zone bonus', () => {
+    const bio = defaultDetectionState().find((m) => m.id === 'bio');
+    expect(bio?.reachMin).toBe(5e-12);
+    expect(bio?.reachMax).toBe(5e-11);
+  });
+
+  it('draws the same random numbers whether a bound is a point or a range, so sweeps compare like with like', () => {
+    const a = makeRng('crn');
+    const b = makeRng('crn');
+    pDetectPerMethod(a, only('seti'), 1e6);
+    pDetectPerMethod(
+      b,
+      only('seti', { reachMin: 1e-5, reachMax: 1e-5, sensMin: 3, sensMax: 3 }),
+      1e6,
+    );
+    expect(a()).toBe(b());
   });
 
   it('caps detection: one civilisation is found with probability at most the reach, however much is spent', () => {

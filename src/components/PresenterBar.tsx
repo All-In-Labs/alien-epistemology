@@ -22,11 +22,11 @@ export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
 
   return (
     <div
-      className="sticky top-0 z-10 bg-ink text-paper px-7 py-2.5 flex justify-between items-center font-mono text-[11px] tracking-chip uppercase"
+      className="sticky top-0 z-10 bg-ink text-paper px-4 sm:px-7 py-2.5 flex flex-wrap justify-between items-center gap-x-5 gap-y-1 font-mono text-[11px] tracking-chip uppercase"
       style={{ position: 'sticky' }}
     >
-      <span>Presenter mode · ←/→ chapter · P to exit</span>
-      <span className="flex gap-5 items-baseline">
+      <span className="hidden lg:inline">Presenter mode · ←/→ chapter · P to exit</span>
+      <span className="flex flex-wrap gap-x-5 gap-y-1 items-baseline">
         <span>
           P( N=0 ){' '}
           <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">

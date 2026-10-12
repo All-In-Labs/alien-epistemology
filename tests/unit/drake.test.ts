@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { makeRng } from '../../src/lib/rng';
 import { sampleDrake, defaultDrakeRanges } from '../../src/model/drake';
-import { BIOSPHERE_LIFETIME_YEARS } from '../../src/constants/defaults';
+import { BIOSPHERE_LIFETIME_YEARS, DRAKE_DEFAULTS } from '../../src/constants/defaults';
 
 describe('sampleDrake', () => {
   it('returns finite, non-negative N and N_detectable ≤ N', () => {
@@ -77,5 +77,19 @@ describe('life-bearing planets', () => {
 
   it('uses Earth’s record for how long a biosphere lasts (~3 billion years)', () => {
     expect(BIOSPHERE_LIFETIME_YEARS).toBe(3e9);
+  });
+});
+
+describe('sampling details', () => {
+  it('uses the same number of random draws for both f_l models, so sweeps between them compare like with like', () => {
+    const a = makeRng('crn-fl');
+    const b = makeRng('crn-fl');
+    sampleDrake(a, defaultDrakeRanges(), 'sdo-lognormal');
+    sampleDrake(b, defaultDrakeRanges(), 'log-uniform');
+    expect(a()).toBe(b());
+  });
+
+  it('R* defaults to the cited star-formation rates: 0.68–1.65 solar masses/yr ÷ ~0.57 solar masses per star ≈ 1–3 stars/yr', () => {
+    expect(DRAKE_DEFAULTS.R.defaults).toEqual({ min: 1, max: 3 });
   });
 });

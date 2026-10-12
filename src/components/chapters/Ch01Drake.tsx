@@ -83,10 +83,11 @@ function buildPreviews(ranges: DrakeRanges, flIsSDO: boolean): Record<DrakeParam
 const TOOLTIPS: Record<DrakeParamId, ReactNode> = {
   R: (
     <p>
-      Milky Way star formation rate, in stars per year. Measured at roughly 0.7–1.9 solar masses
+      Milky Way star formation rate, in stars per year. Measured at roughly 0.7–1.7 solar masses
       per year (<CitationLink cite="robitailleWhitney2010" text="Robitaille & Whitney 2010" />,{' '}
-      <CitationLink cite="licquiaNewman2015" text="Licquia & Newman 2015" />); because most new
-      stars are low-mass, that is around 6–7 stars per year. SDO&rsquo;s Table 1 uses 1–100 (
+      <CitationLink cite="licquiaNewman2015" text="Licquia & Newman 2015" />). A typical new star
+      is ~0.57 solar masses (a standard Kroupa initial mass function), so that is roughly 1–3
+      stars per year; the default range is 1–3. SDO&rsquo;s Table 1 uses 1–100 (
       <CitationLink cite="sdo2018" text="SDO 2018" />).
     </p>
   ),
@@ -157,7 +158,7 @@ export function Ch01Drake() {
     <ChapterShell
       num="01"
       eyebrow="The equation"
-      title="Seven uncertain factors, multiplied together."
+      title="Eight uncertain factors, multiplied together."
       kicker="Each parameter is sampled between bounds you set — except fₗ, the chance life arises, which by default follows Sandberg, Drexler & Ord’s own model. Astrophysical parameters have established lower bounds; the tool nudges you to respect them. The speculative parameters fₗ, fᵢ, f_c, L are wide on purpose — that is the SDO finding."
     >
       <div className="bg-paper border border-ink px-7 py-2">

@@ -41,8 +41,7 @@ export function PriorOverridePanel() {
         <span className="text-ink not-italic">P(≥1 alien civ)</span> high <em>and</em> raise the{' '}
         <span className="text-ink not-italic">detection sensitivity floor</span>. The first
         decides whether they exist; the second decides how visible they are. One alone barely
-        moves the verdict. (This replaces an earlier &ldquo;Grabby Aliens&rdquo; mode, which
-        modelled the same scenario but contradicted the paper it cited.)
+        moves the verdict.
       </p>
 
       <div className="border-t border-edge pt-4 pb-4">

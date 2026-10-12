@@ -83,8 +83,19 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   Ch.2 italic block-quote says so. RETINA's reach is a labelled guess (no source).
 - Biosignature searches count life-bearing planets (`N_lifeDetectable`, using
   `BIOSPHERE_LIFETIME_YEARS`), not civilisations.
-- Comparator bars must be published figures with a named source. If a cause area has none
-  (AI safety, currently), list it in `COMPARATOR_OMISSIONS`; don't invent a range.
+- Comparator bars must be published figures with a named source, drawn as a point when the
+  source gives a point. If a cause area has none (AI safety, currently), list it in
+  `COMPARATOR_OMISSIONS`; don't invent a range. Negative values go in the chart's "below 0"
+  zone; never clamp them to a tiny positive (that made bad results look like "≈ nothing").
+- Reach ranges divide survey star counts by ~2×10¹¹ (the middle of 100–400 billion) at both
+  ends, with no rounding up. Taking the favourable count at each end inflates log-uniform means.
+- The Monte Carlo must consume the same random draws whatever the inputs (point vs ranged
+  bounds, SDO vs log-uniform fₗ). The tornado compares runs on one seed and relies on it;
+  `detection.test.ts` and `drake.test.ts` check it.
+- Presets reset everything they don't set (Drake bounds, methods, overrides, value
+  uncertainty, fₗ model) to the defaults, so a preset never depends on click order.
+- The tornado runs in `workers/tornadoWorker.ts` (pure logic in `model/tornado.ts`),
+  debounced. Don't move it back onto the main thread: 29 Monte Carlo runs block input.
 - The verdict histogram only shows positive multipliers. P(EV<0) is shown as a separate stat
   (in accent) so non-trivial negative-EV worldviews aren't hidden by the log axis.
 - **Grokkability is a goal**: a visitor who hasn't dug into the numbers should get the

@@ -60,7 +60,18 @@ export function binLog10(
 }
 
 export function percentile(samples: Float64Array, p: number): number {
-  const sorted = Array.from(samples).sort((a, b) => a - b);
-  const idx = Math.max(0, Math.min(sorted.length - 1, Math.floor(p * sorted.length)));
-  return sorted[idx] ?? 0;
+  return percentiles(samples, [p])[0] ?? 0;
+}
+
+/**
+ * Several percentiles from one sort. Uses the typed array's own numeric sort, which is
+ * far faster than Array#sort with a comparator; the old one-sort-per-percentile version
+ * blocked the main thread for ~0.4s every time the verdict updated.
+ */
+export function percentiles(samples: Float64Array, ps: readonly number[]): number[] {
+  const sorted = Float64Array.from(samples).sort();
+  return ps.map((p) => {
+    const idx = Math.max(0, Math.min(sorted.length - 1, Math.floor(p * sorted.length)));
+    return sorted[idx] ?? 0;
+  });
 }

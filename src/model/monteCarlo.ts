@@ -18,10 +18,12 @@ import type { DetectionType } from '../constants/detectionDefaults';
 
 export interface PriorOverrides {
   /** When set, P(N≥1) is replaced by this value, bypassing Drake for the partition stat.
-   *  N_detectable is sampled from a Bernoulli(value) ⇒ N=fixed-large when alive, 0 otherwise.  */
+   *  Each sample is "alive" with this probability; alive samples take the Drake count
+   *  conditioned on at least one (zero-truncated Poisson), still scaled by f_d. */
   overridePNGteOne?: number | undefined;
-  /** When set, P(detection|aliens) is floored at this value (for users who think
-   *  alien presence is already evident in some form). */
+  /** When set, P(detection | aliens exist) is floored at this value (for users who think
+   *  alien presence is already evident in some form). Scaled per sample by the chance
+   *  there is at least one detectable civilisation. */
   detectionFloor?: number | undefined;
 }
 
@@ -173,10 +175,23 @@ export function runDrakeMC({
     let N_detectable = s.N_detectable;
     let N_lifeDetectable = s.N_lifeDetectable;
     let overrideAlive: boolean | undefined = undefined;
+    /** P(exactly one | at least one) for this sample, when the override forces N ≥ 1. */
+    let pOneGivenAlive = 0;
     if (overrides?.overridePNGteOne !== undefined) {
       overrideAlive = rng() < overrides.overridePNGteOne;
-      N = overrideAlive ? Math.max(N, 1) : 0;
-      N_detectable = overrideAlive ? Math.max(N_detectable, 1) : 0;
+      if (overrideAlive) {
+        // Condition the Poisson count on "at least one". Its mean is N / (1 − e^−N): ~1
+        // when the Drake rate is tiny, ~N when it is large. P(exactly one | ≥ 1) is
+        // N / (e^N − 1): ~1 for tiny N, ~0 for large. The forced civilisations still pass
+        // through f_d like any others.
+        const rate = s.N;
+        N = rate > 0 ? rate / -Math.expm1(-rate) : 1;
+        pOneGivenAlive = rate > 0 ? rate / Math.expm1(rate) : 1;
+        N_detectable = N * s.components.fd;
+      } else {
+        N = 0;
+        N_detectable = 0;
+      }
       // The override is about civilisations; simple life is left as sampled, but every
       // civilisation still lives on a life-bearing planet.
       N_lifeDetectable = Math.max(N_lifeDetectable, N_detectable);
@@ -186,12 +201,12 @@ export function runDrakeMC({
 
     // Partition contributions.
     if (overrideAlive !== undefined) {
-      // Bayesian-shortcut override directly sets P(N≥1). Bypass the Poisson partition
-      // so the user-set value round-trips through the headline pNGteOne stat; otherwise
-      // small Drake-derived N values get bumped to 1 by Math.max and exp(-1)=0.37 leaks
-      // into pNZero, breaking the UI's promise that the slider controls P(N≥1).
+      // Bayesian-shortcut override directly sets P(N≥1), so the user-set value
+      // round-trips through the headline pNGteOne stat. Within "at least one", the split
+      // between exactly one and more than one follows the zero-truncated Poisson.
       if (overrideAlive) {
-        pNGtOneSum += 1;
+        pNOneSum += pOneGivenAlive;
+        pNGtOneSum += 1 - pOneGivenAlive;
       } else {
         pNZeroSum += 1;
       }
@@ -209,10 +224,14 @@ export function runDrakeMC({
     if (methods !== undefined) {
       const m = methods;
       const per = pDetectPerMethod(rng, m, N_detectable, N_lifeDetectable);
-      let pCombined = per.combined;
-      if (overrides?.detectionFloor !== undefined && N_detectable > 0) {
-        pCombined = Math.max(pCombined, overrides.detectionFloor);
-      }
+      // The floor promises P(detection | aliens exist) ≥ floor. N is an expected count,
+      // so scale by the chance there is at least one detectable civilisation; otherwise
+      // the floor would conjure detections in worlds with no one there.
+      const floorHere =
+        overrides?.detectionFloor !== undefined
+          ? overrides.detectionFloor * -Math.expm1(-N_detectable)
+          : 0;
+      const pCombined = Math.max(per.combined, floorHere);
       detectionProbSamples[i] = pCombined;
       detectionSum += pCombined;
 
@@ -271,12 +290,8 @@ export function runDrakeMC({
           // Apply detection-floor as a value-weighted blend if it's set: floor
           // the implied detection probability up to the floor by treating the
           // missing mass as "average-type detection."
-          if (
-            overrides?.detectionFloor !== undefined &&
-            N_detectable > 0 &&
-            per.combined < overrides.detectionFloor
-          ) {
-            const missing = overrides.detectionFloor - per.combined;
+          if (per.combined < floorHere) {
+            const missing = floorHere - per.combined;
             // Average V across enabled-method type singletons as a fallback.
             let avgSingleV = 0;
             for (const a of active) {

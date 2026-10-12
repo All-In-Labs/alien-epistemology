@@ -50,7 +50,7 @@ export function Ch03Value() {
     <ChapterShell
       num="03"
       eyebrow="What detection is worth"
-      title="Four channels — two positive, two negative, all defensible."
+      title="Four channels: one good, two bad, one either way."
       kicker="Detection is not unambiguously good. Channel A (Hanson's Filter), Channel D (Dark Forest) and the lightcone-claim side of Channel B can all drive expected value negative. The tool refuses to hide that."
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

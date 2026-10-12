@@ -33,7 +33,7 @@ export const SDO_FL_LOG10_RATE = { mean: 0, sd: 50 } as const;
  * civilisations, so the count they need is life-bearing planets: R* × fₚ × nₑ × fₗ × this.
  * Earth has hosted life for more than 3.5 billion years; 3 × 10⁹ rounds that down. One
  * fixed number rather than a range because it only matters when the biosignature search is
- * switched on, and the biosignature reach range (10⁻¹²–10⁻⁹) is far wider than any
+ * switched on, and the biosignature reach range (5×10⁻¹²–5×10⁻¹¹) is far wider than any
  * plausible spread here.
  */
 export const BIOSPHERE_LIFETIME_YEARS = 3e9;
@@ -60,9 +60,13 @@ export const DRAKE_DEFAULTS: Record<DrakeParamId, DrakeParamConfig> = {
     label: 'Star formation rate',
     unit: ' /yr',
     distribution: 'log-uniform',
-    defaults: { min: 1.5, max: 10 },
+    // 0.68–1.45 (Robitaille & Whitney 2010) and 1.65 ± 0.19 (Licquia & Newman 2015) solar
+    // masses/yr, divided by a Kroupa IMF's mean stellar mass of ~0.57 solar masses
+    // (0.08–100 solar masses) ≈ 1.2–2.9 stars/yr. Brown dwarfs (~0.38 mean) would give
+    // up to ~4, but they aren't stars.
+    defaults: { min: 1, max: 3 },
     floor: 1.0,
-    note: 'Milky Way star formation rate, in stars per year. Measured at ~0.7–1.9 solar masses/yr (Robitaille & Whitney 2010; Licquia & Newman 2015); most new stars are low-mass, so ~6–7 stars/yr.',
+    note: 'Milky Way star formation rate, in stars per year. Measured at ~0.7–1.7 solar masses/yr (Robitaille & Whitney 2010; Licquia & Newman 2015). With a typical new star at ~0.57 solar masses (Kroupa IMF), that is ~1–3 stars/yr.',
   },
   fp: {
     id: 'fp',
