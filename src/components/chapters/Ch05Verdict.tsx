@@ -4,6 +4,7 @@ import { ComparatorBars } from '../charts/ComparatorBars';
 import { useStore } from '../../store';
 import { PRESETS } from '../../presets/worldviews';
 import { COMPARATORS } from '../../constants/comparators';
+import { headlineFor } from '../../model/summary';
 
 // Number-only formatter (no trailing × — caller decides whether to add one).
 function fmtMul(v: number): string {
@@ -51,33 +52,31 @@ function supScript(n: number): string {
 export function Ch05Verdict() {
   const out = useStore((s) => s.drakeOutput);
   const activePreset = useStore((s) => s.activePreset);
+  const riskAversion = useStore((s) => s.worldview.riskAversion);
   const presetName = activePreset
     ? (PRESETS.find((p) => p.id === activePreset)?.name ?? 'Custom')
     : 'Custom';
 
   const median = out?.medianMultiplier ?? 0;
-  const medianGivenDetection = out?.medianMultiplierGivenDetection ?? 0;
-  const gmean = out?.gmeanPositiveMultiplier ?? 0;
+  const mean = out?.meanMultiplier ?? 0;
   const p5 = out?.p5Multiplier ?? 0;
   const p95 = out?.p95Multiplier ?? 0;
   const pAbove = out?.pAboveGiveWell ?? 0;
   const pNeg = out?.pNegativeEV ?? 0;
   const pAnyDetection = out?.pAnyDetection ?? 0;
 
-  // Three regimes, each with its own headline:
-  //   1. No detections at all — conditional median is undefined.
-  //   2. Detections happen but every value is 0 (no channels enabled) — multipliers
-  //      are exactly 0; "median given detection" is technically 0 but conveys nothing.
-  //   3. Normal — show the unconditional median when it's non-zero, otherwise fall
-  //      back to the conditional median (which doesn't collapse on the no-detection
-  //      mass when P(N=0) > 0.5).
+  // The headline statistic follows the risk-aversion dial (spec §5.4): mean for EV-max,
+  // geometric mean for log-utility, 25th percentile for difference-making. Two regimes
+  // have no meaningful headline: no detections at all, or every multiplier exactly 0.
   const noDetections = pAnyDetection === 0;
-  const allZeroValue = !noDetections && gmean === 0 && pNeg === 0;
+  const allZeroValue = !noDetections && mean === 0 && p5 === 0 && p95 === 0 && pNeg === 0;
   const hideHeadlineNumber = noDetections || allZeroValue;
 
-  const headlineValue = Math.abs(median) < 1e-12 ? medianGivenDetection : median;
-  const headlineLabel =
-    Math.abs(median) < 1e-12 ? '× GiveWell · median given detection' : '× GiveWell · median';
+  const headline = out ? headlineFor(out, riskAversion) : null;
+  const headlineValue = headline?.value ?? null;
+  const headlineLabel = `× GiveWell · ${headline?.label ?? 'mean (EV-max)'}`;
+  // For the comparator dot: fall back to the median when the headline is undefined.
+  const dotValue = headlineValue ?? median;
 
   // For the histogram, use only positive log-finite multipliers.
   const positives = (() => {
@@ -132,7 +131,7 @@ export function Ch05Verdict() {
       num="05"
       eyebrow="The verdict"
       title="A distribution, not a number."
-      kicker="Cost-effectiveness expressed as a multiplier of the GiveWell top-charity bar (~$100 per DALY averted). Log x-axis. Vertical line marks the bar. The 95th percentile reflects rare scenarios where N is very large; the typical case is the median given detection."
+      kicker="Cost-effectiveness expressed as a multiplier of an approximate GiveWell top-charity bar (~$100 per DALY averted; GiveWell itself uses its own units). Log x-axis. Vertical line marks the bar. The 95th percentile reflects rare scenarios where N is very large."
     >
       <div className="bg-paper border border-ink px-7 py-6">
         <div className="flex justify-between items-end mb-3.5">
@@ -146,6 +145,11 @@ export function Ch05Verdict() {
             >
               {hideHeadlineNumber ? (
                 <span className="text-muted">n/a</span>
+              ) : headlineValue === null ? (
+                <>
+                  <span className="text-muted">undefined</span>
+                  <span className="font-mono text-lg text-muted ml-1.5">{headlineLabel}</span>
+                </>
               ) : (
                 <>
                   {fmtMul(headlineValue)}
@@ -158,13 +162,7 @@ export function Ch05Verdict() {
                 ? 'no detections in any sample — enable at least one method or raise the detection-floor override'
                 : allZeroValue
                   ? 'every detection has zero value — enable at least one channel to see EV'
-                  : gmean > 0 && median !== 0
-                    ? `geom. mean of positive multipliers: ${fmtX(gmean)} · unconditional median: ${fmtX(median)}`
-                    : gmean > 0
-                      ? `geom. mean of positive multipliers: ${fmtX(gmean)}`
-                      : median !== 0
-                        ? `unconditional median: ${fmtX(median)}`
-                        : 'no positive multipliers under this worldview — every detection is net negative'}
+                  : `${headline?.note !== undefined ? `${headline.note} · ` : ''}median: ${fmtX(median)} · mean: ${fmtX(mean)} · headline set by risk aversion (Ch.4)`}
             </div>
           </div>
           <div className="flex gap-6 font-mono text-[11.5px] text-muted">
@@ -212,10 +210,10 @@ export function Ch05Verdict() {
         <ComparatorBars
           items={[
             {
-              label: `This tool — ${presetName}${Math.abs(median) < 1e-12 ? ' (cond.)' : ''}`,
-              lo: Math.max(Math.abs(median) < 1e-12 ? gmean / 100 : p5, 1e-9),
-              mid: Math.max(headlineValue, 1e-9),
-              hi: Math.max(Math.abs(median) < 1e-12 ? gmean * 100 : p95, 1e-9),
+              label: `This tool — ${presetName} (${headline?.short ?? 'mean'}${dotValue < 0 ? ', negative' : ''})`,
+              lo: Math.max(p5, 1e-9),
+              mid: Math.max(dotValue, 1e-9),
+              hi: Math.max(p95, 1e-9),
               main: true,
             },
             ...COMPARATORS.map((c) => ({

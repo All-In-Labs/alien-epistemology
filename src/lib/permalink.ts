@@ -7,7 +7,8 @@ import pako from 'pako';
 
 import type { DrakeRanges } from '../model/drake';
 import type { DetectionMethodState } from '../model/detection';
-import type { ChannelsState } from '../model/value';
+import { NO_VALUE_UNCERTAINTY, type ChannelsState, type ValueUncertainty } from '../model/value';
+import type { FlDistribution } from '../constants/defaults';
 import type { WorldviewDials } from '../model/worldview';
 import type { GrabbyState } from '../model/grabby';
 import type { CosmologyMode, PriorOverrides } from '../model/monteCarlo';
@@ -24,8 +25,8 @@ interface SerializedStateV1 {
   overrides: PriorOverrides;
 }
 
-/** v=2: adds astroLocked so the lock state survives URL share. */
-export interface SerializedState {
+/** v=2: adds astroLocked so the lock state survives URL share. Used for migration only. */
+interface SerializedStateV2 {
   v: 2;
   drakeRanges: DrakeRanges;
   methods: DetectionMethodState[];
@@ -35,6 +36,34 @@ export interface SerializedState {
   grabby: GrabbyState;
   overrides: PriorOverrides;
   astroLocked: boolean;
+}
+
+/** v=3: adds valueUncertainty and flDistribution. */
+export interface SerializedState {
+  v: 3;
+  drakeRanges: DrakeRanges;
+  methods: DetectionMethodState[];
+  channels: ChannelsState;
+  worldview: WorldviewDials;
+  cosmology: CosmologyMode;
+  grabby: GrabbyState;
+  overrides: PriorOverrides;
+  valueUncertainty: ValueUncertainty;
+  flDistribution: FlDistribution;
+  astroLocked: boolean;
+}
+
+/**
+ * Links made before v3 had no value uncertainty and log-uniform f_l. Migrating them to
+ * exactly that keeps an old link as close as possible to what its author saw.
+ */
+function migrateV2(v2: SerializedStateV2): SerializedState {
+  return {
+    ...v2,
+    v: 3,
+    valueUncertainty: { ...NO_VALUE_UNCERTAINTY },
+    flDistribution: 'log-uniform',
+  };
 }
 
 function base64urlEncode(bytes: Uint8Array): string {
@@ -67,9 +96,12 @@ export function decodeState(s: string): SerializedState {
   const obj = JSON.parse(json) as { v?: number };
   if (obj.v === 1) {
     const v1 = obj as unknown as SerializedStateV1;
-    return { ...v1, v: 2, astroLocked: false };
+    return migrateV2({ ...v1, v: 2, astroLocked: false });
   }
   if (obj.v === 2) {
+    return migrateV2(obj as unknown as SerializedStateV2);
+  }
+  if (obj.v === 3) {
     return obj as unknown as SerializedState;
   }
   throw new Error(`Unknown permalink version: ${String(obj.v)}`);

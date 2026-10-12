@@ -16,6 +16,7 @@ import { runDrakeMC, type DrakeMCOutput } from '../../src/model/monteCarlo';
 import { defaultDrakeRanges } from '../../src/model/drake';
 import { defaultDetectionState } from '../../src/model/detection';
 import { applyPreset, PRESETS, type PresetId } from '../../src/presets/worldviews';
+import { headlineFor } from '../../src/model/summary';
 
 const N = 30_000;
 
@@ -71,5 +72,17 @@ describe('epistemic-neutrality calibration — spec §10 #5', () => {
     // The Ord Moderate preset MUST land short of that — the spec's most important
     // honesty check. If this fails, defaults are biased.
     expect(ord.out.pAboveGiveWell).toBeLessThan(0.8);
+  });
+
+  it('Ord Moderate’s own headline statistic (log-utility) is below the GiveWell bar', () => {
+    // The verdict headline follows each preset's risk-aversion setting. For Ord Moderate
+    // that is the geometric mean, which must not clear the bar on default settings.
+    const results = runAllPresets();
+    const ord = results.find((r) => r.id === 'ord');
+    const preset = PRESETS.find((p) => p.id === 'ord');
+    if (!ord || !preset) throw new Error('ord preset missing from PRESETS');
+    const h = headlineFor(ord.out, preset.worldview.riskAversion);
+    expect(h.value).not.toBeNull();
+    expect(h.value ?? Infinity).toBeLessThan(1);
   });
 });

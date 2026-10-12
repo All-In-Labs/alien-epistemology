@@ -6,10 +6,10 @@ import { useStore } from '../../store';
 
 const CHANNEL_A_TOOLTIP = (
   <p>
-    The Great Filter (<CitationLink cite="hansonFilter" text="Hanson 1998" />). Detection updates
-    whether the filter sits behind us (life is hard, we passed the gauntlet) or ahead (life is
-    easy, civilisations rarely survive). By default finding life is bad news. Sign flips when
-    you set ϕ &lt; 0.5.
+    The Great Filter (<CitationLink cite="hansonFilter" text="Hanson 1998" />). Finding life
+    elsewhere suggests the early steps were easy, so the filter is more likely ahead of us:
+    detection moves a fraction Δ of your credence that the filter is behind us (ϕ) to
+    &ldquo;ahead&rdquo;. That is bad news whatever ϕ is, and it shrinks to zero only at ϕ = 0.
   </p>
 );
 const CHANNEL_B_TOOLTIP = (
@@ -42,13 +42,15 @@ export function Ch03Value() {
   const patchB = useStore((s) => s.patchChannelB);
   const patchC = useStore((s) => s.patchChannelC);
   const patchD = useStore((s) => s.patchChannelD);
+  const valueUncertainty = useStore((s) => s.valueUncertainty);
+  const patchValueUncertainty = useStore((s) => s.patchValueUncertainty);
 
   return (
     <ChapterShell
       num="03"
       eyebrow="What detection is worth"
       title="Four channels — two positive, two negative, all defensible."
-      kicker="Detection is not unambiguously good. Channel A (Hanson's Filter) and Channel D (Dark Forest) can drive expected value negative. The tool refuses to hide that."
+      kicker="Detection is not unambiguously good. Channel A (Hanson's Filter), Channel D (Dark Forest) and the lightcone-claim side of Channel B can all drive expected value negative. The tool refuses to hide that."
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChannelCard
@@ -75,7 +77,7 @@ export function Ch03Value() {
               onChange={(v) => {
                 patchWorldview({ filterPriorBehind: v });
               }}
-              hint="< 0.5 flips channel A positive · also editable in Ch.4"
+              hint="0 = nothing to lose · also editable in Ch.4"
             />
           </div>
         </ChannelCard>
@@ -172,6 +174,41 @@ export function Ch03Value() {
             />
           </div>
         </ChannelCard>
+      </div>
+
+      <div className="mt-5 bg-paper border border-ink px-7 py-5">
+        <div className="font-mono text-[11px] text-muted tracking-chip uppercase mb-1">
+          Value uncertainty
+        </div>
+        <p className="font-serif italic text-[13.5px] text-muted max-w-[780px] mb-3">
+          Each Monte Carlo sample draws its own channel values around the settings above, so the
+          sign of the outcome can vary between samples. Without this, P(EV &lt; 0) can only be
+          0% or 100%. Both spreads keep the settings above as the expected values.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+          <RangeSlider
+            label="Magnitude spread (± orders of magnitude)"
+            value={valueUncertainty.magnitudeOOM}
+            min={0}
+            max={3}
+            step={0.1}
+            onChange={(v) => {
+              patchValueUncertainty({ magnitudeOOM: v });
+            }}
+            hint="scales each channel's value per sample · 0 = fixed"
+          />
+          <RangeSlider
+            label="Channel B shift uncertainty (±)"
+            value={valueUncertainty.shiftPM}
+            min={0}
+            max={0.3}
+            step={0.01}
+            onChange={(v) => {
+              patchValueUncertainty({ shiftPM: v });
+            }}
+            hint="each B shift drawn within ± this · drives P(EV < 0)"
+          />
+        </div>
       </div>
     </ChapterShell>
   );

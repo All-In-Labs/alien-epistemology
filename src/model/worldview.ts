@@ -14,7 +14,7 @@ export interface WorldviewDials {
   alienMoralWeight: number;
   /** Multiplier on channel B (does our action shift cosmic endowment?). */
   hingeyness: number;
-  /** P(filter behind us) — used inside channel A's value calc, surfaced here for the panel. */
+  /** P(filter behind us). Channel A's (negative) value scales with it. */
   filterPriorBehind: number;
   /** Determines which summary stat the UI presents (mean / geom-mean / 25th-pctl). */
   riskAversion: RiskAversion;
@@ -59,11 +59,12 @@ export function applyWorldview(
   const discountA = Math.pow(1 + d.timeDiscount, -HORIZON_A);
   const discountB = Math.pow(1 + d.timeDiscount, -HORIZON_B);
 
-  // Channel A sign tracks the user's filter prior. > 0.5 ⇒ detection challenges optimism
-  // (negative information value); < 0.5 ⇒ detection confirms pessimism (positive); = 0.5
-  // ⇒ neutral (no directional component, magnitude collapses to zero).
-  const signA = d.filterPriorBehind > 0.5 ? -1 : d.filterPriorBehind < 0.5 ? 1 : 0;
-  const A = v.A * signA * d.longtermismStrength * discountA;
+  // Channel A: news about the Great Filter. Finding life elsewhere is evidence that the
+  // steps behind us were easy, which moves credence from "filter behind us" to "filter
+  // ahead" — bad news whatever your prior (Hanson 1998). v.A is the unsigned Δ × V; the
+  // update can only move credence that exists, so it scales with ϕ = P(filter behind).
+  // It is zero only if you already put no weight on the filter being behind us.
+  const A = -v.A * d.filterPriorBehind * d.longtermismStrength * discountA;
   let B = v.B * d.longtermismStrength * d.hingeyness * discountB;
   if (d.personAffecting) B = 0;
   const C = v.C * d.alienMoralWeight;

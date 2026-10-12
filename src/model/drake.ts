@@ -1,9 +1,11 @@
 import type { Rng } from '../lib/rng';
-import { logUniform, linearUniform } from '../lib/sampling';
+import { logUniform, linearUniform, standardNormal } from '../lib/sampling';
 import {
   DRAKE_DEFAULTS,
+  SDO_FL_LOG10_RATE,
   type DrakeBound,
   type DrakeParamId,
+  type FlDistribution,
 } from '../constants/defaults';
 
 export type DrakeRanges = Record<DrakeParamId, DrakeBound>;
@@ -34,11 +36,23 @@ function sampleParam(rng: Rng, id: DrakeParamId, range: DrakeBound): number {
     : linearUniform(rng, range.min, range.max);
 }
 
-export function sampleDrake(rng: Rng, ranges: DrakeRanges): DrakeSample {
+/** SDO 2018 f_l: 1 − exp(−λVt) with log10(λVt) normally distributed. Always in [0, 1]. */
+export function sampleFlSDO(rng: Rng): number {
+  const log10Rate = SDO_FL_LOG10_RATE.mean + SDO_FL_LOG10_RATE.sd * standardNormal(rng);
+  // 10^x overflows to Infinity for x > ~308 (f_l → 1) and underflows to 0 for x < ~-323
+  // (f_l → 0, so N = 0); -expm1 keeps precision when the rate is tiny.
+  return -Math.expm1(-Math.pow(10, log10Rate));
+}
+
+export function sampleDrake(
+  rng: Rng,
+  ranges: DrakeRanges,
+  flDistribution: FlDistribution = 'log-uniform',
+): DrakeSample {
   const R = sampleParam(rng, 'R', ranges.R);
   const fp = sampleParam(rng, 'fp', ranges.fp);
   const ne = sampleParam(rng, 'ne', ranges.ne);
-  const fl = sampleParam(rng, 'fl', ranges.fl);
+  const fl = flDistribution === 'sdo-lognormal' ? sampleFlSDO(rng) : sampleParam(rng, 'fl', ranges.fl);
   const fi = sampleParam(rng, 'fi', ranges.fi);
   const fc = sampleParam(rng, 'fc', ranges.fc);
   const L = sampleParam(rng, 'L', ranges.L);

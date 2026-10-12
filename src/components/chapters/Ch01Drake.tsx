@@ -13,6 +13,8 @@ import { binLog10 } from '../../lib/binning';
 import type { DrakeRanges } from '../../model/drake';
 import type { ReactNode } from 'react';
 import { CitationLink } from '../CitationLink';
+import { Segmented } from '../controls/Segmented';
+import type { FlDistribution } from '../../constants/defaults';
 
 const PREVIEW_SAMPLES = 1000;
 const PREVIEW_BINS = 32;
@@ -127,6 +129,9 @@ export function Ch01Drake() {
   const resetDrakeRanges = useStore((s) => s.resetDrakeRanges);
   const astroLocked = useStore((s) => s.astroLocked);
   const toggleAstroLock = useStore((s) => s.toggleAstroLock);
+  const flDistribution = useStore((s) => s.flDistribution);
+  const setFlDistribution = useStore((s) => s.setFlDistribution);
+  const flIsSDO = flDistribution === 'sdo-lognormal';
   const previews = useMemo(() => buildPreviews(drakeRanges), [drakeRanges]);
 
   return (
@@ -158,11 +163,28 @@ export function Ch01Drake() {
               onChange={(lo, hi) => {
                 setDrakeRange(id, { min: lo, max: hi });
               }}
-              disabled={astroLocked && isAstro}
+              disabled={(astroLocked && isAstro) || (id === 'fl' && flIsSDO)}
               tooltip={TOOLTIPS[id]}
             />
           );
         })}
+      </div>
+      <div className="flex flex-wrap gap-3 mt-4 font-mono text-[11px] text-muted tracking-chip uppercase items-center">
+        <span>fₗ distribution</span>
+        <Segmented<FlDistribution>
+          ariaLabel="f_l distribution"
+          value={flDistribution}
+          onChange={setFlDistribution}
+          options={[
+            { value: 'log-uniform', label: 'Log-uniform (your bounds)' },
+            { value: 'sdo-lognormal', label: 'SDO 2018 (log-normal rate)' },
+          ]}
+        />
+        <span className="normal-case tracking-normal max-w-[460px]">
+          {flIsSDO
+            ? 'fₗ = 1 − e^(−λVt), log₁₀(λVt) ~ Normal(0, 50) — SDO 2018 §3.1. The fₗ bounds are ignored.'
+            : 'Log-uniform puts only ~3% of fₗ samples above 0.1; SDO’s model puts about half near 1.'}
+        </span>
       </div>
       <div className="flex gap-3 mt-4 font-mono text-[11px] text-muted tracking-chip uppercase items-center">
         <button

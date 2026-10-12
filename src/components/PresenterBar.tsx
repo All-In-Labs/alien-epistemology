@@ -1,4 +1,5 @@
 import { useStore } from '../store';
+import { headlineFor } from '../model/summary';
 
 interface PresenterBarProps {
   chapterIdx: number;
@@ -20,18 +21,13 @@ function fmtX(v: number): string {
 
 export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
   const out = useStore((s) => s.drakeOutput);
+  const riskAversion = useStore((s) => s.worldview.riskAversion);
   const idx = String(chapterIdx).padStart(2, '0');
   const max = String(Math.max(0, chapterTitles.length - 1)).padStart(2, '0');
   const title = chapterTitles[chapterIdx] ?? '';
-  // Use the conditional-on-detection median when the unconditional collapses to zero
-  // (which happens whenever P(N=0) > 0.5 — i.e. most realistic configurations).
-  // Otherwise the audience would see "median 0×" for the entire talk.
-  const headlineMedian =
-    out !== null && Math.abs(out.medianMultiplier) < 1e-12
-      ? out.medianMultiplierGivenDetection
-      : (out?.medianMultiplier ?? 0);
-  const headlineLabel =
-    out !== null && Math.abs(out.medianMultiplier) < 1e-12 ? 'median*' : 'median';
+  // Same headline statistic as the Ch.5 verdict, chosen by the risk-aversion dial.
+  const headline = out !== null ? headlineFor(out, riskAversion) : null;
+  const headlineLabel = headline?.short ?? 'mean';
 
   return (
     <div
@@ -55,7 +51,7 @@ export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
         <span>
           {headlineLabel}{' '}
           <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">
-            {out ? fmtX(headlineMedian) : '—'}
+            {headline === null ? '—' : headline.value === null ? 'undef.' : fmtX(headline.value)}
           </span>
         </span>
       </span>

@@ -8,9 +8,9 @@ import type { DetectionType } from '../constants/detectionDefaults';
 export interface ChannelAState {
   on: boolean;
   /**
-   * @deprecated The Channel A sign is now controlled by `WorldviewDials.filterPriorBehind`
-   * (the single source of truth). This field is retained for permalink back-compat only —
-   * it is initialised by `defaultChannelState()` but no model code reads it.
+   * @deprecated Channel A now reads `WorldviewDials.filterPriorBehind` (the single source of
+   * truth). This field is retained for permalink back-compat only — it is initialised by
+   * `defaultChannelState()` but no model code reads it.
    */
   filterPriorBehind: number;
   delta: {
@@ -51,6 +51,39 @@ export interface ChannelsState {
   D: ChannelDState;
 }
 
+/**
+ * Per-sample uncertainty on the value model. Without it, the value of a detection is a
+ * single number per configuration, so every sample shares its sign and P(EV < 0) can only
+ * be 0% or 100%.
+ */
+export interface ValueUncertainty {
+  /**
+   * Each channel's value magnitude (V_xrisk_info, V_cosmic_endowment, V_contact_friendly,
+   * V_hostile_disvalue) is scaled per sample by an independent log-uniform factor spanning
+   * ± this many orders of magnitude, normalised so the factor's mean is 1 (the dial values
+   * stay the expected values).
+   */
+  magnitudeOOM: number;
+  /**
+   * Channel B's two evidence shifts are each sampled uniformly within ± this amount of
+   * their dial value. Symmetric, so the expected net shift is unchanged.
+   */
+  shiftPM: number;
+}
+
+export function defaultValueUncertainty(): ValueUncertainty {
+  return { magnitudeOOM: 1, shiftPM: 0.1 };
+}
+
+/** No per-sample uncertainty: reproduces the original point-value model exactly. */
+export const NO_VALUE_UNCERTAINTY: ValueUncertainty = { magnitudeOOM: 0, shiftPM: 0 };
+
+/** Mean of 10^U for U ~ Uniform(−w, w), used to normalise magnitude factors to mean 1. */
+export function logUniformFactorMean(w: number): number {
+  if (w <= 0) return 1;
+  return (Math.pow(10, w) - Math.pow(10, -w)) / (2 * w * Math.LN10);
+}
+
 export function defaultChannelState(): ChannelsState {
   return {
     A: { on: true, ...VALUE_DEFAULTS.A, delta: { ...VALUE_DEFAULTS.A.delta } },
@@ -80,11 +113,9 @@ export function channelValues(
   detectionType: DetectionType,
   ch: ChannelsState,
 ): { A: number; B: number; C: number; D: number } {
-  // Channel A returns the UNSIGNED magnitude Δ × V_xrisk_info. The sign — which depends
-  // on whether detection confirms or challenges the user's filter prior — is applied
-  // in applyWorldview() using `WorldviewDials.filterPriorBehind`. Centralising the sign
-  // there fixes the prior bug where worldview-level presets (e.g. Hanson) couldn't
-  // affect Channel A because the sign was being read from a separate channel-level dial.
+  // Channel A returns the UNSIGNED magnitude Δ × V_xrisk_info. applyWorldview() scales it
+  // by the filter prior ϕ = P(filter behind us) and makes it negative: detection moves
+  // a fraction Δ of that prior mass to "filter ahead", which is bad news (Hanson 1998).
   let A = 0;
   if (ch.A.on) {
     const delta = deltaFor(ch.A, detectionType);
@@ -132,8 +163,8 @@ export function channelValuesForTypeSet(
 ): { A: number; B: number; C: number; D: number } {
   let A = 0;
   if (ch.A.on && types.length > 0) {
-    // Probabilistic union of Δs from each fired type. Returned UNSIGNED; sign is applied
-    // in applyWorldview() from the worldview's filter prior.
+    // Probabilistic union of Δs from each fired type. Returned UNSIGNED; applyWorldview()
+    // scales by the filter prior and applies the (negative) sign.
     let prodMiss = 1;
     for (const t of types) prodMiss *= 1 - deltaFor(ch.A, t);
     const totalDelta = 1 - prodMiss;

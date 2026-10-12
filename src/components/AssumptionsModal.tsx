@@ -29,6 +29,18 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
+            <em>fₗ</em> can be sampled two ways (Ch.1). <strong>Log-uniform</strong> between your
+            bounds is the default. <strong>SDO 2018</strong> uses their own model: fₗ = 1 −
+            e<sup>−λVt</sup> with log₁₀(λVt) ~ Normal(0, 50), i.e. a median of one abiogenesis
+            event per planet and ~50 orders of magnitude of spread (
+            <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />). Fed SDO&rsquo;s Table 1
+            ranges, it reproduces their 52% probability of no other civilisation.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
             The seven Drake factors{' '}
             <em>R★, fₚ, nₑ, fₗ, fᵢ, f_c, L</em> are <strong>independently distributed</strong>.
             Real-world correlations (e.g. denser star regions might produce both more planets and
@@ -185,11 +197,13 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Channel A's sign comes from <strong>WorldviewDials.filterPriorBehind</strong> (the
-            worldview-level dial, set in Ch.4 — also surfaced as a convenience slider in Ch.3).
-            Prior &gt; 0.5 → finding life is <em>bad news</em>; &lt; 0.5 → <em>good news</em>;
-            = 0.5 → channel zeroed. <em>ChannelAState.filterPriorBehind</em> is a vestigial
-            field retained for permalink back-compat — it is not read by the model.
+            Channel A is always <strong>bad news</strong>: detection moves a fraction Δ of your
+            credence that the filter is behind us (ϕ, set in Ch.4 and Ch.3) to &ldquo;filter
+            ahead&rdquo;, so its value is −Δ × ϕ × V_xrisk_info. It models the news itself, not
+            the decision value of learning it (Hanson calls it &ldquo;bad (though
+            valuable)&rdquo;); that second part isn&rsquo;t modelled.{' '}
+            <em>ChannelAState.filterPriorBehind</em> is a vestigial field retained for
+            permalink back-compat — it is not read by the model.
           </>
         ),
       },
@@ -199,6 +213,19 @@ const CATEGORIES: Category[] = [
             Channel B (<CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />) fires{' '}
             <strong>exactly once</strong> if any detection happens — the cosmic-endowment update
             doesn't double-count across multiple-method detections.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>Value uncertainty</strong> (Ch.3). Each sample scales each channel&rsquo;s
+            magnitude by an independent log-uniform factor (default ±1 order of magnitude,
+            normalised to mean 1), and draws Channel B&rsquo;s two shifts uniformly within ±0.1
+            of their settings by default. Both are mean-preserving, so expected value is
+            unchanged; what changes is that samples can now differ in sign, which is what
+            makes <em>P(EV &lt; 0)</em> a real probability. The ±0.1 shift spread is a
+            judgement call, not a published figure.
           </>
         ),
       },
@@ -324,9 +351,11 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Risk aversion changes the <strong>summary stat displayed</strong> only — not the math.
-            EV-max → mean; log-utility → geometric mean of positives; difference-making → 25th
-            percentile. The MC distribution itself is risk-neutral.
+            Risk aversion picks the <strong>headline statistic</strong> in Ch.5 — not the
+            maths. EV-max → mean; log-utility → geometric mean over all samples (undefined if
+            any sample is a loss, since log utility can&rsquo;t take one; 0 if any sample is
+            0); difference-making → 25th percentile. The MC distribution itself is
+            risk-neutral.
           </>
         ),
       },
@@ -357,9 +386,9 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            "Median given detection" is used as the headline when the unconditional median
-            collapses on the no-detection mass. That's almost always (because P(N=0) is typically
-            high under realistic priors). The unconditional median is shown as a sub-line.
+            The median and mean are always shown under the headline. On default settings they
+            differ by many orders of magnitude: most samples have almost no chance of a
+            detection, while a few have a large one, so the mean is driven by the tail.
           </>
         ),
       },

@@ -28,6 +28,8 @@ function captureState() {
     cosmology: s.cosmology,
     grabby: structuredClone(s.grabby),
     overrides: structuredClone(s.overrides),
+    valueUncertainty: structuredClone(s.valueUncertainty),
+    flDistribution: s.flDistribution,
   };
 }
 
@@ -40,6 +42,8 @@ function runSweep(state: ReturnType<typeof captureState>, seed: string): number 
     cosmology: state.cosmology,
     grabby: state.grabby,
     overrides: state.overrides,
+    valueUncertainty: state.valueUncertainty,
+    flDistribution: state.flDistribution,
     n: SWEEP_N,
     seed,
   });
@@ -240,6 +244,8 @@ export function Ch06Tornado() {
   const cosmology = useStore((s) => s.cosmology);
   const grabby = useStore((s) => s.grabby);
   const overrides = useStore((s) => s.overrides);
+  const valueUncertainty = useStore((s) => s.valueUncertainty);
+  const flDistribution = useStore((s) => s.flDistribution);
 
   const [items, setItems] = useState<TornadoItem[] | null>(null);
   const generationRef = useRef(0);
@@ -305,7 +311,17 @@ export function Ch06Tornado() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       if (generationRef.current === myGen) generationRef.current++;
     };
-  }, [drakeRanges, methods, channels, worldview, cosmology, grabby, overrides]);
+  }, [
+    drakeRanges,
+    methods,
+    channels,
+    worldview,
+    cosmology,
+    grabby,
+    overrides,
+    valueUncertainty,
+    flDistribution,
+  ]);
 
   return (
     <ChapterShell

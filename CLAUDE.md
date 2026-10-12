@@ -74,6 +74,17 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   The Ch.2 italic block-quote says so.
 - The verdict histogram only shows positive multipliers. P(EV<0) is shown as a separate stat
   (in accent) so non-trivial negative-EV worldviews aren't hidden by the log axis.
+- The Ch.5 headline follows the worldview's risk-aversion dial (`src/model/summary.ts`):
+  EV-max → mean, log-utility → geometric mean (null if any sample is a loss),
+  difference-making → 25th percentile. On defaults the mean sits >10 orders of magnitude
+  above the median, because a few samples with large N carry almost all the EV.
+- Channel A is always ≤ 0: −Δ × ϕ × V_xrisk_info (Hanson: finding life is bad news). It is
+  not a sign flip around ϕ = 0.5.
+- `valueUncertainty` makes P(EV<0) a real probability. Without it, V(detection) is one number
+  per config, so every sample shares its sign. Tests that call `runDrakeMC` without it get the
+  point-value model (`NO_VALUE_UNCERTAINTY`).
+- Permalinks are schema v3. v1/v2 links migrate to zero value uncertainty and log-uniform fₗ,
+  so old links keep their maths.
 - `pnpm` is via corepack (Node 22 bundles it). `.npmrc` disables `verifyDepsBeforeRun` and
   `ignored-builds-check` because `esbuild`'s build script is approved via
   `package.json` `pnpm.onlyBuiltDependencies` but pnpm 11's verify-deps check still flags it.
