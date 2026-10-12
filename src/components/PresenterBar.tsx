@@ -44,7 +44,7 @@ export function PresenterBar({ chapterIdx, chapterTitles }: PresenterBarProps) {
           <span className="font-serif text-sm ml-1.5 normal-case tracking-normal">
             {split === null
               ? '—'
-              : `${String(split.better)} beat GiveWell · ${String(split.worse)} serious harm`}
+              : `${split.betterUnderOne ? '<1' : String(split.better)} beat GiveWell · ${split.worseUnderOne ? '<1' : String(split.worse)} serious harm`}
           </span>
         </span>
         <span>

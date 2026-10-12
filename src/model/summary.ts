@@ -81,8 +81,20 @@ export function plainGloss(multiplier: number): string {
   if (multiplier < 1e-3) return 'about nothing';
   if (multiplier < 0.5) return 'less than GiveWell';
   if (multiplier < 2) return 'about as good as GiveWell';
-  if (multiplier < 100) return 'better than GiveWell';
-  return 'far better than GiveWell';
+  // No "far better" for big numbers: the number beside it already says how much.
+  return 'better than GiveWell';
+}
+
+/**
+ * How many of 100 worlds actually see a detection this decade, in plain words. The dot
+ * grid shows each world's *expected* value, so most green dots are worlds where nothing
+ * is found; this says how rare a find really is.
+ */
+export function worldsThatFind(pAnyDetection: number): string {
+  const n = pAnyDetection * 100;
+  if (!(n > 0)) return 'none';
+  if (n < 0.5) return 'fewer than 1';
+  return `about ${String(Math.round(n))}`;
 }
 
 const SUPERSCRIPT: Record<string, string> = {

@@ -93,6 +93,37 @@ describe('prior overrides', () => {
     expect(out.pNGtOne).toBeLessThan(0.01);
   });
 
+  it('the detection floor carries value even when only probes are funded', () => {
+    // Probes can't detect anything this decade, but the floor says aliens are already
+    // evident in some form; the value of that should come from the funded methods' types.
+    const out = runDrakeMC({
+      ranges: lifeEverywhere(),
+      methods: defaultDetectionState().map((m) => ({ ...m, on: m.id === 'probe' })),
+      channels: defaultChannelState(),
+      overrides: { detectionFloor: 0.5 },
+      n: 5_000,
+      seed: 'floor-probes',
+    });
+    expect(out.pAnyDetection).toBeGreaterThan(0.45);
+    expect(out.evDALYs).not.toBe(0);
+  });
+
+  it('biosignature-only detection gets no astronomical-waste value', () => {
+    const channels = defaultChannelState();
+    channels.A.on = false;
+    channels.C.on = false;
+    channels.D.on = false;
+    const out = runDrakeMC({
+      ranges: lifeEverywhere(),
+      methods: defaultDetectionState().map((m) => ({ ...m, on: m.id === 'bio' })),
+      channels,
+      n: 5_000,
+      seed: 'bio-no-b',
+    });
+    expect(out.pAnyDetection).toBeGreaterThan(0);
+    expect(out.evDALYs).toBe(0);
+  });
+
   it('a forced civilisation still passes through f_d', () => {
     const ranges = lifeRare();
     ranges.fd = { min: 1e-3, max: 1e-3 };

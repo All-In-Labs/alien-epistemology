@@ -2,7 +2,7 @@
 // to let users adjust per-method sensitivity bounds. Pointer hit-testing routes
 // clicks to the closer thumb (same pattern as LogRangeSlider).
 
-import { useCallback, useId, useRef } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 
 interface DualLogTrackProps {
   rangeMin: number;
@@ -16,6 +16,8 @@ interface DualLogTrackProps {
   height?: number;
   /** Track active-band fill color. */
   fillColor?: string;
+  /** Formats a value for screen readers (aria-valuetext). */
+  formatValue?: (v: number) => string;
 }
 
 export function DualLogTrack({
@@ -28,8 +30,14 @@ export function DualLogTrack({
   ariaLabelHi,
   height = 6,
   fillColor = '#2e6a31',
+  formatValue = (v: number) => v.toExponential(1),
 }: DualLogTrackProps) {
   const id = useId();
+  const [focused, setFocused] = useState<'lo' | 'hi' | null>(null);
+  // One arrow-key press moves a tenth of an order of magnitude (it used to be 0.001 of
+  // the span: ~140 presses per order of magnitude).
+  const decades = Math.max(1e-9, Math.log10(rangeMax / rangeMin));
+  const step = Math.min(0.05, 0.1 / decades);
   const trackRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<'lo' | 'hi' | null>(null);
 
@@ -101,14 +109,35 @@ export function DualLogTrack({
           background: fillColor,
         }}
       />
+      {(['lo', 'hi'] as const).map((which) => (
+        <span
+          key={which}
+          aria-hidden
+          className="absolute top-1/2 w-3 h-3 rounded-full pointer-events-none"
+          style={{
+            left: `${((which === 'lo' ? loFrac : hiFrac) * 100).toString()}%`,
+            transform: 'translate(-50%, -50%)',
+            background: '#fff',
+            border: `2px solid ${fillColor}`,
+            boxShadow: focused === which ? `0 0 0 3px rgba(46,106,49,0.35)` : 'none',
+          }}
+        />
+      ))}
       <input
         id={`${id}-lo`}
         aria-label={ariaLabelLo}
         type="range"
         min={0}
         max={1}
-        step={0.001}
+        step={step}
         value={loFrac}
+        aria-valuetext={formatValue(loValue)}
+        onFocus={() => {
+          setFocused('lo');
+        }}
+        onBlur={() => {
+          setFocused(null);
+        }}
         onChange={(e) => {
           updateFor('lo', Number(e.target.value));
         }}
@@ -121,8 +150,15 @@ export function DualLogTrack({
         type="range"
         min={0}
         max={1}
-        step={0.001}
+        step={step}
         value={hiFrac}
+        aria-valuetext={formatValue(hiValue)}
+        onFocus={() => {
+          setFocused('hi');
+        }}
+        onBlur={() => {
+          setFocused(null);
+        }}
         onChange={(e) => {
           updateFor('hi', Number(e.target.value));
         }}

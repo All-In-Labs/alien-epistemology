@@ -37,6 +37,11 @@ A React SPA that evaluates "searching for alien civilisations" as an EA cause ar
 - **Prior overrides** (§5.5): the detection floor is scaled by the chance there is at least one detectable civilisation, so it no longer creates detections in empty worlds. Forcing P(N ≥ 1) uses the zero-truncated Poisson (so a lone civilisation counts as exactly one) and still applies f_d.
 - **Presets** are complete starting points: anything a preset doesn't set goes back to the defaults.
 - **Tornado** (§7): sweeps run in a web worker, share random draws with the baseline, sweep sensitivity across its own range (not 100× beyond), and treat answers below 10⁻⁶ × GiveWell as ≈ 0.
+- **Verdict framing** (§7): the 100-world split is of expected values, so it says "on average" and states how many worlds actually find something. The default "In GiveWell terms" number is the typical world (median), not the average. A one-paragraph verdict sits under the headline stats.
+- **Channel B** needs a technosignature-type detection; a biosignature alone doesn't fire it.
+- **Detection floor** value uses the funded methods' types, so it still counts when only probes are funded.
+- **Filter pessimist** differs from the defaults only in ϕ = 0.2; it no longer carries unannounced longtermism/hingeyness/discount changes.
+- **fₗ model** is an explicit choice (SDO 2018 / your own range); the slider is off in SDO mode.
 
 ## 1. Goal
 

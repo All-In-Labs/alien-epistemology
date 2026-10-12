@@ -236,8 +236,10 @@ const CATEGORIES: Category[] = [
         text: (
           <>
             Channel B (<CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />) fires{' '}
-            <strong>exactly once</strong> if any detection happens — the cosmic-endowment update
-            doesn't double-count across multiple-method detections.
+            <strong>exactly once</strong> if any technosignature-type detection happens (radio,
+            optical/infrared, passive radar, probe) — the cosmic-endowment update doesn&rsquo;t
+            double-count across methods. A biosignature alone doesn&rsquo;t fire it: microbes
+            say nothing about whether interstellar technology works or the cosmos is claimed.
           </>
         ),
       },
@@ -287,7 +289,8 @@ const CATEGORIES: Category[] = [
           <>
             <strong>V_cosmic_endowment = 10¹⁶ DALYs</strong> (Channel B). The number matches{' '}
             <CitationLink cite="bostrom2013" text="Bostrom 2013" />&rsquo;s conservative
-            Earth-only estimate of 10¹⁶ future lives (lives of normal duration, not DALYs). It is
+            Earth-only estimate of 10¹⁶ future lives (lives of normal duration, not DALYs; using
+            it as 10¹⁶ DALYs understates it ~50&ndash;80×, since a life spans many years). It is
             far below <CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />&rsquo;s
             astronomical-waste figures: ~10³⁸ potential lives lost per century of delay
             (simulation-based upper estimate) or over 10¹³ lives per second of delay (conservative,
@@ -312,10 +315,26 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <strong>V_hostile_disvalue = −10¹² DALYs</strong> (Channel D). About three times the
+            <strong>V_hostile_disvalue = −10¹² DALYs</strong> (Channel D). A back-of-envelope
+            placeholder: about three times the
             remaining life-years of everyone alive today (~8×10⁹ people × ~40 years ≈ 3×10¹¹) —
             a placeholder for hostile contact that is roughly as bad as extinction of the current
             generation. Tornado bounds: −10⁸ to −10¹⁶.
+          </>
+        ),
+      },
+      {
+        text: (
+          <>
+            <strong>Inputs with no published source</strong> — judgement calls, labelled as
+            guesses where they appear: every method&rsquo;s cost range except Breakthrough
+            Listen&rsquo;s $100M over 10 years; the in-reach sensitivities; RETINA&rsquo;s reach;
+            Channel A&rsquo;s credence shifts Δ (radio and passive radar 0.4, technosignature
+            and probe 0.3, biosignature 0.1); Channel B&rsquo;s shifts (+0.15 tech viability,
+            −0.10 lightcone claim), whose net sign decides which way that channel points;
+            P(friendly) = 0.5 and P(hostile) = 0.05; V_xrisk_info, V_contact_friendly and
+            V_hostile_disvalue; the value-uncertainty spreads; the discount horizons; and the
+            default worldview dials.
           </>
         ),
       },

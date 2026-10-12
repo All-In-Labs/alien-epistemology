@@ -17,6 +17,7 @@ export function usePermalink(): void {
   const valueUncertainty = useStore((s) => s.valueUncertainty);
   const flDistribution = useStore((s) => s.flDistribution);
   const astroLocked = useStore((s) => s.astroLocked);
+  const activePreset = useStore((s) => s.activePreset);
   const hydratedRef = useRef(false);
   const writeTimerRef = useRef<number | undefined>(undefined);
 
@@ -49,5 +50,6 @@ export function usePermalink(): void {
     valueUncertainty,
     flDistribution,
     astroLocked,
+    activePreset,
   ]);
 }

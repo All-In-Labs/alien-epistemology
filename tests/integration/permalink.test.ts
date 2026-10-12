@@ -157,6 +157,11 @@ describe('permalink encode / decode', () => {
     expect(decoded).toEqual({ ...s, methods: migratedMethods() });
   });
 
+  it('round-trips the preset name', () => {
+    const s = { ...defaultState(), preset: 'ord' as const };
+    expect(decodeState(encodeState(s))).toEqual(s);
+  });
+
   it('round-trips custom reach bounds', () => {
     const s = defaultState();
     s.methods = s.methods.map((m) =>

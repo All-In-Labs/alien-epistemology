@@ -2,7 +2,7 @@
 // Four channels (A: Filter info; B: Astro waste; C: Direct contact; D: Dark Forest).
 // Each channel has an on/off toggle and tuneable dials.
 
-import { VALUE_DEFAULTS } from '../constants/valueDefaults';
+import { B_FIRES, VALUE_DEFAULTS } from '../constants/valueDefaults';
 import type { DetectionType } from '../constants/detectionDefaults';
 
 export interface ChannelAState {
@@ -122,8 +122,9 @@ export function channelValues(
     A = delta * ch.A.vXriskInfo;
   }
   // Channel B: net evidence shift (tech-viability + lightcone-claim) × cosmic endowment.
+  // Needs a technosignature (see B_FIRES).
   let B = 0;
-  if (ch.B.on) {
+  if (ch.B.on && B_FIRES.includes(detectionType)) {
     const net = ch.B.techViabilityShift + ch.B.lightconeClaimShift;
     B = net * ch.B.vCosmicEndowment;
   }
@@ -153,8 +154,8 @@ export function valueOnDetection(detectionType: DetectionType, ch: ChannelsState
  *   the Filter. Independent updates combine probabilistically (1 - Π(1-Δ_i));
  *   for small Δ that ≈ Σ Δ_i. We use the probabilistic-union form so the total
  *   is naturally bounded in [0, 1].
- * Channel B: fires once if any detection happens (the cosmic-endowment update
- *   doesn't double-count).
+ * Channel B: fires once if any technosignature-type detection happens (the
+ *   cosmic-endowment update doesn't double-count; biosignatures alone don't fire it).
  * Channel C/D: fire boolean-style if any eligible type is in the set.
  */
 export function channelValuesForTypeSet(
@@ -171,7 +172,7 @@ export function channelValuesForTypeSet(
     A = totalDelta * ch.A.vXriskInfo;
   }
   let B = 0;
-  if (ch.B.on && types.length > 0) {
+  if (ch.B.on && types.some((t) => B_FIRES.includes(t))) {
     const net = ch.B.techViabilityShift + ch.B.lightconeClaimShift;
     B = net * ch.B.vCosmicEndowment;
   }

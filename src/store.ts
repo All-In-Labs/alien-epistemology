@@ -83,30 +83,37 @@ export const useStore = create<AppState>()((set) => ({
   astroLocked: false,
   seedMode: 'deterministic',
   drakeOutput: null,
+  // Every edit below clears activePreset, so the verdict never calls an edited
+  // configuration by a preset's name. (Only loadPreset sets it.)
   setDrakeRange: (id, bound) => {
     // Setting f_l bounds means the user wants their own range rather than SDO's model.
     set((s) => ({
+      activePreset: null,
       drakeRanges: { ...s.drakeRanges, [id]: bound },
       ...(id === 'fl' ? { flDistribution: 'log-uniform' as const } : {}),
     }));
   },
   setMethodOn: (id, on) => {
     set((s) => ({
+      activePreset: null,
       methods: s.methods.map((m) => (m.id === id ? { ...m, on } : m)),
     }));
   },
   setMethodCost: (id, costM) => {
     set((s) => ({
+      activePreset: null,
       methods: s.methods.map((m) => (m.id === id ? { ...m, costM } : m)),
     }));
   },
   setMethodSensitivity: (id, sensMin, sensMax) => {
     set((s) => ({
+      activePreset: null,
       methods: s.methods.map((m) => (m.id === id ? { ...m, sensMin, sensMax } : m)),
     }));
   },
   setMethodReach: (id, reachMin, reachMax) => {
     set((s) => ({
+      activePreset: null,
       methods: s.methods.map((m) => (m.id === id ? { ...m, reachMin, reachMax } : m)),
     }));
   },
@@ -114,31 +121,41 @@ export const useStore = create<AppState>()((set) => ({
     set({ drakeOutput: out });
   },
   resetDrakeRanges: () => {
-    set({ drakeRanges: defaultDrakeRanges(), flDistribution: DEFAULT_FL_DISTRIBUTION });
+    set({ activePreset: null, drakeRanges: defaultDrakeRanges(), flDistribution: DEFAULT_FL_DISTRIBUTION });
   },
   resetMethods: () => {
-    set({ methods: defaultDetectionState() });
+    set({ activePreset: null, methods: defaultDetectionState() });
   },
   setChannelOn: (id, on) => {
-    set((s) => ({ channels: { ...s.channels, [id]: { ...s.channels[id], on } } }));
+    set((s) => ({
+      activePreset: null, channels: { ...s.channels, [id]: { ...s.channels[id], on } } }));
   },
   patchChannelA: (patch) => {
-    set((s) => ({ channels: { ...s.channels, A: { ...s.channels.A, ...patch } } }));
+    set((s) => ({
+      activePreset: null, channels: { ...s.channels, A: { ...s.channels.A, ...patch } } }));
   },
   patchChannelB: (patch) => {
-    set((s) => ({ channels: { ...s.channels, B: { ...s.channels.B, ...patch } } }));
+    set((s) => ({
+      activePreset: null, channels: { ...s.channels, B: { ...s.channels.B, ...patch } } }));
   },
   patchChannelC: (patch) => {
-    set((s) => ({ channels: { ...s.channels, C: { ...s.channels.C, ...patch } } }));
+    set((s) => ({
+      activePreset: null, channels: { ...s.channels, C: { ...s.channels.C, ...patch } } }));
   },
   patchChannelD: (patch) => {
-    set((s) => ({ channels: { ...s.channels, D: { ...s.channels.D, ...patch } } }));
+    set((s) => ({
+      activePreset: null, channels: { ...s.channels, D: { ...s.channels.D, ...patch } } }));
   },
   resetChannels: () => {
-    set({ channels: defaultChannelState() });
+    set({ activePreset: null, channels: defaultChannelState() });
   },
   patchWorldview: (patch) => {
-    set((s) => ({ worldview: { ...s.worldview, ...patch }, activePreset: null }));
+    // The risk dial only picks which summary number to show, so it keeps the preset name.
+    const dialOnly = Object.keys(patch).every((k) => k === 'riskAversion');
+    set((s) => ({
+      worldview: { ...s.worldview, ...patch },
+      activePreset: dialOnly ? s.activePreset : null,
+    }));
   },
   loadPreset: (id) => {
     const preset = PRESETS.find((p) => p.id === id);
@@ -163,13 +180,15 @@ export const useStore = create<AppState>()((set) => ({
     set({ worldview: defaultWorldview(), activePreset: null });
   },
   patchOverrides: (patch) => {
-    set((s) => ({ overrides: { ...s.overrides, ...patch } }));
+    set((s) => ({
+      activePreset: null, overrides: { ...s.overrides, ...patch } }));
   },
   patchValueUncertainty: (patch) => {
-    set((s) => ({ valueUncertainty: { ...s.valueUncertainty, ...patch } }));
+    set((s) => ({
+      activePreset: null, valueUncertainty: { ...s.valueUncertainty, ...patch } }));
   },
   setFlDistribution: (d) => {
-    set({ flDistribution: d });
+    set({ activePreset: null, flDistribution: d });
   },
   resetAll: () => {
     set({
@@ -191,6 +210,7 @@ export const useStore = create<AppState>()((set) => ({
     set((s) => {
       if (!s.astroLocked) {
         return {
+          activePreset: null,
           astroLocked: true,
           drakeRanges: {
             ...s.drakeRanges,
@@ -200,7 +220,7 @@ export const useStore = create<AppState>()((set) => ({
           },
         };
       }
-      return { astroLocked: false };
+      return { astroLocked: false, activePreset: null };
     });
   },
   setSeedMode: (m) => {
@@ -220,6 +240,7 @@ export function getSerializedState(): SerializedState {
     valueUncertainty: s.valueUncertainty,
     flDistribution: s.flDistribution,
     astroLocked: s.astroLocked,
+    ...(s.activePreset !== null ? { preset: s.activePreset } : {}),
   };
 }
 
@@ -233,6 +254,54 @@ export function applySerializedState(state: SerializedState): void {
     valueUncertainty: state.valueUncertainty,
     flDistribution: state.flDistribution,
     astroLocked: state.astroLocked,
-    activePreset: null,
+    activePreset: state.preset ?? null,
   });
+}
+
+type ConfigSlices = Pick<
+  AppState,
+  | 'drakeRanges'
+  | 'methods'
+  | 'channels'
+  | 'worldview'
+  | 'overrides'
+  | 'valueUncertainty'
+  | 'flDistribution'
+  | 'activePreset'
+>;
+
+/** Everything that affects the model, minus the risk dial (it only picks a summary number). */
+function modelSlices(s: ConfigSlices): string {
+  return JSON.stringify({
+    drakeRanges: s.drakeRanges,
+    methods: s.methods,
+    channels: s.channels,
+    worldview: { ...s.worldview, riskAversion: undefined },
+    overrides: s.overrides,
+    valueUncertainty: s.valueUncertainty,
+    flDistribution: s.flDistribution,
+  });
+}
+
+const DEFAULT_MODEL_SLICES = modelSlices({
+  drakeRanges: defaultDrakeRanges(),
+  methods: defaultDetectionState(),
+  channels: defaultChannelState(),
+  worldview: defaultWorldview(),
+  overrides: {},
+  valueUncertainty: defaultValueUncertainty(),
+  flDistribution: DEFAULT_FL_DISTRIBUTION,
+  activePreset: null,
+});
+
+/**
+ * What the current configuration is, in words: the preset's name (until anything is
+ * edited), "Default settings", or "Your settings".
+ */
+export function configurationLabel(s: ConfigSlices): string {
+  if (s.activePreset !== null) {
+    const name = PRESETS.find((p) => p.id === s.activePreset)?.name;
+    if (name !== undefined) return `${name} preset`;
+  }
+  return modelSlices(s) === DEFAULT_MODEL_SLICES ? 'Default settings' : 'Your settings';
 }

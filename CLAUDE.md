@@ -82,7 +82,18 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   sensitivities are still placeholders and the most uncertain numbers in the model; the
   Ch.2 italic block-quote says so. RETINA's reach is a labelled guess (no source).
 - Biosignature searches count life-bearing planets (`N_lifeDetectable`, using
-  `BIOSPHERE_LIFETIME_YEARS`), not civilisations.
+  `BIOSPHERE_LIFETIME_YEARS`), not civilisations. Channel B (astronomical waste) needs a
+  technosignature-type detection (`B_FIRES`); microbes alone don't fire it.
+- The default "In GiveWell terms" dial is Typical world (median). Don't put the average
+  first: it is dominated by a few huge-payoff worlds. The 100-world split is of *expected*
+  values, so its copy says "on average" and the page states how many worlds actually find
+  something (`worldsThatFind`). No "far better than GiveWell" style adjectives.
+- Neutrality tests check the split (fewer than 40 of 100 worlds beat GiveWell, at least 5
+  do serious harm, for the site defaults and Moderate longtermist). Median-based checks
+  can't fail: the median is ≈ 0 for every non-negative preset.
+- `configurationLabel` names the configuration: a preset's name until anything (other than
+  the risk dial) is edited, then "Your settings"; "Default settings" when untouched. Every
+  store edit clears `activePreset`. Permalinks carry an optional `preset` field.
 - Comparator bars must be published figures with a named source, drawn as a point when the
   source gives a point. If a cause area has none (AI safety, currently), list it in
   `COMPARATOR_OMISSIONS`; don't invent a range. Negative values go in the chart's "below 0"

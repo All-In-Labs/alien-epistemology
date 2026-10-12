@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Masthead } from './components/Masthead';
 import { StatPair } from './components/StatPair';
+import { PairingNote, VerdictTeaser } from './components/VerdictTeaser';
 import { Ch01Drake } from './components/chapters/Ch01Drake';
 import { Ch02Detection } from './components/chapters/Ch02Detection';
 import { Ch03Value } from './components/chapters/Ch03Value';
@@ -91,13 +92,9 @@ export default function App() {
         <Masthead presenter={presenter} onTogglePresenter={togglePresenter} />
       </div>
       <section className="px-4 sm:px-8 lg:px-20 pt-8 lg:pt-12 pb-3">
+        <VerdictTeaser />
         <StatPair />
-        <p className="font-serif italic text-[14px] text-muted mt-3.5 max-w-[840px]">
-          The pairing matters more than either individual stat.{' '}
-          <span className="text-ink not-italic">&ldquo;We are probably alone&rdquo;</span> and{' '}
-          <span className="text-ink not-italic">&ldquo;we probably are not&rdquo;</span> are equally
-          valid framings of the same Monte Carlo result.
-        </p>
+        <PairingNote />
       </section>
       <div id="ch-01">
         <Ch01Drake />
@@ -129,9 +126,7 @@ export default function App() {
           <CitationLink cite="azad2026" text="Azad 2026" /> ·{' '}
           <CitationLink cite="giveWell" text="GiveWell" />
         </span>
-        <span>
-          Worldview-diversified · no worldview privileged · no defaults flatter the conclusion
-        </span>
+        <span>Worldview-diversified · no worldview privileged</span>
       </footer>
     </div>
   );

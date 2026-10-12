@@ -15,9 +15,11 @@ const CHANNEL_A_TOOLTIP = (
 const CHANNEL_B_TOOLTIP = (
   <p>
     Astronomical Waste (<CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />). Two-sided:
-    detection raises P(tech-viability) but lowers P(unclaimed lightcone). The default cosmic
-    endowment of 10¹⁶ DALYs is far below Bostrom&rsquo;s own figures (see View assumptions);
-    move the two shifts independently.
+    detection raises P(tech-viability) but lowers P(unclaimed lightcone). The two shifts
+    (+0.15 and −0.10) have no published source, and their net sign decides which way this
+    channel points. The default cosmic endowment, 10¹⁶, is Bostrom 2013&rsquo;s count of
+    lives used as DALYs: far below Bostrom 2003&rsquo;s figures (see View assumptions). Fires
+    only for technosignature-type detections; microbes say nothing about interstellar tech.
   </p>
 );
 const CHANNEL_C_TOOLTIP = (
@@ -81,6 +83,12 @@ export function Ch03Value() {
               hint="0 = nothing to lose · also editable in Ch.4"
             />
           </div>
+          <div className="font-mono text-[10.5px] text-muted mt-2">
+            Credence moved by a detection, Δ (guesses, no published source): radio{' '}
+            {channels.A.delta.radio} · passive radar {channels.A.delta.passive_radar} ·
+            technosignature {channels.A.delta.technosig} · probe {channels.A.delta.probe} ·
+            biosignature {channels.A.delta.biosig}
+          </div>
         </ChannelCard>
 
         <ChannelCard
@@ -106,7 +114,7 @@ export function Ch03Value() {
               onChange={(v) => {
                 patchB({ techViabilityShift: v });
               }}
-              hint="positive = good"
+              hint="positive = good · a guess, no published source"
             />
             <RangeSlider
               label="Lightcone-claim shift"
@@ -117,7 +125,7 @@ export function Ch03Value() {
               onChange={(v) => {
                 patchB({ lightconeClaimShift: v });
               }}
-              hint="negative = bad"
+              hint="negative = bad · a guess, no published source"
             />
           </div>
         </ChannelCard>
@@ -145,6 +153,7 @@ export function Ch03Value() {
               onChange={(v) => {
                 patchC({ pFriendly: v });
               }}
+              hint="a guess, no published source"
             />
           </div>
         </ChannelCard>
@@ -172,6 +181,7 @@ export function Ch03Value() {
               onChange={(v) => {
                 patchD({ pHostile: v });
               }}
+              hint="a guess, no published source"
             />
           </div>
         </ChannelCard>

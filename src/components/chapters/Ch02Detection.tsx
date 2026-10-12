@@ -28,7 +28,8 @@ export function Ch02Detection() {
         The sensitivities within reach &mdash; is a civilisation in view transmitting, aimed our
         way and in-band when we look? &mdash; are the most uncertain numbers in the model. Their
         defaults are wide placeholder ranges, not community estimates. Adjust them critically;
-        each ⓘ links the surveys behind the reach ranges.
+        each ⓘ links the surveys behind the reach ranges. Costs are marginal spend per decade;
+        apart from Breakthrough Listen&rsquo;s $100M over 10 years, the cost ranges are guesses.
       </div>
       <div className="flex gap-3 mt-4 font-mono text-[11px] text-muted tracking-chip uppercase items-center">
         <button

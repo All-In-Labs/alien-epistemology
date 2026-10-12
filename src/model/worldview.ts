@@ -61,7 +61,9 @@ export function defaultWorldview(): WorldviewDials {
     alienMoralWeight: 0.1,
     hingeyness: 0.1,
     filterPriorBehind: 0.5,
-    riskAversion: 'average',
+    // The typical world, not the average: the average is dominated by a few worlds with
+    // enormous payoffs, so leading with it overstated the case.
+    riskAversion: 'typical',
   };
 }
 
