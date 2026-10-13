@@ -74,6 +74,8 @@ export interface DrakeMCOutput {
   gmeanPositiveMultiplier: number;
   /** Mean multiplier across all samples, signed — the 'average' summary. */
   meanMultiplier: number;
+  /** Monte Carlo standard error of `meanMultiplier`. */
+  meanMultiplierSE: number;
   /** 25th-percentile multiplier — the 'cautious' summary. */
   p25Multiplier: number;
   /** 5th and 95th percentile of multiplier samples. */
@@ -127,7 +129,15 @@ export function runDrakeMC({
     'passive_radar',
   ];
   const nMasks = 1 << TYPE_ORDER.length;
-  const comps: { A: Float64Array; B: Float64Array; C: Float64Array; D: Float64Array } | null =
+  // D is channel D's near-term part; DE is its endowment loss, kept apart so it can share
+  // channel B's magnitude draw (both are V_cosmic_endowment).
+  const comps: {
+    A: Float64Array;
+    B: Float64Array;
+    C: Float64Array;
+    D: Float64Array;
+    DE: Float64Array;
+  } | null =
     channels
       ? (() => {
           const out = {
@@ -135,6 +145,7 @@ export function runDrakeMC({
             B: new Float64Array(nMasks),
             C: new Float64Array(nMasks),
             D: new Float64Array(nMasks),
+            DE: new Float64Array(nMasks),
           };
           for (let mask = 1; mask < nMasks; mask++) {
             const types: DetectionType[] = [];
@@ -142,11 +153,16 @@ export function runDrakeMC({
               const t = TYPE_ORDER[i];
               if (t !== undefined && (mask & (1 << i)) !== 0) types.push(t);
             }
-            const w = applyWorldview(channelValueComponentsForTypeSet(types, channels), wv);
+            const c = channelValueComponentsForTypeSet(types, channels);
+            const w = applyWorldview({ ...c, DEndowment: 0 }, wv);
             out.A[mask] = w.A;
             out.B[mask] = w.B;
             out.C[mask] = w.C;
             out.D[mask] = w.D;
+            out.DE[mask] = applyWorldview(
+              { A: 0, B: 0, C: 0, D: 0, DEndowment: c.DEndowment },
+              wv,
+            ).D;
           }
           return out;
         })()
@@ -251,6 +267,7 @@ export function runDrakeMC({
         const vOf = (mask: number): number =>
           kA * (comps.A[mask] ?? 0) +
           kB * net * (comps.B[mask] ?? 0) +
+          kB * (comps.DE[mask] ?? 0) +
           kC * (comps.C[mask] ?? 0) +
           kD * (comps.D[mask] ?? 0);
         // Subset enumeration: for each non-empty subset S of enabled methods,
@@ -349,6 +366,12 @@ export function runDrakeMC({
   let multSum = 0;
   for (const v of multiplierSamples) multSum += v;
   const meanMultiplier = totalCostUSD > 0 ? multSum / n : 0;
+  // Standard error of that mean. The mean is a difference of two heavy tails (cosmic
+  // upside vs cosmic loss), so at some settings it is smaller than its own sampling noise
+  // and even its sign is undetermined; the UI must say so rather than print a number.
+  let sqDev = 0;
+  for (const v of multiplierSamples) sqDev += (v - meanMultiplier) ** 2;
+  const meanMultiplierSE = totalCostUSD > 0 && n > 1 ? Math.sqrt(sqDev / (n - 1) / n) : 0;
 
   return {
     pNZero: pNZeroSum / n,
@@ -365,6 +388,7 @@ export function runDrakeMC({
     medianMultiplier: pickPctl(0.5),
     gmeanPositiveMultiplier: gmeanPositive,
     meanMultiplier,
+    meanMultiplierSE,
     p25Multiplier: pickPctl(0.25),
     p5Multiplier: pickPctl(0.05),
     p95Multiplier: pickPctl(0.95),
@@ -381,7 +405,7 @@ export function runDrakeMC({
 function channelValueComponentsForTypeSet(
   types: readonly DetectionType[],
   ch: ChannelsState,
-): { A: number; B: number; C: number; D: number } {
+): { A: number; B: number; C: number; D: number; DEndowment: number } {
   // Re-implement here to avoid an import shuffle. The intent matches
   // channelValuesForTypeSet in value.ts but we keep both call sites working.
   // (See value.ts for spec rationale.)
@@ -418,10 +442,12 @@ function channelValueComponentsForTypeSet(
     C = ch.C.pFriendly * ch.C.vContactFriendly;
   }
   let D = 0;
+  let DEndowment = 0;
   if (ch.D.on && types.some((t) => ch.D.fires.includes(t))) {
     D = ch.D.pHostile * ch.D.vHostileDisvalue;
+    DEndowment = -ch.D.pHostile * ch.B.vCosmicEndowment;
   }
-  return { A, B, C, D };
+  return { A, B, C, D, DEndowment };
 }
 
 // Re-export so anything still importing valueForTypeSet keeps working

@@ -33,7 +33,8 @@ const CHANNEL_D_TOOLTIP = (
   <p>
     Dark Forest disvalue (Liu 2008; METI debate). Detection alerts hostile attention or commits
     us to METI. Fires for radio, technosignature, and probe — biosig and passive radar do not
-    draw fire.
+    draw fire. It costs the harm to people alive now and, if hostile contact ends us, the
+    cosmic endowment: the same endowment channel B counts as upside, valued the same way.
   </p>
 );
 
@@ -163,8 +164,8 @@ export function Ch03Value() {
           title="Contact disvalue (Dark Forest)"
           tag="Liu / METI debate"
           sign="-"
-          description="Detection alerts hostile aliens, or commits us to METI. Active for radio / technosig / probe."
-          defaultV="−1×10¹² DALY"
+          description="Detection alerts hostile aliens, or commits us to METI. Costs lives now and, if it ends us, the cosmic future channel B counts as upside. Active for radio / technosig / probe."
+          defaultV="−1×10¹² DALY now, plus the endowment"
           on={channels.D.on}
           onToggle={(v) => {
             setChannelOn('D', v);

@@ -268,7 +268,11 @@ const CATEGORIES: Category[] = [
         text: (
           <>
             Channel D fires <em>iff</em> the type set ∩ &#123;radio, technosig, probe&#125; ≠ ∅.
-            Biosig and passive_radar detections do <em>not</em> draw hostile attention.
+            Biosig and passive_radar detections do <em>not</em> draw hostile attention. When it
+            fires it costs two things: harm to people alive now (P(hostile) × V_hostile_disvalue)
+            and, since hostile contact could end us, the cosmic endowment we would lose
+            (P(hostile) × V_cosmic_endowment). That second part is the mirror image of channel B
+            and is valued with exactly the same worldview transform.
           </>
         ),
       },
@@ -292,13 +296,13 @@ const CATEGORIES: Category[] = [
             Earth-only estimate of 10¹⁶ future lives (lives of normal duration, not DALYs; using
             it as 10¹⁶ DALYs understates it ~50&ndash;80×, since a life spans many years). It is
             far below <CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />&rsquo;s
-            astronomical-waste figures: ~10³⁸ potential lives lost per century of delay
-            (simulation-based upper estimate) or over 10¹³ lives per second of delay (conservative,
-            biological). <strong>This value was chosen for its effect on the verdict, not from
-            evidence</strong>: feeding in Bostrom&rsquo;s 2003 numbers makes alien-finding look
-            overwhelmingly cost-effective under almost any preset. Even at 10¹⁶, Channel B is the
-            dominant contributor under longtermism (~99% of EV mass). Tornado bounds: 10¹² to
-            10²⁰.
+            astronomical-waste figures: ~10³⁸ potential lives lost per century of delay (an
+            estimate for computer-simulated minds that Bostrom calls conservative) or over 10¹³
+            lives per second of delay (biological humans). The endowment appears on both sides:
+            channel B&rsquo;s upside and channel D&rsquo;s loss if hostile contact ends us. A
+            bigger endowment therefore magnifies the stakes in both directions rather than
+            favouring the search. Under longtermism these two terms dominate everything else.
+            Tornado bounds: 10¹² to 10²⁰.
           </>
         ),
       },
@@ -318,8 +322,10 @@ const CATEGORIES: Category[] = [
             <strong>V_hostile_disvalue = −10¹² DALYs</strong> (Channel D). A back-of-envelope
             placeholder: about three times the
             remaining life-years of everyone alive today (~8×10⁹ people × ~40 years ≈ 3×10¹¹) —
-            a placeholder for hostile contact that is roughly as bad as extinction of the current
-            generation. Tornado bounds: −10⁸ to −10¹⁶.
+            a placeholder for the harm hostile contact does to the current generation. This part
+            is not discounted or scaled by longtermism. The loss of the future is counted
+            separately, through V_cosmic_endowment (see channel D above). Tornado bounds: −10⁸ to
+            −10¹⁶.
           </>
         ),
       },
@@ -344,8 +350,10 @@ const CATEGORIES: Category[] = [
             Empirical note: under any longtermist preset, <strong>Channel A is a rounding
             error compared to Channel B</strong> (V_xrisk ≪ V_endowment by 6 OOM). The
             "four channels" framing is structurally important for honest neutrality, but the
-            verdict under longtermism is overwhelmingly Channel-B-driven. See the Ch.6 tornado
-            for confirmation.
+            verdict under longtermism is driven by the cosmic endowment, which enters through
+            channel B (upside) and channel D (loss). At the defaults channel B&rsquo;s expected
+            net shift (+0.05) equals P(hostile) (0.05), so the two cancel on average: the
+            average outcome is too close to zero for the simulation to tell its sign.
           </>
         ),
       },
@@ -358,17 +366,19 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Longtermism strength (α_L ∈ [0, 1]) multiplies <em>only</em> channels A and B (the
-            time-distant ones). Channels C (direct contact) and D (Dark Forest) are treated as
-            near-term consequences and are not multiplied by α_L.
+            Longtermism strength (α_L ∈ [0, 1]) multiplies <em>only</em> the time-distant terms:
+            channel A, channel B, and channel D&rsquo;s endowment loss. Channel C (direct
+            contact) and channel D&rsquo;s harm to people alive now are near-term and are not
+            multiplied by α_L.
           </>
         ),
       },
       {
         text: (
           <>
-            Pure time discount applies <em>only</em> to channels A and B, with hardcoded horizons
-            <em> T_A = 100 years</em> and <em>T_B = 1000 years</em>. These horizons are picked to
+            Pure time discount applies <em>only</em> to channel A, channel B and channel D&rsquo;s
+            endowment loss, with hardcoded horizons <em> T_A = 100 years</em> and{' '}
+            <em>T_B = 1000 years</em> (the endowment loss uses T_B). These horizons are picked to
             illustrate the discount mechanism, not derived from a particular x-risk model.
           </>
         ),
@@ -376,16 +386,20 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Person-affecting view (off by default) <strong>zeros channel B entirely</strong> when
-            on. Channels A, C, D unaffected. <CitationLink cite="parfit1984" text="Parfit 1984" />.
+            Person-affecting view (off by default) <strong>zeros channel B and channel D&rsquo;s
+            endowment loss</strong> when on, since both are about people who don&rsquo;t exist
+            yet. Channels A, C and D&rsquo;s near-term harm are unaffected. The view is
+            discussed in <CitationLink cite="parfit1984" text="Parfit 1984" />, who set out its
+            problems and did not endorse it.
           </>
         ),
       },
       {
         text: (
           <>
-            Hingeyness multiplies channel B only (under the assumption that "we are at a critical
-            period" matters most for steering the cosmic endowment).
+            Hingeyness multiplies channel B and channel D&rsquo;s endowment loss (under the
+            assumption that "we are at a critical period" matters most for steering the cosmic
+            endowment). Both get it so that upside and loss stay on the same scale.
           </>
         ),
       },

@@ -53,10 +53,17 @@ describe('value uncertainty', () => {
   });
 
   it('is mean-preserving: expected value is roughly unchanged by adding uncertainty', () => {
-    // Heavy-tailed EV, so allow generous MC tolerance; a bias would show up as ~2x.
-    const point = runDrakeMC({ ...base(), n: 200_000, seed: 'vu-mean' });
+    // Heavy-tailed EV, so allow generous MC tolerance; a bias would show up as ~2x. Channel
+    // D is off: at the defaults its endowment loss cancels channel B's upside in
+    // expectation, leaving a mean too close to zero for a ratio to mean anything.
+    const upsideOnly = (): Omit<DrakeMCInput, 'n' | 'seed'> => {
+      const b = base();
+      const ch = defaultChannelState();
+      return { ...b, channels: { ...ch, D: { ...ch.D, on: false } } };
+    };
+    const point = runDrakeMC({ ...upsideOnly(), n: 200_000, seed: 'vu-mean' });
     const uncertain = runDrakeMC({
-      ...base(),
+      ...upsideOnly(),
       valueUncertainty: defaultValueUncertainty(),
       n: 200_000,
       seed: 'vu-mean',
@@ -74,9 +81,29 @@ describe('risk-aversion summary statistics', () => {
   });
 
   it('p25 ≤ median, and the mean sits far above the median on this heavy-tailed output', () => {
-    const out = runDrakeMC({ ...base(), n: 20_000, seed: 'stats-order' });
+    // Upside only (channel D off), so the heavy right tail isn't cancelled by the left.
+    const ch = defaultChannelState();
+    const out = runDrakeMC({
+      ...base(),
+      channels: { ...ch, D: { ...ch.D, on: false } },
+      n: 20_000,
+      seed: 'stats-order',
+    });
     expect(out.p25Multiplier).toBeLessThanOrEqual(out.medianMultiplier);
     expect(out.meanMultiplier).toBeGreaterThan(out.medianMultiplier * 1e6);
+  });
+
+  it('reports a standard error for the mean, and at the defaults it swamps the mean', () => {
+    // Upside and endowment loss cancel in expectation at the defaults, so the sampled mean
+    // is noise. The UI relies on meanMultiplierSE to say so instead of printing a number.
+    const out = runDrakeMC({
+      ...base(),
+      valueUncertainty: defaultValueUncertainty(),
+      n: 50_000,
+      seed: 'stats-se',
+    });
+    expect(out.meanMultiplierSE).toBeGreaterThan(0);
+    expect(Math.abs(out.meanMultiplier)).toBeLessThan(3 * out.meanMultiplierSE);
   });
 
   it('all three summaries stay finite when some samples are losses', () => {

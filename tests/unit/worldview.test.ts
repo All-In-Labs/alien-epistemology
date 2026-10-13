@@ -95,8 +95,30 @@ describe('applyWorldview', () => {
     expect(b.B).toBeLessThan(a.B);
   });
 
-  it('does not touch D — Dark Forest is a real near-term cost regardless of worldview', () => {
+  it('does not touch D\'s near-term part — harm to people alive now counts on every worldview', () => {
     const a = applyWorldview(baseChannels, defaultWorldview());
     expect(a.D).toBe(-10);
+  });
+
+  it('values D\'s endowment loss on exactly the same scale as B\'s endowment gain', () => {
+    // Mirror images: +x of endowment via B and −x via D must cancel under every worldview.
+    for (const dials of [
+      defaultWorldview(),
+      { ...defaultWorldview(), longtermismStrength: 1, hingeyness: 1, timeDiscount: 0 },
+      { ...defaultWorldview(), longtermismStrength: 0.05, timeDiscount: 0.01 },
+    ]) {
+      const v = applyWorldview({ A: 0, B: 1e16, C: 0, D: 0, DEndowment: -1e16 }, dials);
+      expect(v.B).toBeGreaterThan(0);
+      expect(v.B + v.D).toBeCloseTo(0, 6);
+    }
+  });
+
+  it('zeroes D\'s endowment loss under a person-affecting view, as it does B', () => {
+    const v = applyWorldview(
+      { A: 0, B: 1e16, C: 0, D: -10, DEndowment: -1e16 },
+      { ...defaultWorldview(), personAffecting: true },
+    );
+    expect(v.B).toBe(0);
+    expect(v.D).toBe(-10);
   });
 });

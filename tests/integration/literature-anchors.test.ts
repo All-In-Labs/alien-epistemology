@@ -7,6 +7,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { runDrakeMC } from '../../src/model/monteCarlo';
+import { defaultValueUncertainty } from '../../src/model/value';
+import { outcomeSplit } from '../../src/model/summary';
+import { DEFAULT_FL_DISTRIBUTION } from '../../src/constants/defaults';
 import { defaultDrakeRanges } from '../../src/model/drake';
 import { defaultDetectionState } from '../../src/model/detection';
 import { applyPreset, PRESETS } from '../../src/presets/worldviews';
@@ -86,7 +89,7 @@ describe('literature anchor: Bostrom 2003 Astronomical Waste (Channel B)', () =>
   // overwhelmingly cost-effective under almost any preset. The anchor here documents
   // the consequence of using 10^38, so future readers can see why we chose 10^16.
 
-  it('with V_cosmic_endowment at Bostrom\'s literal 10^38, mean EV is 22 OOM above default', () => {
+  it('with V_cosmic_endowment at Bostrom\'s literal 10^38, |mean EV| is ~22 OOM above default', () => {
     const { worldview, channels } = applyPreset(BOSTROM_PRESET);
     const bostromLiteral = {
       ...channels,
@@ -97,33 +100,38 @@ describe('literature anchor: Bostrom 2003 Astronomical Waste (Channel B)', () =>
       methods: defaultDetectionState(),
       channels: bostromLiteral,
       worldview,
+      valueUncertainty: defaultValueUncertainty(),
+      flDistribution: DEFAULT_FL_DISTRIBUTION,
       n: 50_000,
       seed: 'literature-bostrom-literal',
     });
-    // EV scales linearly in V_cosmic_endowment for Bostrom-style longtermist presets
-    // (Channel B dominates). With V=10^38 the mean EV reaches the absurd regime that
-    // would collapse the tool's verdict onto "obviously a top cause" — the reason
-    // we picked 10^16 as the default.
-    expect(out.evDALYs).toBeGreaterThan(1e32);
+    // EV scales linearly in V_cosmic_endowment for longtermist presets. The endowment sits
+    // on both sides (channel B's upside, channel D's loss if hostile contact ends us), so a
+    // bigger endowment pulls worlds out of "about the same" towards both extremes equally
+    // rather than picking a side.
+    expect(Math.abs(out.evDALYs)).toBeGreaterThan(1e32);
+    const split = outcomeSplit(out.pAboveGiveWell, out.pHarmBeyondGiveWell);
+    expect(split.less).toBeLessThan(40);
+    expect(Math.abs(split.better - split.worse)).toBeLessThanOrEqual(3);
   });
 
-  it('with our default V_cosmic_endowment = 10^16, the Strong longtermist preset (id bostrom) gives a moderate longtermist verdict', () => {
-    // At the default conservatism, the Strong longtermist preset (id 'bostrom') still favours alien-finding —
-    // but at a magnitude where reasonable disagreement is possible. This is the
-    // "epistemic neutrality" property the conservatism buys us.
+  it('with our default V_cosmic_endowment = 10^16, the Strong longtermist preset (id bostrom) splits evenly between better and harm', () => {
+    // The endowment cuts both ways. At the defaults channel B's expected net shift (+0.05)
+    // equals p_hostile (0.05), so the upside and the loss are the same size and the
+    // preset's long shots land as often on the harm side as on the good side.
     const { worldview, channels } = applyPreset(BOSTROM_PRESET);
     const out = runDrakeMC({
       ranges: defaultDrakeRanges(),
       methods: defaultDetectionState(),
       channels,
       worldview,
+      valueUncertainty: defaultValueUncertainty(),
+      flDistribution: DEFAULT_FL_DISTRIBUTION,
       n: 50_000,
       seed: 'literature-bostrom-default',
     });
-    // Empirically: evDALYs ≈ 1.1e12 at default (survey reach included). The corresponding
-    // mean multiplier (evDALYs / totalCostUSD × 100) is ~2×10^6 — above bar on average, but
-    // not so far that other worldviews can't reasonably disagree.
-    expect(out.evDALYs).toBeGreaterThan(1e10);
-    expect(out.evDALYs).toBeLessThan(1e15);
+    const split = outcomeSplit(out.pAboveGiveWell, out.pHarmBeyondGiveWell);
+    expect(split.better).toBeGreaterThan(15);
+    expect(Math.abs(split.better - split.worse)).toBeLessThanOrEqual(3);
   });
 });

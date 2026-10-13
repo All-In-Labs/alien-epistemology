@@ -49,6 +49,15 @@ export interface ChannelContributions {
   D: number;
 }
 
+/**
+ * Channel inputs to the worldview transform. `DEndowment` is the cosmic-endowment loss if
+ * hostile contact ends us (−p_hostile × V_cosmic_endowment): the mirror image of channel B,
+ * so it gets B's transform. It is folded into `D` on the way out.
+ */
+export interface ChannelInputs extends ChannelContributions {
+  DEndowment?: number;
+}
+
 export interface WorldviewOutput extends ChannelContributions {
   total: number;
 }
@@ -74,7 +83,7 @@ const HORIZON_A = 100;
 const HORIZON_B = 1000;
 
 export function applyWorldview(
-  v: ChannelContributions,
+  v: ChannelInputs,
   d: WorldviewDials,
 ): WorldviewOutput {
   const discountA = Math.pow(1 + d.timeDiscount, -HORIZON_A);
@@ -86,9 +95,16 @@ export function applyWorldview(
   // update can only move credence that exists, so it scales with ϕ = P(filter behind).
   // It is zero only if you already put no weight on the filter being behind us.
   const A = -v.A * d.filterPriorBehind * d.longtermismStrength * discountA;
-  let B = v.B * d.longtermismStrength * d.hingeyness * discountB;
-  if (d.personAffecting) B = 0;
+  // Channel B and channel D's endowment loss share one transform: the upside of learning
+  // the cosmos is open and the downside of being wiped out of it are valued on the same
+  // scale. Pricing the upside at cosmic scale and the downside at one generation's lives
+  // would tilt every longtermist configuration toward searching.
+  const endowment = d.personAffecting
+    ? 0
+    : d.longtermismStrength * d.hingeyness * discountB;
+  const B = v.B * endowment;
   const C = v.C * d.alienMoralWeight;
-  const D = v.D; // Dark Forest disvalue is a near-term cost; not transformed
+  // Channel D's near-term part (the people alive today) is not transformed.
+  const D = v.D + (v.DEndowment ?? 0) * endowment;
   return { A, B, C, D, total: A + B + C + D };
 }
