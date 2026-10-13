@@ -31,11 +31,12 @@ const CATEGORIES: Category[] = [
           <>
             By default <em>fₗ</em> follows <strong>SDO 2018&rsquo;s own model</strong>: fₗ = 1
             − e<sup>−λVt</sup> with log₁₀(λVt) ~ Normal(0, 50), i.e. a median of one abiogenesis
-            event per planet and ~50 orders of magnitude of spread (
-            <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />). Life arises on about half of
-            habitable planets; the rest form a long tail of near-zero values. With the
-            tool&rsquo;s other defaults this gives <em>P(no civ)</em> ≈ 51%; fed SDO&rsquo;s
-            Table 1 ranges it reproduces their 52%.
+            event per planet and a standard deviation of 50 orders of magnitude (
+            <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />). The split is between worlds,
+            not planets: in about half of worlds life arises on nearly every habitable planet,
+            and in most of the rest it almost never does (SDO: mean fₗ 0.5, median 0.63). With
+            the tool&rsquo;s other defaults this gives <em>P(no civ)</em> ≈ 53%; fed
+            SDO&rsquo;s Table 1 ranges it reproduces their 52%.
           </>
         ),
       },
@@ -87,7 +88,10 @@ const CATEGORIES: Category[] = [
           <>
             <em>f_d</em> (detection-readiness multiplier) is a tool-specific addition not in
             SDO 2018: the share of civilisations producing a signature of a kind our instruments
-            look for. It multiplies <em>N</em> by a sample from [user min, user max] log-uniform
+            look for. It overlaps with SDO&rsquo;s own f_c, which they define as the fraction of
+            civilisations that are &ldquo;detectable/contactable&rdquo;, so using both partly
+            counts detectability twice. That makes the search look <em>worse</em>: at the
+            default range it cuts detectable civilisations by a median of ~30×. It multiplies <em>N</em> by a sample from [user min, user max] log-uniform
             to get <em>N_detectable</em>. Default range [10⁻³, 1.0]. How far away a signature
             could be seen is handled separately, by each method&rsquo;s reach (Ch.2).
           </>
@@ -96,12 +100,14 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            <strong>No Grabby Aliens mode.</strong> An earlier version offered one, modelled as
-            a chance that we are inside an expanding civilisation&rsquo;s territory. But{' '}
+            <strong>Grabby aliens are not modelled separately.</strong>{' '}
             <CitationLink cite="hansonGrabby" text="Hanson et al. 2021" /> fit their model on the
-            premise that we are <em>not</em>, so it contradicted the paper it cited. The scenario
-            it was really capturing &mdash; &ldquo;they&rsquo;re already here&rdquo; &mdash; lives
-            in the prior overrides, just after Ch.4.
+            premise that we are <em>not</em> inside an expanding civilisation&rsquo;s territory,
+            so it cannot be used to add one. Their conclusion for searches is pessimistic: a
+            &ldquo;depressingly low transition chance (&lt;∼10⁻⁴) is required to expect that even
+            one other quiet alien civilization has ever been active in our galaxy. Which seems
+            bad news for SETI.&rdquo; If you share that view, lower fₗ or use the prior overrides
+            just after Ch.4, which also cover &ldquo;they&rsquo;re already here&rdquo;.
           </>
         ),
       },
@@ -110,7 +116,7 @@ const CATEGORIES: Category[] = [
           <>
             <strong>Calibration.</strong> With SDO&rsquo;s fₗ model and their Table 1 ranges,
             the Drake model reproduces <CitationLink cite="sdo2018" text="SDO 2018" />
-            &rsquo;s pre-Fermi 52% (see <em>drake-sdo.test.ts</em>).
+            &rsquo;s pre-Fermi 52%, and an automated test checks it stays that way.
           </>
         ),
       },

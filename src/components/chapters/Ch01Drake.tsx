@@ -112,8 +112,9 @@ const TOOLTIPS: Record<DrakeParamId, ReactNode> = {
     <p>
       Fraction of habitable planets where life arises — the single biggest uncertainty in the
       model. By default it follows <CitationLink cite="sdo2018" text="SDO 2018 §3.1" />: fₗ =
-      1 − e<sup>−λVt</sup> with λVt log-normal (median 1, ~50 orders of magnitude wide), so life
-      arises on about half of habitable planets, with a long tail of near-zero cases. Drag the
+      1 − e<sup>−λVt</sup> with λVt log-normal (median 1, standard deviation of 50 orders of
+      magnitude). That splits worlds rather than planets: in about half of them life arises on
+      nearly every habitable planet; in most of the rest, almost never. Drag the
       slider to use your own range instead (sampled log-uniform).
     </p>
   ),
@@ -210,9 +211,9 @@ export function Ch01Drake() {
       <p className="font-serif text-[13.5px] text-muted mt-2 max-w-[780px]">
         {flIsSDO ? (
           <>
-            <strong className="text-ink">fₗ follows SDO 2018&rsquo;s model:</strong> life arises on
-            about half of habitable planets, with a long tail of planets where it almost never
-            does. The fₗ slider is off; choose &ldquo;Your own range&rdquo; to set bounds.
+            <strong className="text-ink">fₗ follows SDO 2018&rsquo;s model:</strong> in about half
+            of plausible worlds life arises on nearly every habitable planet; in most of the rest
+            it almost never does. The fₗ slider is off; choose &ldquo;Your own range&rdquo; to set bounds.
           </>
         ) : (
           <>

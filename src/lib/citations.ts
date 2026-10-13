@@ -33,7 +33,7 @@ export const CITATIONS = {
   },
   armstrongSandberg: {
     label: 'Armstrong & Sandberg, Eternity in Six Hours (2013)',
-    url: 'https://www.fhi.ox.ac.uk/wp-content/uploads/intergalactic-spreading.pdf',
+    url: 'https://doi.org/10.1016/j.actaastro.2013.04.002',
   },
   giveWell: {
     label: 'GiveWell — cost-effectiveness analysis',
@@ -87,9 +87,9 @@ export const CITATIONS = {
     label: 'Parfit, Reasons and Persons (1984)',
     url: 'https://en.wikipedia.org/wiki/Reasons_and_Persons',
   },
-  rethinkPrioritiesCRAFT: {
-    label: 'Rethink Priorities CRAFT/CURVE',
-    url: 'https://rethinkpriorities.org/research-area/curve/',
+  rethinkPrioritiesRisk: {
+    label: 'Rethink Priorities, How can risk aversion affect your cause prioritization?',
+    url: 'https://rethinkpriorities.org/research-area/how-can-risk-aversion-affect-your-cause-prioritization/',
   },
   // Detection reach (Ch.2). Each method's reach range is built from these.
   nasaStarCount2015: {

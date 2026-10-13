@@ -1,7 +1,8 @@
 interface ComparatorItem {
   label: string;
   lo: number;
-  mid: number;
+  /** The dot. Omitted when the source publishes only a range. */
+  mid?: number | undefined;
   hi: number;
   main?: boolean;
 }
@@ -42,7 +43,7 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
   // Values at or below zero can't go on a log axis. Rather than clamp them to a tiny
   // positive number (which made negative results look like "about nothing"), they sit in
   // a labelled "below 0" zone to the left of the axis.
-  const hasNeg = items.some((it) => it.lo <= 0 || it.mid <= 0 || it.hi <= 0);
+  const hasNeg = items.some((it) => it.lo <= 0 || (it.mid ?? 1) <= 0 || it.hi <= 0);
   const negW = hasNeg ? 84 : 0;
   const axisL = padL + negW;
   const innerW = w - axisL - padR;
@@ -131,7 +132,7 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
         const y = 28 + i * rowH;
         const x0 = xOf(it.lo);
         const x1 = xOf(it.hi);
-        const xm = xOf(it.mid);
+        const xm = it.mid === undefined ? null : xOf(it.mid);
         const isMain = it.main ?? false;
         const stroke = isMain ? '#2e6a31' : '#2a2823';
         const sw = isMain ? 2 : 1.5;
@@ -151,7 +152,7 @@ export function ComparatorBars({ items, w = 1120, rowH = 36 }: ComparatorBarsPro
             <line x1={x0} x2={x1} y1={y} y2={y} stroke={stroke} strokeWidth={sw} />
             <line x1={x0} x2={x0} y1={y - 5} y2={y + 5} stroke={stroke} strokeWidth={sw} />
             <line x1={x1} x2={x1} y1={y - 5} y2={y + 5} stroke={stroke} strokeWidth={sw} />
-            <circle cx={xm} cy={y} r={isMain ? 5 : 4} fill={stroke} />
+            {xm !== null && <circle cx={xm} cy={y} r={isMain ? 5 : 4} fill={stroke} />}
           </g>
         );
       })}

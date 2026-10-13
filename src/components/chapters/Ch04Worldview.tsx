@@ -19,8 +19,9 @@ const TT_LONGTERMISM = (
 );
 const TT_DISCOUNT = (
   <p>
-    Pure time-preference rate (Ramsey 1928). Discounts channels A and B by (1+r)^-T over their
-    horizon. 0% = no time preference; 0.1%/yr = the Stern Review&rsquo;s (2006) pure time
+    Pure time-preference rate: discounting future welfare just for being in the future (Ramsey
+    1928 framed the idea and called it ethically indefensible). Discounts channel A, channel B
+    and channel D&rsquo;s endowment loss by (1+r)^-T over their horizon. 0% = no time preference; 0.1%/yr = the Stern Review&rsquo;s (2006) pure time
     preference; higher values discount the far future steeply.
   </p>
 );
@@ -35,7 +36,8 @@ const TT_HINGEYNESS = (
   <p>
     Probability our actions today materially shift the cosmic endowment trajectory.{' '}
     <CitationLink cite="macAskill2019" text="MacAskill 2019" /> on whether we live at the
-    &ldquo;hinge of history&rdquo;. High hingeyness amplifies channel B.
+    &ldquo;hinge of history&rdquo;. High hingeyness amplifies channel B and channel D&rsquo;s
+    endowment loss alike.
   </p>
 );
 const TT_FILTER_PRIOR = (
@@ -48,8 +50,9 @@ const TT_FILTER_PRIOR = (
 );
 const TT_PERSON_AFFECTING = (
   <p>
-    When on, channel B (astronomical waste) is zeroed entirely — non-existent future persons have
-    no welfare to weigh. <CitationLink cite="parfit1984" text="Parfit 1984" />.
+    When on, channel B (astronomical waste) and channel D&rsquo;s endowment loss are zeroed —
+    non-existent future persons have no welfare to weigh. Discussed in{' '}
+    <CitationLink cite="parfit1984" text="Parfit 1984" />, who did not endorse it.
   </p>
 );
 const TT_RISK = (
@@ -57,8 +60,9 @@ const TT_RISK = (
     Picks the GiveWell number shown under the 100-world split in Ch.5.{' '}
     <strong>Average</strong> is the mean, so long shots count fully (risk-neutral).{' '}
     <strong>Typical world</strong> is the median. <strong>Cautious</strong> is the 25th
-    percentile, focusing on the worse cases (cf. difference-making risk aversion).
-    See <CitationLink cite="rethinkPrioritiesCRAFT" text="Rethink Priorities CRAFT/CURVE" />.
+    percentile, focusing on the worse cases. These are simple stand-ins: for formal models of
+    risk aversion (risk-weighted expected utility, difference-making risk aversion) see{' '}
+    <CitationLink cite="rethinkPrioritiesRisk" text="Rethink Priorities" />.
   </p>
 );
 
