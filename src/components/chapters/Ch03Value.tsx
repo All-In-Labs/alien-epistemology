@@ -10,6 +10,10 @@ const CHANNEL_A_TOOLTIP = (
     elsewhere suggests the early steps were easy, so the filter is more likely ahead of us:
     detection moves a fraction Δ of your credence that the filter is behind us (ϕ) to
     &ldquo;ahead&rdquo;. That is bad news whatever ϕ is, and it shrinks to zero only at ϕ = 0.
+    At its default value (10¹⁰ DALYs) it is tens of thousands of times smaller than channels B
+    and D, so it does not change the verdict under any preset, whatever ϕ is. It starts to
+    matter only if Filter news is worth something close to the cosmic endowment itself (the
+    top of its range in Ch.6).
   </p>
 );
 const CHANNEL_B_TOOLTIP = (
@@ -17,7 +21,10 @@ const CHANNEL_B_TOOLTIP = (
     Astronomical Waste (<CitationLink cite="bostromAstroWaste" text="Bostrom 2003" />). Two-sided:
     detection raises P(tech-viability) but lowers P(unclaimed lightcone). The two shifts
     (+0.15 and −0.10) have no published source, and their net sign decides which way this
-    channel points. The default cosmic endowment, 10¹⁶, is Bostrom 2013&rsquo;s count of
+    channel points. Uncertainty about these shifts (the ± spread at the bottom of this
+    chapter) is also where every &ldquo;better than GiveWell&rdquo; world comes from at the
+    defaults: with no spread, the upside and channel D&rsquo;s loss cancel and no world comes
+    out ahead. The default cosmic endowment, 10¹⁶, is Bostrom 2013&rsquo;s count of
     lives used as DALYs: far below Bostrom 2003&rsquo;s figures (see View assumptions). Fires
     only for technosignature-type detections; microbes say nothing about interstellar tech.
   </p>
@@ -54,7 +61,7 @@ export function Ch03Value() {
       num="03"
       eyebrow="What detection is worth"
       title="Four channels: one good, two bad, one either way."
-      kicker="Detection is not unambiguously good. Channel D (hostile contact) and the cosmos-already-claimed side of channel B can make it bad news, and channel A (Hanson's Filter) always counts against it, though at its default size it is small. Values are in DALYs: disability-adjusted life years, the unit GiveWell-style comparisons use."
+      kicker="Detection is not unambiguously good. The verdict turns on one question: is a find good or bad news for humanity's long-term future? Channel B says it may be good (interstellar technology works) or bad (the cosmos is already claimed); channel D says it may draw hostile contact that ends us and loses that future. Channel A (Hanson's Filter) always counts against detection but, at its default size, is too small to change the verdict. Values are in DALYs: disability-adjusted life years, the unit GiveWell-style comparisons use."
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChannelCard
@@ -62,7 +69,7 @@ export function Ch03Value() {
           title="Great Filter information"
           tag="Hanson 1998"
           sign="-"
-          description="Detection updates our credence about whether the Great Filter is behind or ahead of us. Generically: finding life is bad news."
+          description="Detection updates our credence about whether the Great Filter is behind or ahead of us. Generically: finding life is bad news. At the default size, too small to move the verdict."
           defaultV="1×10¹⁰ DALY"
           on={channels.A.on}
           onToggle={(v) => {
@@ -218,7 +225,7 @@ export function Ch03Value() {
             onChange={(v) => {
               patchValueUncertainty({ shiftPM: v });
             }}
-            hint="each B shift drawn within ± this · drives how many worlds do harm"
+            hint="each B shift drawn within ± this · 0 = no world beats GiveWell at the defaults"
           />
         </div>
       </div>

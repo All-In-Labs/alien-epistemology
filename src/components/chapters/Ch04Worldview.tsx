@@ -183,7 +183,7 @@ export function Ch04Worldview() {
           onChange={(v) => {
             patchWorldview({ filterPriorBehind: v });
           }}
-          hint="only affects channel A (news about the Great Filter)"
+          hint="only affects channel A (news about the Great Filter), which is too small to move the verdict at default values"
           tooltip={TT_FILTER_PRIOR}
         />
         <div className="flex flex-col gap-1.5">

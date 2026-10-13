@@ -131,6 +131,12 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
   Old permalinks' 'EV-max' / 'log-utility' / 'difference-making' are mapped on decode.
 - Channel A is always ≤ 0: −Δ × ϕ × V_xrisk_info (Hanson: finding life is bad news). It is
   not a sign flip around ϕ = 0.5.
+  At its default V (10¹⁰) it is ~10⁴–10⁵× smaller than B and D and changes no preset's split
+  (so the Filter pessimist preset matches the defaults). The copy says so; don't let it claim
+  A "can make the result negative".
+- `tests/integration/copy-claims.test.ts` pins what the copy says drives the verdict (A has
+  no effect at defaults; with no B-shift spread no world beats GiveWell; harm comes mostly
+  from D). If one fails after a model change, update the copy, not just the test.
 - `valueUncertainty` makes P(EV<0) a real probability. Without it, V(detection) is one number
   per config, so every sample shares its sign. Tests that call `runDrakeMC` without it get the
   point-value model (`NO_VALUE_UNCERTAINTY`).

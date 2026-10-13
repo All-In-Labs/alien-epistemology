@@ -262,7 +262,10 @@ const CATEGORIES: Category[] = [
             of their settings by default. Both are mean-preserving, so expected value is
             unchanged; what changes is that samples can now differ in sign, which is what
             makes <em>P(EV &lt; 0)</em> a real probability. The ±0.1 shift spread is a
-            judgement call, not a published figure.
+            judgement call, not a published figure, and it matters: at the defaults every
+            &ldquo;better than GiveWell&rdquo; world comes from it. With no spread, channel
+            B&rsquo;s expected upside exactly cancels channel D&rsquo;s endowment loss, and the
+            split is 0 better / 76 about the same / 24 serious harm.
           </>
         ),
       },
@@ -357,13 +360,20 @@ const CATEGORIES: Category[] = [
       {
         text: (
           <>
-            Empirical note: under any longtermist preset, <strong>Channel A is a rounding
-            error compared to Channel B</strong> (V_xrisk ≪ V_endowment by 6 OOM). The
-            "four channels" framing is structurally important for honest neutrality, but the
+            Empirical note: <strong>Channel A does not change the split under any
+            preset</strong>. V_xrisk_info is six orders of magnitude below V_cosmic_endowment,
+            so even after channel B&rsquo;s small net shift and the hingeyness discount, A is
+            tens of thousands of times smaller than B or D: ϕ = 0 and ϕ = 1 give the same split,
+            and the Filter pessimist preset gives the same split as the defaults. A starts to
+            matter only near the top of its Ch.6 range (V_xrisk_info ≈ 10¹⁴). The four-channel
+            framing is kept so the Filter argument is visible and adjustable, but the
             verdict under longtermism is driven by the cosmic endowment, which enters through
             channel B (upside) and channel D (loss). At the defaults channel B&rsquo;s expected
             net shift (+0.05) equals P(hostile) (0.05), so the two cancel on average: the
-            average outcome is too close to zero for the simulation to tell its sign.
+            average outcome is too close to zero for the simulation to tell its sign. Where the
+            serious-harm worlds come from, at the defaults: switching channel D off cuts them
+            from 18 to 10, and the 10 left are worlds where B&rsquo;s shift draw comes out negative
+            (the cosmos looks claimed); switching channel B off raises them to 36.
           </>
         ),
       },

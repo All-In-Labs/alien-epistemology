@@ -78,7 +78,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'hanson',
     name: 'Filter pessimist',
-    short: 'Great Filter probably ahead; aliens’ welfare counts little',
+    short: 'Great Filter probably ahead; Filter news too small to change the split',
     // Differs from the defaults only in what its name and description say: ϕ = 0.2 (the
     // filter is probably ahead). It used to also raise longtermism, hingeyness and drop the
     // discount, unannounced, which made it ~19× kinder to the search than the defaults.

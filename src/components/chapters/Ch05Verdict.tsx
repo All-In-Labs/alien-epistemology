@@ -116,7 +116,7 @@ export function Ch05Verdict() {
                     key: 'better' as const,
                     count: fmtCount(split.better, split.betterUnderOne),
                     text: 'worlds where the bet is worth more than GiveWell',
-                    sub: 'usually a small chance of a very large payoff, not an actual find',
+                    sub: 'a find there would most likely be good news for our long-term future: usually a small chance of a very large payoff, not an actual find',
                   },
                   {
                     key: 'less' as const,
@@ -128,7 +128,7 @@ export function Ch05Verdict() {
                     key: 'worse' as const,
                     count: fmtCount(split.worse, split.worseUnderOne),
                     text: 'worlds where it does more harm than GiveWell does good',
-                    sub: 'finding aliens can be bad news: it may mean the cosmos is already claimed, or draw hostile attention that could end us (Ch.3)',
+                    sub: 'a find there would most likely be bad news: hostile contact that could end us and lose our long-term future, or evidence the cosmos is already claimed (Ch.3)',
                   },
                 ].map((row) => (
                   <div key={row.key} className="flex items-baseline gap-3">
