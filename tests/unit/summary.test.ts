@@ -5,6 +5,8 @@ import {
   plainGloss,
   plainNumber,
   worldsThatFind,
+  meanIsNoise,
+  reconcileVerdict,
 } from '../../src/model/summary';
 import { normalizeRiskAversion } from '../../src/model/worldview';
 
@@ -87,7 +89,9 @@ describe('plainNumber — no scientific notation for lay readers', () => {
     expect(plainNumber(1e-10)).toBe('≈ 0');
     expect(plainNumber(0.55)).toBe('0.55');
     expect(plainNumber(3.2)).toBe('3.2');
-    expect(plainNumber(219947)).toBe('219,947');
+    expect(plainNumber(219947)).toBe('220,000');
+    expect(plainNumber(347)).toBe('350');
+    expect(plainNumber(-12.4)).toBe('−12');
     expect(plainNumber(1.7e6)).toBe('1.7 million');
     expect(plainNumber(-4e6)).toBe('−4 million');
     expect(plainNumber(2.5e9)).toBe('2.5 billion');
@@ -101,5 +105,29 @@ describe('worldsThatFind', () => {
     expect(worldsThatFind(0.004)).toBe('fewer than 1');
     expect(worldsThatFind(0)).toBe('none');
     expect(worldsThatFind(0.5)).toBe('about 50');
+  });
+});
+
+describe('meanIsNoise', () => {
+  it('flags a mean within two standard errors of zero', () => {
+    expect(meanIsNoise(1e4, 2e4)).toBe(true);
+    expect(meanIsNoise(-1e4, 6e3)).toBe(true);
+    expect(meanIsNoise(5e4, 1e4)).toBe(false);
+  });
+});
+
+describe('reconcileVerdict', () => {
+  const split = outcomeSplit(0.18, 0.18);
+  it('says when the average cannot be signed, instead of quoting a number', () => {
+    const t = reconcileVerdict({ split, median: 1e-30, mean: 3e4, meanSE: 4e4, pNegative: 0.51 });
+    expect(t).toContain('about no difference');
+    expect(t).toContain('too close to zero');
+    expect(t).not.toContain('30,000');
+  });
+  it('explains a big positive average as long shots, and reconciles below-zero with harm', () => {
+    const t = reconcileVerdict({ split, median: 1e-30, mean: 3.5e5, meanSE: 1e4, pNegative: 0.29 });
+    expect(t).toContain('350,000× GiveWell');
+    expect(t).toContain('long shots');
+    expect(t).toContain('29 of 100 worlds come out below zero, but only 18');
   });
 });

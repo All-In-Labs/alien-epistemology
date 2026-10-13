@@ -46,6 +46,8 @@ interface AppState {
    *  demo is stable. */
   seedMode: 'deterministic' | 'rotating';
   drakeOutput: DrakeMCOutput | null;
+  /** True between a settings change and the Monte Carlo result that reflects it. */
+  mcPending: boolean;
   setDrakeRange: (id: DrakeParamId, bound: DrakeBound) => void;
   setMethodOn: (id: DetectionMethodId, on: boolean) => void;
   setMethodCost: (id: DetectionMethodId, costM: number) => void;
@@ -62,6 +64,7 @@ interface AppState {
   setFlDistribution: (d: FlDistribution) => void;
   loadPreset: (id: PresetId) => void;
   setDrakeOutput: (out: DrakeMCOutput) => void;
+  setMcPending: (pending: boolean) => void;
   resetDrakeRanges: () => void;
   resetMethods: () => void;
   resetChannels: () => void;
@@ -83,6 +86,7 @@ export const useStore = create<AppState>()((set) => ({
   astroLocked: false,
   seedMode: 'deterministic',
   drakeOutput: null,
+  mcPending: true,
   // Every edit below clears activePreset, so the verdict never calls an edited
   // configuration by a preset's name. (Only loadPreset sets it.)
   setDrakeRange: (id, bound) => {
@@ -116,6 +120,9 @@ export const useStore = create<AppState>()((set) => ({
       activePreset: null,
       methods: s.methods.map((m) => (m.id === id ? { ...m, reachMin, reachMax } : m)),
     }));
+  },
+  setMcPending: (pending) => {
+    set({ mcPending: pending });
   },
   setDrakeOutput: (out) => {
     set({ drakeOutput: out });

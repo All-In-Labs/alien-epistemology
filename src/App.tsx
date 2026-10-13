@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Masthead } from './components/Masthead';
 import { StatPair } from './components/StatPair';
-import { PairingNote, VerdictTeaser } from './components/VerdictTeaser';
+import { PairingNote } from './components/VerdictTeaser';
+import { VerdictPill } from './components/VerdictPill';
 import { Ch01Drake } from './components/chapters/Ch01Drake';
 import { Ch02Detection } from './components/chapters/Ch02Detection';
 import { Ch03Value } from './components/chapters/Ch03Value';
@@ -88,11 +89,11 @@ export default function App() {
       style={{ scrollSnapType: presenter ? 'y mandatory' : 'none' }}
     >
       {presenter && <PresenterBar chapterIdx={chapterIdx} chapterTitles={CHAPTER_TITLES} />}
+      {!presenter && <VerdictPill />}
       <div id="masthead">
         <Masthead presenter={presenter} onTogglePresenter={togglePresenter} />
       </div>
       <section className="px-4 sm:px-8 lg:px-20 pt-8 lg:pt-12 pb-3">
-        <VerdictTeaser />
         <StatPair />
         <PairingNote />
       </section>

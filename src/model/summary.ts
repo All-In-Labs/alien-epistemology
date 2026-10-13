@@ -118,7 +118,12 @@ export function plainNumber(v: number): string {
   const sign = v < 0 ? '−' : '';
   if (a < 1e-3) return '≈ 0';
   if (a < 10) return sign + a.toFixed(a < 1 ? 2 : 1).replace(/\.?0+$/, '');
-  if (a < 1e6) return sign + Math.round(a).toLocaleString('en-GB');
+  // Two significant figures: the Monte Carlo can't support more, and "347,340" reads as
+  // more precise than it is.
+  if (a < 1e6) {
+    const mag = Math.pow(10, Math.floor(Math.log10(a)) - 1);
+    return sign + (Math.round(a / mag) * mag).toLocaleString('en-GB');
+  }
   const units: [number, string][] = [
     [1e12, 'trillion'],
     [1e9, 'billion'],
@@ -134,4 +139,56 @@ export function plainNumber(v: number): string {
     .map((c) => SUPERSCRIPT[c] ?? c)
     .join('');
   return `${sign}10${exp}`;
+}
+
+/**
+ * True when the sampled mean is within two standard errors of zero, so the simulation can't
+ * tell its sign. Happens when big wins and big losses roughly cancel, as they do at the
+ * defaults (channel B's expected upside equals channel D's expected endowment loss).
+ */
+export function meanIsNoise(mean: number, meanSE: number): boolean {
+  return Math.abs(mean) < 2 * meanSE;
+}
+
+/**
+ * One sentence that reconciles the three numbers a reader sees in Ch.5 (the split, the
+ * typical world, the average) instead of leaving them to work out why they disagree.
+ */
+export function reconcileVerdict(o: {
+  split: OutcomeSplit;
+  median: number;
+  mean: number;
+  meanSE: number;
+  pNegative: number;
+}): string {
+  const typical =
+    Math.abs(o.median) < 1e-3
+      ? 'In the typical world the search makes about no difference'
+      : `In the typical world the search is worth ${plainNumber(o.median)}× GiveWell (${plainGloss(o.median)})`;
+  let average: string;
+  if (meanIsNoise(o.mean, o.meanSE)) {
+    average =
+      'averaged over every world, the rare huge wins and rare huge losses cancel out: the average is too close to zero for this simulation to tell whether it is positive or negative';
+  } else if (o.mean > 0) {
+    average = `the average is ${plainNumber(o.mean)}× GiveWell, but only because a few long shots pay off enormously`;
+  } else {
+    average = `the average is ${plainNumber(o.mean)}× GiveWell, because a few worlds go very badly`;
+  }
+  const negWorlds = Math.round(o.pNegative * 100);
+  const harm =
+    negWorlds > o.split.worse
+      ? ` ${String(negWorlds)} of 100 worlds come out below zero, but only ${String(o.split.worse)} by enough to count as serious harm.`
+      : '';
+  return `${typical}; ${average}.${harm}`;
+}
+
+/**
+ * The page's one-line answer to "should we fund this search?", shown under the title.
+ * Everything else on the page is evidence for or against this sentence, so it has to stay
+ * neutral: it must never sound more (or less) favourable than the split it summarises.
+ */
+export function headlineVerdict(split: OutcomeSplit, averageIsNoise: boolean): string {
+  // TODO(owner): decide how the split maps to a one-line answer. See the request in the PR.
+  void averageIsNoise;
+  return `Out of 100 plausible worlds, ${String(split.better)} come out better than GiveWell and ${String(split.worse)} do serious harm.`;
 }

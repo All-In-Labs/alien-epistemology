@@ -1,18 +1,22 @@
 import { ChapterShell } from '../ChapterShell';
-import { Histogram } from '../charts/Histogram';
+import { SignedHistogram } from '../charts/SignedHistogram';
 import { ComparatorBars } from '../charts/ComparatorBars';
 import { useStore, configurationLabel } from '../../store';
 import { COMPARATORS, COMPARATOR_OMISSIONS } from '../../constants/comparators';
-import { logTicks } from '../../lib/axis';
 
-/** The histogram's x-axis never goes below 10⁻¹² × GiveWell. */
-const HIST_FLOOR_LOG = -12;
+/**
+ * Below 10⁻³ × GiveWell (either sign) a world counts as "≈ 0": the same cut-off plainGloss
+ * uses for "about nothing", so the chart, the numbers and the words agree.
+ */
+const HIST_FLOOR_LOG = -3;
 import {
   summaryFor,
   outcomeSplit,
   plainGloss,
   plainNumber,
   worldsThatFind,
+  meanIsNoise,
+  reconcileVerdict,
 } from '../../model/summary';
 import { OutcomeDots } from '../charts/OutcomeDots';
 import { OUTCOME_COLORS } from '../../constants/outcomeColors';
@@ -25,30 +29,6 @@ function fmtX(v: number): string {
   return `${plainNumber(v)}×`;
 }
 
-function fmtPct(p: number): string {
-  if (!Number.isFinite(p)) return '—';
-  return `${(p * 100).toFixed(0)}%`;
-}
-
-function supScript(n: number): string {
-  const map: Record<string, string> = {
-    '-': '⁻',
-    '0': '⁰',
-    '1': '¹',
-    '2': '²',
-    '3': '³',
-    '4': '⁴',
-    '5': '⁵',
-    '6': '⁶',
-    '7': '⁷',
-    '8': '⁸',
-    '9': '⁹',
-  };
-  return String(n)
-    .split('')
-    .map((c) => map[c] ?? c)
-    .join('');
-}
 
 export function Ch05Verdict() {
   const out = useStore((s) => s.drakeOutput);
@@ -58,6 +38,8 @@ export function Ch05Verdict() {
 
   const median = out?.medianMultiplier ?? 0;
   const mean = out?.meanMultiplier ?? 0;
+  const meanSE = out?.meanMultiplierSE ?? 0;
+  const meanNoise = meanIsNoise(mean, meanSE);
   const p5 = out?.p5Multiplier ?? 0;
   const p95 = out?.p95Multiplier ?? 0;
   const pAbove = out?.pAboveGiveWell ?? 0;
@@ -84,56 +66,33 @@ export function Ch05Verdict() {
   );
   const fmtCount = (n: number, underOne: boolean): string => (underOne ? '<1' : String(n));
 
-  // For the histogram, use only positive log-finite multipliers.
-  const positives = (() => {
-    if (!out) return new Float64Array(0);
-    const buf = new Float64Array(out.multiplierSamples.length);
+  // Share of worlds meaningfully below zero (not just a hair below it).
+  const pMeaningfullyNeg = (() => {
+    const xs = out?.multiplierSamples;
+    if (!xs || xs.length === 0) return 0;
     let k = 0;
-    for (const v of out.multiplierSamples) {
-      if (v > 0 && Number.isFinite(v)) {
-        buf[k++] = v;
-      }
-    }
-    return buf.slice(0, k);
+    for (const v of xs) if (v <= -Math.pow(10, HIST_FLOOR_LOG)) k++;
+    return k / xs.length;
   })();
 
-  // Histogram x-range: from the smallest positive multiplier to the largest, but never
-  // below 10⁻¹² × GiveWell. Smaller positive values are effectively nothing; they are
-  // counted in the hatched left-edge marker rather than stretching the axis across
-  // hundreds of meaningless orders of magnitude.
-  const xRange = (() => {
-    if (positives.length === 0) return { logMin: -3, logMax: 3 };
-    let minLog = Infinity;
-    let maxLog = -Infinity;
-    for (const v of positives) {
-      if (v <= 0) continue;
-      const lv = Math.log10(v);
-      if (lv < minLog) minLog = lv;
-      if (lv > maxLog) maxLog = lv;
+  // Histogram range: |x| from 10⁻¹² (anything smaller is "≈ 0") up to the largest
+  // magnitude seen, always including the ±1× GiveWell lines.
+  const histLogMax = (() => {
+    let maxLog = 1;
+    for (const v of out?.multiplierSamples ?? []) {
+      const a = Math.abs(v);
+      if (a > 0 && Number.isFinite(a)) maxLog = Math.max(maxLog, Math.log10(a));
     }
-    if (!Number.isFinite(minLog) || !Number.isFinite(maxLog)) {
-      return { logMin: -3, logMax: 3 };
-    }
-    let logMin = Math.max(HIST_FLOOR_LOG, Math.floor(minLog));
-    let logMax = Math.ceil(maxLog);
-    // Always show the GiveWell line.
-    logMin = Math.min(logMin, -1);
-    logMax = Math.max(logMax, 1);
-    return { logMin, logMax };
+    return Math.ceil(maxLog);
   })();
-  const xTicks = logTicks(xRange.logMin, xRange.logMax).map((l) => ({
-    log: l,
-    label: l === 0 ? '1' : `10${supScript(l)}`,
-  }));
-  let belowFloor = 0;
-  for (const v of positives) if (v < Math.pow(10, xRange.logMin)) belowFloor++;
+
 
   return (
     <ChapterShell
       num="05"
       eyebrow="The verdict"
       title="A spread of worlds, not one number."
-      kicker="Each world is one draw of every uncertain input in Chapters 1–4. We run 100,000 and scale to 100. “GiveWell” means an approximate bar for its top charities (~$100 per DALY averted; GiveWell itself uses its own units)."
+      kicker="Each world is one draw of every uncertain input in Chapters 1–4. We run 100,000 and scale to 100. “GiveWell” means our approximation of GiveWell’s funding bar: about $100 per disability-adjusted life year (DALY) averted. Its top charities sit about twice above that line."
     >
       <div className="bg-paper border border-ink px-4 sm:px-7 py-6">
         <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
@@ -156,20 +115,20 @@ export function Ch05Verdict() {
                   {
                     key: 'better' as const,
                     count: fmtCount(split.better, split.betterUnderOne),
-                    text: 'are worth more than GiveWell’s top charities, on average',
-                    sub: 'usually a small chance of a find with a very large payoff, not a find itself',
+                    text: 'worlds where the bet is worth more than GiveWell',
+                    sub: 'usually a small chance of a very large payoff, not an actual find',
                   },
                   {
                     key: 'less' as const,
                     count: String(split.less),
-                    text: 'make less difference than GiveWell, either way',
-                    sub: 'mostly close to nothing, because a find is very unlikely in that world',
+                    text: 'worlds where it makes almost no difference',
+                    sub: 'mostly because a find is very unlikely in that world',
                   },
                   {
                     key: 'worse' as const,
                     count: fmtCount(split.worse, split.worseUnderOne),
-                    text: 'do serious harm, on average',
-                    sub: 'at least as much harm as GiveWell’s top charities do good. Finding aliens can be bad news: it may mean the cosmos is already claimed, or draw hostile attention (Ch.3)',
+                    text: 'worlds where it does more harm than GiveWell does good',
+                    sub: 'finding aliens can be bad news: it may mean the cosmos is already claimed, or draw hostile attention that could end us (Ch.3)',
                   },
                 ].map((row) => (
                   <div key={row.key} className="flex items-baseline gap-3">
@@ -194,9 +153,13 @@ export function Ch05Verdict() {
                 ))}
               </div>
             </div>
-            <p className="font-serif text-[14px] text-muted mt-5 max-w-[780px]">
+            <p className="font-serif text-[15px] text-ink mt-5 max-w-[780px]">
+              {reconcileVerdict({ split, median, mean, meanSE, pNegative: pMeaningfullyNeg })}
+            </p>
+            <p className="font-serif text-[14px] text-muted mt-2 max-w-[780px]">
               Each dot is one world&rsquo;s value <em>on average</em>, over whether the search
-              finds anything. The search actually finds something this decade in{' '}
+              finds anything. Even in the green worlds it usually finds nothing: the search
+              actually finds something this decade in{' '}
               <span className="text-ink">{worldsThatFind(pAnyDetection)}</span> of 100 worlds.
             </p>
 
@@ -219,10 +182,21 @@ export function Ch05Verdict() {
                 />
               </div>
               <div className="font-serif text-xl text-ink mt-3">
-                <span className="font-display text-3xl" style={{ fontWeight: 600 }}>
-                  {plainNumber(summary.value)}×
-                </span>{' '}
-                GiveWell — {plainGloss(summary.value)}
+                {riskAversion === 'average' && meanNoise ? (
+                  <>
+                    <span className="font-display text-3xl" style={{ fontWeight: 600 }}>
+                      ≈ 0×
+                    </span>{' '}
+                    GiveWell — too close to zero to tell the sign
+                  </>
+                ) : (
+                  <>
+                    <span className="font-display text-3xl" style={{ fontWeight: 600 }}>
+                      {plainNumber(summary.value)}×
+                    </span>{' '}
+                    GiveWell — {plainGloss(summary.value)}
+                  </>
+                )}
               </div>
               <div className="font-serif text-[13px] text-muted mt-1 max-w-[780px]">
                 {riskAversion === 'average'
@@ -239,7 +213,7 @@ export function Ch05Verdict() {
       <div className="mt-7 bg-paper border border-ink px-4 sm:px-7 py-6">
         <div className="flex flex-wrap justify-between items-end gap-4 mb-3.5">
           <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
-            For the numbers people · full distribution (positive outcomes, log scale)
+            For the numbers people · every world, losses and gains
           </div>
           <div className="flex gap-6 font-mono text-[11.5px] text-muted">
             <div>
@@ -252,7 +226,9 @@ export function Ch05Verdict() {
             </div>
             <div>
               <div className="uppercase tracking-[0.12em]">mean</div>
-              <div className="font-serif text-lg text-ink">{fmtX(mean)}</div>
+              <div className="font-serif text-lg text-ink">
+                {meanNoise ? 'sign unclear' : fmtX(mean)}
+              </div>
             </div>
             <div>
               <div className="uppercase tracking-[0.12em]">95th</div>
@@ -263,31 +239,13 @@ export function Ch05Verdict() {
         {/* On phones the chart keeps a readable minimum width and scrolls sideways. */}
         <div className="overflow-x-auto">
           <div className="min-w-[720px] md:min-w-0">
-            <Histogram
-              samples={positives}
-              w={1120}
-              h={300}
-              refLine={0}
-              refLabel="GiveWell bar (1×)"
-              logMin={xRange.logMin}
-              logMax={xRange.logMax}
-              nBins={Math.max(40, (xRange.logMax - xRange.logMin) * 6)}
-              xTicks={xTicks}
+            <SignedHistogram
+              samples={out?.multiplierSamples ?? new Float64Array(0)}
+              logMin={HIST_FLOOR_LOG}
+              logMax={histLogMax}
             />
           </div>
         </div>
-        {pNeg > 0 && (
-          <div className="font-mono text-[11px] text-muted mt-3">
-            {fmtPct(pNeg)} of worlds are below zero and not shown on this log-scale chart.
-          </div>
-        )}
-        {belowFloor > 0 && (
-          <div className="font-mono text-[11px] text-muted mt-1">
-            {fmtPct(belowFloor / Math.max(1, out?.multiplierSamples.length ?? 1))} of worlds are
-            positive but below 10⁻¹² × GiveWell (effectively nothing); they are counted in the
-            hatched marker at the left edge.
-          </div>
-        )}
       </div>
 
       <div className="mt-7 bg-paper border border-ink px-7 py-6">

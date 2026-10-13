@@ -42,9 +42,12 @@ export function useDrakeMCRunner(): void {
   const flDistribution = useStore((s) => s.flDistribution);
   const seedMode = useStore((s) => s.seedMode);
   const setDrakeOutput = useStore((s) => s.setDrakeOutput);
+  const setMcPending = useStore((s) => s.setMcPending);
 
   const timer = useRef<number | undefined>(undefined);
   const seedRef = useRef(0);
+  /** Bumped on every settings change, so a result for older settings can't clear mcPending. */
+  const genRef = useRef(0);
   const clientRef = useRef<MCWorkerClient | null>(null);
 
   useEffect(() => {
@@ -58,6 +61,8 @@ export function useDrakeMCRunner(): void {
 
   useEffect(() => {
     window.clearTimeout(timer.current);
+    setMcPending(true);
+    const gen = ++genRef.current;
     timer.current = window.setTimeout(() => {
       const client = clientRef.current;
       if (!client) return;
@@ -90,6 +95,7 @@ export function useDrakeMCRunner(): void {
         })
         .then((out) => {
           setDrakeOutput(out);
+          if (gen === genRef.current) setMcPending(false);
         });
     }, DEBOUNCE_MS);
     return () => {
@@ -105,5 +111,6 @@ export function useDrakeMCRunner(): void {
     flDistribution,
     seedMode,
     setDrakeOutput,
+    setMcPending,
   ]);
 }

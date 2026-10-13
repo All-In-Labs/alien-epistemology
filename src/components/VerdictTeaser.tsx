@@ -1,34 +1,70 @@
-// The verdict in one paragraph, near the top of the page, so a visitor who never scrolls
-// to Ch.5 still gets the answer. Same numbers and wording as the Ch.5 headline.
+// The short answer, directly under the page title, so a visitor who never scrolls still
+// gets the verdict and knows what "the search" is. Same numbers as the Ch.5 headline.
 
 import { useStore, configurationLabel } from '../store';
-import { outcomeSplit, worldsThatFind } from '../model/summary';
+import {
+  headlineVerdict,
+  meanIsNoise,
+  outcomeSplit,
+  worldsThatFind,
+} from '../model/summary';
+import type { DetectionMethodId } from '../constants/detectionDefaults';
+
+const SHORT_NAMES: Record<DetectionMethodId, string> = {
+  seti: 'radio SETI',
+  tech: 'technosignature searches',
+  bio: 'biosignature searches',
+  probe: 'interstellar probe research',
+  retina: 'RETINA passive radar',
+};
+
+function fmtMoney(costM: number): string {
+  if (costM >= 1000) return `$${(costM / 1000).toFixed(1).replace(/\.0$/, '')} billion`;
+  return `$${String(Math.round(costM))} million`;
+}
+
+function listNames(names: string[]): string {
+  if (names.length <= 1) return names.join('');
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1] ?? ''}`;
+}
 
 export function VerdictTeaser() {
   const out = useStore((s) => s.drakeOutput);
+  const methods = useStore((s) => s.methods);
   const label = useStore(configurationLabel);
 
+  const funded = methods.filter((m) => m.on && m.costM > 0);
+  const what =
+    funded.length === 0
+      ? null
+      : `Spending ${fmtMoney(funded.reduce((a, m) => a + m.costM, 0))} this decade on ${listNames(funded.map((m) => SHORT_NAMES[m.id]))}`;
+
+  let answer: string | null = null;
   let body: string;
   if (out === null) {
     body = 'Running the model…';
-  } else if (out.totalCostM <= 0 || out.pAnyDetection === 0) {
+  } else if (what === null || out.pAnyDetection === 0) {
     body =
       'No detection programme is switched on, so there is nothing to find. Switch one on in Ch.2.';
   } else {
     const split = outcomeSplit(out.pAboveGiveWell, out.pHarmBeyondGiveWell);
+    answer = headlineVerdict(split, meanIsNoise(out.meanMultiplier, out.meanMultiplierSE));
     body =
-      `Out of 100 plausible worlds, ${String(split.better)} are worth more than GiveWell’s ` +
-      `top charities on average, ${String(split.less)} make less difference either way, and ` +
-      `${String(split.worse)} do serious harm. The search actually finds something this ` +
-      `decade in ${worldsThatFind(out.pAnyDetection)} of them.`;
+      `${what}: in ${String(split.better)} of 100 plausible worlds that bet is worth more than ` +
+      `GiveWell, in ${String(split.less)} it makes almost no difference, and in ` +
+      `${String(split.worse)} it does serious harm. Even in the good worlds the search ` +
+      `usually finds nothing; it finds something in ${worldsThatFind(out.pAnyDetection)} of 100.`;
   }
 
   return (
-    <div className="mb-8 pl-3.5 max-w-[840px]" style={{ borderLeft: '2px solid #2e6a31' }}>
+    <div className="mt-6 pl-4 max-w-[900px]" style={{ borderLeft: '3px solid #2e6a31' }}>
       <div className="font-mono text-[11px] text-muted tracking-chip uppercase">
-        The verdict, in short · {label}
+        Short answer · {label}
       </div>
-      <p className="font-serif text-[16px] text-ink mt-1 leading-snug">
+      {answer !== null && (
+        <p className="font-serif text-xl sm:text-2xl text-ink mt-1.5 leading-snug">{answer}</p>
+      )}
+      <p className="font-serif text-base sm:text-lg text-ink mt-1.5 leading-snug">
         {body}{' '}
         <a
           href="#ch-05"

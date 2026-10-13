@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PermalinkButton } from './PermalinkButton';
 import { PermalinkChips } from './PermalinkChips';
 import { AssumptionsModal } from './AssumptionsModal';
+import { VerdictTeaser } from './VerdictTeaser';
 import { useStore } from '../store';
 
 interface MastheadProps {
@@ -61,7 +62,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           >
             i
           </span>
-          hover any of these for the reasoning and, where there is one, the source
+          tap or hover any of these for the reasoning and, where there is one, the source
         </span>
       </div>
       <h1
@@ -73,6 +74,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
           alien-finding?
         </em>
       </h1>
+      <VerdictTeaser />
       <p className="font-serif text-base sm:text-lg lg:text-[21px] leading-[1.45] mt-6 max-w-[840px] text-ink">
         Frank Drake&rsquo;s 1961 equation gives a number; Sandberg, Drexler &amp; Ord&rsquo;s 2018
         reformulation gives a <em>distribution</em>. This tool lets you set its bounds, choose

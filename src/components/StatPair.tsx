@@ -21,7 +21,7 @@ export function StatPair() {
   return (
     <div className="border border-ink bg-paper">
       <div className="px-8 pt-3 pb-2 border-b border-edge font-mono text-[10.5px] tracking-chip uppercase text-muted">
-        Drake / detection — set in Ch.1–2, not by the worldview dials
+        Background · are we alone, and would we notice? Set in Ch.1–2
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3">
       <div className="px-4 sm:px-8 py-5 lg:py-7 border-b lg:border-b-0 lg:border-r border-ink">
@@ -29,13 +29,13 @@ export function StatPair() {
           P( no other civilisation in the Milky Way )
         </div>
         <div
-          className="font-display text-6xl lg:text-[88px] leading-[0.95] mt-3.5 text-ink"
+          className="font-display text-4xl lg:text-5xl leading-[0.95] mt-3 text-ink"
           style={{ fontWeight: 600 }}
         >
           {pZero}
         </div>
         <div className="font-mono text-[11.5px] text-muted mt-2.5">
-          The pairing matters more than either side.
+          SDO 2018 found 52% with their own inputs
         </div>
       </div>
       <div className="px-4 sm:px-8 py-5 lg:py-7 border-b lg:border-b-0 lg:border-r border-ink">
@@ -43,7 +43,7 @@ export function StatPair() {
           P( at least one other civilisation in the Milky Way )
         </div>
         <div
-          className="font-display text-6xl lg:text-[88px] leading-[0.95] mt-3.5 text-ink"
+          className="font-display text-4xl lg:text-5xl leading-[0.95] mt-3 text-ink"
           style={{ fontWeight: 600 }}
         >
           {pGteOne}
@@ -58,7 +58,7 @@ export function StatPair() {
           P( any detection in decade )
         </div>
         <div
-          className="font-display text-6xl lg:text-[88px] leading-[0.95] mt-3.5 text-ink"
+          className="font-display text-4xl lg:text-5xl leading-[0.95] mt-3 text-ink"
           style={{ fontWeight: 600 }}
         >
           {pAnyDetection}
