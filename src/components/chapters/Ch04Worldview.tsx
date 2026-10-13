@@ -144,7 +144,7 @@ export function Ch04Worldview() {
           onChange={(v) => {
             patchWorldview({ timeDiscount: v / 100 });
           }}
-          hint="discounts channels A & B over horizon T"
+          hint="discounts far-future value (channel A, channel B, channel D's cosmic loss)"
           tooltip={TT_DISCOUNT}
         />
         <RangeSlider
@@ -157,7 +157,7 @@ export function Ch04Worldview() {
           onChange={(v) => {
             patchWorldview({ alienMoralWeight: v });
           }}
-          hint="multiplies channel C only"
+          hint="how much aliens' own welfare counts (channel C)"
           tooltip={TT_ALIEN_WEIGHT}
         />
         <RangeSlider
@@ -170,7 +170,7 @@ export function Ch04Worldview() {
           onChange={(v) => {
             patchWorldview({ hingeyness: v });
           }}
-          hint="P( our actions matter for cosmic endowment )"
+          hint="chance our actions now steer the long-term future"
           tooltip={TT_HINGEYNESS}
         />
         <RangeSlider
@@ -183,7 +183,7 @@ export function Ch04Worldview() {
           onChange={(v) => {
             patchWorldview({ filterPriorBehind: v });
           }}
-          hint="used in channel A only"
+          hint="only affects channel A (news about the Great Filter)"
           tooltip={TT_FILTER_PRIOR}
         />
         <div className="flex flex-col gap-1.5">
@@ -201,12 +201,12 @@ export function Ch04Worldview() {
             />
           </div>
           <div className="font-mono text-[10.5px] text-muted">
-            zeros channel B (astronomical waste)
+            future people don&rsquo;t count: zeros channel B and D&rsquo;s cosmic loss
           </div>
         </div>
         <div className="flex flex-col gap-1.5 lg:col-span-2">
           <div className="font-sans text-[13px] flex items-center gap-1.5">
-            Risk aversion
+            Summary number in Ch.5
             <Tooltip>{TT_RISK}</Tooltip>
           </div>
           <Segmented<RiskAversion>

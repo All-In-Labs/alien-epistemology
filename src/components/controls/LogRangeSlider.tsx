@@ -6,9 +6,10 @@
 // The native range inputs remain in the DOM with `pointer-events: none` for
 // keyboard accessibility (Tab to focus, arrow keys to nudge).
 
-import { useCallback, useId, useRef } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import { Sparkline } from '../charts/Sparkline';
 import { Tooltip } from '../Tooltip';
+import { Sym } from '../Sym';
 
 interface LogRangeSliderProps {
   symbol: string;
@@ -147,6 +148,8 @@ export function LogRangeSlider({
     }
   };
 
+  const [focused, setFocused] = useState<'lo' | 'hi' | null>(null);
+
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>): void => {
     if (disabled) return;
     const f = fracFromPointer(e.clientX);
@@ -172,14 +175,17 @@ export function LogRangeSlider({
       className={`flex flex-col lg:grid lg:grid-cols-[180px_1fr_220px] gap-3 lg:gap-6 items-stretch lg:items-center py-3.5 border-b border-edge ${disabled ? 'opacity-60' : ''}`}
     >
       <div className="flex items-baseline gap-2.5">
-        <span className="font-display italic text-[22px] text-ink">{symbol}</span>
+        <span className="font-display italic text-[22px] text-ink">
+          <Sym s={symbol} />
+        </span>
         <span className="font-sans text-[13px] text-muted">{label}</span>
         {tooltip !== undefined && <Tooltip>{tooltip}</Tooltip>}
       </div>
       <div className="flex items-center gap-3">
         <span
-          className={`font-mono text-[11px] w-[60px] text-right ${warn ? 'text-accent' : 'text-muted'}`}
+          className={`font-mono text-[11px] w-[60px] lg:w-[88px] text-right ${warn ? 'text-accent' : 'text-muted'}`}
         >
+          <span className="sr-only lg:not-sr-only">from </span>
           {formatBound(loValue)}
         </span>
         <div
@@ -206,6 +212,13 @@ export function LogRangeSlider({
           <input
             id={`${id}-lo`}
             aria-label={`${label} minimum`}
+            aria-valuetext={formatBound(loValue)}
+            onFocus={() => {
+              setFocused('lo');
+            }}
+            onBlur={() => {
+              setFocused(null);
+            }}
             type="range"
             min={0}
             max={1}
@@ -218,6 +231,13 @@ export function LogRangeSlider({
           <input
             id={`${id}-hi`}
             aria-label={`${label} maximum`}
+            aria-valuetext={formatBound(hiValue)}
+            onFocus={() => {
+              setFocused('hi');
+            }}
+            onBlur={() => {
+              setFocused(null);
+            }}
             type="range"
             min={0}
             max={1}
@@ -236,6 +256,7 @@ export function LogRangeSlider({
               width: '2px',
               height: '18px',
               background: '#2e6a31',
+              boxShadow: focused === 'lo' ? '0 0 0 4px rgba(46,106,49,0.45)' : 'none',
             }}
           />
           <div
@@ -247,10 +268,14 @@ export function LogRangeSlider({
               width: '2px',
               height: '18px',
               background: '#2e6a31',
+              boxShadow: focused === 'hi' ? '0 0 0 4px rgba(46,106,49,0.45)' : 'none',
             }}
           />
         </div>
-        <span className="font-mono text-[11px] text-muted w-[60px]">{formatBound(hiValue)}</span>
+        <span className="font-mono text-[11px] text-muted w-[60px] lg:w-[88px]">
+          <span className="sr-only lg:not-sr-only">to </span>
+          {formatBound(hiValue)}
+        </span>
       </div>
       <div className="flex justify-end">
         <Sparkline values={preview} w={200} h={32} stroke="#1f1d18" fill="rgba(31,29,24,0.10)" />

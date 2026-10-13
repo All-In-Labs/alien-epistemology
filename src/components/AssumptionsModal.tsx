@@ -44,7 +44,11 @@ const CATEGORIES: Category[] = [
         text: (
           <>
             The seven Drake factors{' '}
-            <em>R★, fₚ, nₑ, fₗ, fᵢ, f_c, L</em> are <strong>independently distributed</strong>.
+            <em>
+              R★, fₚ, nₑ, fₗ, fᵢ, f<sub>c</sub>, L
+            </em>{' '}
+            and the tool&rsquo;s eighth, f<sub>d</sub>, are{' '}
+            <strong>independently distributed</strong>.
             Real-world correlations (e.g. denser star regions might produce both more planets and
             shorter civ lifetimes) are not modelled.
           </>

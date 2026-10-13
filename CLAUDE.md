@@ -94,8 +94,11 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
 - `configurationLabel` names the configuration: a preset's name until anything (other than
   the risk dial) is edited, then "Your settings"; "Default settings" when untouched. Every
   store edit clears `activePreset`. Permalinks carry an optional `preset` field.
-- Comparator bars must be published figures with a named source, drawn as a point when the
-  source gives a point. If a cause area has none (AI safety, currently), list it in
+- Comparator bars must be published figures with a named source, with a dot only when the
+  source gives a point (no midpoints). They are on this tool's bar (1 DALY per $100 = 10 per
+  $1k), which is ~2× easier than the DALY-based sources' own GiveWell figure (~20–21 per $1k),
+  so each source label states the conversion and the source's own ratio. The 1× line is
+  "GiveWell's funding bar", never "top charities". If a cause area has none (AI safety, currently), list it in
   `COMPARATOR_OMISSIONS`; don't invent a range. Negative values go in the chart's "below 0"
   zone; never clamp them to a tiny positive (that made bad results look like "≈ nothing").
 - Reach ranges divide survey star counts by ~2×10¹¹ (the middle of 100–400 billion) at both
@@ -106,16 +109,24 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
 - Presets reset everything they don't set (Drake bounds, methods, overrides, value
   uncertainty, fₗ model) to the defaults, so a preset never depends on click order.
 - The tornado runs in `workers/tornadoWorker.ts` (pure logic in `model/tornado.ts`),
-  debounced. Don't move it back onto the main thread: 29 Monte Carlo runs block input.
-- The verdict histogram only shows positive multipliers. P(EV<0) is shown as a separate stat
-  (in accent) so non-trivial negative-EV worldviews aren't hidden by the log axis.
+  debounced. Don't move it back onto the main thread: 35 Monte Carlo runs block input. It
+  measures change in net worlds (better − serious harm, out of 100), not the mean: the mean
+  is a difference of two heavy tails and can sit within noise of zero. A sweep's low end must
+  not set a value-uncertainty spread to exactly 0 (zero spreads skip random draws).
+- The verdict histogram (`SignedHistogram`) shows every world: losses mirrored left of an
+  "≈ 0" column, gains right, in the dot grid's colours. "≈ 0" means |x| < 10⁻³ everywhere
+  (chart, `plainGloss`, the Ch.5 sentence); keep those in step.
+- Channel D's endowment loss (−P(hostile) × V_cosmic_endowment) gets exactly channel B's
+  transform and magnitude draw. Upside and downside must stay on the same scale; a unit test
+  checks they cancel. At the defaults B's expected net shift (+0.05) equals P(hostile), so the
+  mean is ≈ 0 and `meanMultiplierSE` decides whether the UI may print it (`meanIsNoise`).
 - **Grokkability is a goal**: a visitor who hasn't dug into the numbers should get the
   verdict at a glance. Prefer plain words and "out of 100 worlds" framing over statistics.
 - The Ch.5 headline is the 100-world split (`outcomeSplit` in `src/model/summary.ts`):
   more good than GiveWell (multiplier > 1) / less difference either way (−1 to 1) / serious
   harm (< −1), drawn as a 10×10 dot grid. Symmetric on purpose: many negative worlds are
-  only ≈ −10⁻¹², which isn't harm worth a red dot. No single number works as a headline: on defaults the mean sits >10
-  orders of magnitude above the median. The risk dial (average / typical / cautious →
+  only ≈ −10⁻¹², which isn't harm worth a red dot. No single number works as a headline: the
+  median is ≈ 0 and the mean is dominated by rare huge wins and losses. The risk dial (average / typical / cautious →
   mean / median / 25th percentile) only picks the secondary GiveWell number underneath.
   Old permalinks' 'EV-max' / 'log-utility' / 'difference-making' are mapped on decode.
 - Channel A is always ≤ 0: −Δ × ϕ × V_xrisk_info (Hanson: finding life is bad news). It is

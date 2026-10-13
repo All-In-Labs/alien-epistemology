@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Tooltip } from '../Tooltip';
+import { Sym } from '../Sym';
 
 interface RangeSliderProps {
   label: string;
@@ -33,7 +34,9 @@ export function RangeSlider({
       <div className="flex items-baseline justify-between gap-3">
         <div className="flex items-baseline gap-2">
           {sym !== undefined && (
-            <span className="font-display italic text-[15px] text-ink">{sym}</span>
+            <span className="font-display italic text-[15px] text-ink">
+              <Sym s={sym} />
+            </span>
           )}
           <span className="font-sans text-[13px] text-ink">{label}</span>
           {tooltip !== undefined && <Tooltip>{tooltip}</Tooltip>}
@@ -52,6 +55,8 @@ export function RangeSlider({
         onChange={(e) => {
           onChange(Number(e.target.value));
         }}
+        aria-label={label}
+        aria-valuetext={`${String(value)}${unit}`}
         className="w-full"
         style={{ accentColor: warn ? '#2e6a31' : '#1f1d18' }}
       />

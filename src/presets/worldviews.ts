@@ -123,7 +123,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'dark',
     name: 'Dark Forest',
-    short: 'cautious view; weight D high',
+    short: 'detection likely draws hostile attention',
     worldview: {
       longtermismStrength: 0.5,
       timeDiscount: 0,
@@ -145,7 +145,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'astro',
     name: 'Astronomical Waste max.',
-    short: 'channel B dominates everything',
+    short: 'the cosmic future dominates, on both sides',
     worldview: {
       longtermismStrength: 1.0,
       timeDiscount: 0,

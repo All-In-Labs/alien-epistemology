@@ -16,6 +16,8 @@ interface ChannelCardProps {
   tooltip?: ReactNode;
 }
 
+const SIGN_WORDS = { '+': 'good news', '-': 'bad news', '±': 'either way' } as const;
+
 export function ChannelCard({
   id,
   title,
@@ -33,7 +35,7 @@ export function ChannelCard({
       <div className="flex justify-between items-start gap-4">
         <div>
           <div className="font-mono text-[11px] tracking-eyebrow text-muted uppercase">
-            Channel {id} · sign {sign}
+            Channel {id} · {SIGN_WORDS[sign]}
           </div>
           <div className="flex items-center gap-2 mt-2">
             <h3
@@ -54,7 +56,7 @@ export function ChannelCard({
         className="font-mono text-[11px] text-muted mt-3 pt-3 flex justify-between"
         style={{ borderTop: '1px dashed #d8d3c8' }}
       >
-        <span>default value</span>
+        <span>value of one detection (default)</span>
         <span className="text-ink">{defaultV}</span>
       </div>
     </div>

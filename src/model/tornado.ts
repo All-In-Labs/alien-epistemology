@@ -1,5 +1,8 @@
 // Ch.6 tornado: rerun the Monte Carlo with one input at a time pushed to each end of its
-// plausible range, and report how far the mean cost-effectiveness multiplier moves.
+// plausible range, and report how many of the 100 worlds move. The metric is the headline
+// itself: worlds better than GiveWell minus worlds of serious harm. (It used to be the
+// mean multiplier, but the mean is a difference of two heavy tails and at the defaults it
+// is within sampling noise of zero, so ratios to it were meaningless.)
 // Pure, so it can run in a web worker (see workers/tornadoWorker.ts) and be tested.
 
 import { runDrakeMC } from './monteCarlo';
@@ -21,12 +24,18 @@ export interface TornadoState {
   flDistribution: FlDistribution;
 }
 
+/** What kind of input a sweep varies: a fact about nature, a value-model guess, or a philosophical stance. */
+export type SweepKind = 'nature' | 'value' | 'philosophy';
+
 export interface TornadoItem {
   symbol: string;
   label: string;
-  /** Signed orders-of-magnitude shift from baseline at the sweep's low end. */
+  kind: SweepKind;
+  /** True when the swept range comes from published sources rather than judgement. */
+  sourced: boolean;
+  /** Change in net worlds (better − serious harm, out of 100) at the sweep's low end. */
   low: number;
-  /** Signed orders-of-magnitude shift at the high end. */
+  /** Change in net worlds at the high end. */
   high: number;
   lowLabel: string;
   highLabel: string;
@@ -35,23 +44,17 @@ export interface TornadoItem {
 interface SweepDef {
   symbol: string;
   label: string;
+  kind: SweepKind;
+  sourced: boolean;
   /** Mutate a cloned state to the LOW endpoint. */
   setLow: (s: TornadoState) => void;
   setHigh: (s: TornadoState) => void;
 }
 
-export const SWEEP_N = 8000;
+export const SWEEP_N = 10_000;
 
-/**
- * A multiplier smaller than this (in × GiveWell) counts as "about nothing". Without a
- * floor, a sweep that drives the answer to ~0 (e.g. "life is rare") reports a meaningless
- * 30-orders-of-magnitude shift against a 10⁻³⁰ guard.
- */
-export const NEGLIGIBLE_MULTIPLIER = 1e-6;
-
-/** Mean multiplier (signed) for one state. The mean keeps sign and magnitude; the median
- *  collapses to ~0 when most worlds find nothing. */
-function meanMultiplier(state: TornadoState, seed: string): number {
+/** Net worlds (better − serious harm, out of 100) for one state, unrounded. */
+function netWorlds(state: TornadoState, seed: string): number {
   const out = runDrakeMC({
     ranges: state.drakeRanges,
     methods: state.methods,
@@ -64,13 +67,55 @@ function meanMultiplier(state: TornadoState, seed: string): number {
     seed,
   });
   if (out.totalCostM <= 0) return 0;
-  return (out.evDALYs / (out.totalCostM * 1e6)) * 100;
+  return (out.pAboveGiveWell - out.pHarmBeyondGiveWell) * 100;
 }
 
 export const SWEEPS: SweepDef[] = [
   {
+    symbol: 'Δ_B',
+    kind: 'value',
+    sourced: false,
+    label: 'Is a detection good news? (channel B net shift)',
+    // ±0.1 around the default net shift of +0.05: the expected evidence that interstellar
+    // technology works, minus the evidence that the cosmos is already claimed.
+    setLow: (s) => {
+      s.channels.B.lightconeClaimShift -= 0.1;
+    },
+    setHigh: (s) => {
+      s.channels.B.techViabilityShift += 0.1;
+    },
+  },
+  {
+    symbol: 'σ_B',
+    kind: 'value',
+    sourced: false,
+    label: 'Spread of that shift between worlds',
+    // Not 0: a zero spread skips random draws, which would break the shared-draws
+    // comparison with the baseline.
+    setLow: (s) => {
+      s.valueUncertainty.shiftPM = 0.01;
+    },
+    setHigh: (s) => {
+      s.valueUncertainty.shiftPM = 0.2;
+    },
+  },
+  {
+    symbol: 'h',
+    kind: 'philosophy',
+    sourced: false,
+    label: 'Hingeyness (do our actions steer the future?)',
+    setLow: (s) => {
+      s.worldview.hingeyness = 0.01;
+    },
+    setHigh: (s) => {
+      s.worldview.hingeyness = 1;
+    },
+  },
+  {
     symbol: 'r_seti',
-    label: 'SETI reach',
+    kind: 'nature',
+    sourced: true,
+    label: 'How much of the galaxy SETI covers',
     // The two ends of the sourced reach range, each as a single point.
     setLow: (s) => {
       const m = s.methods.find((mm) => mm.id === 'seti');
@@ -83,7 +128,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 's_seti',
-    label: 'SETI sensitivity in reach',
+    kind: 'nature',
+    sourced: false,
+    label: 'How sensitive SETI is within that',
     // The two ends of the user's range, each as a single point — the same treatment as
     // reach, so the two rows can be compared.
     setLow: (s) => {
@@ -97,7 +144,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'P(D)',
-    label: 'Channel D — hostile probability',
+    kind: 'value',
+    sourced: false,
+    label: 'Chance a detection draws hostile attention',
     setLow: (s) => {
       s.channels.D.pHostile = 0;
     },
@@ -107,6 +156,8 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'α_L',
+    kind: 'philosophy',
+    sourced: false,
     label: 'Longtermism strength',
     setLow: (s) => {
       s.worldview.longtermismStrength = 0;
@@ -117,7 +168,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'V_B',
-    label: 'Cosmic-endowment value',
+    kind: 'value',
+    sourced: false,
+    label: 'Size of the cosmic future at stake',
     setLow: (s) => {
       s.channels.B.vCosmicEndowment = 1e12;
     },
@@ -127,7 +180,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'V_A',
-    label: 'X-risk information value',
+    kind: 'value',
+    sourced: false,
+    label: 'Value of news about the Great Filter',
     setLow: (s) => {
       s.channels.A.vXriskInfo = 1e6;
     },
@@ -137,7 +192,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'V_D',
-    label: 'Hostile-contact disvalue',
+    kind: 'value',
+    sourced: false,
+    label: 'Harm hostile contact does to people now',
     // "Low" = MORE negative (worst-case Dark Forest); "high" = less negative.
     setLow: (s) => {
       s.channels.D.vHostileDisvalue = -1e16;
@@ -148,7 +205,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'f_d',
-    label: 'Detection-readiness multiplier',
+    kind: 'nature',
+    sourced: false,
+    label: 'Share of civilisations we could detect',
     setLow: (s) => {
       s.drakeRanges.fd = { min: 1e-6, max: 1e-3 };
     },
@@ -158,6 +217,8 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'L',
+    kind: 'nature',
+    sourced: true,
     label: 'Civilisation lifetime',
     setLow: (s) => {
       s.drakeRanges.L = { min: 100, max: 1000 };
@@ -168,7 +229,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'ϕ',
-    label: 'Filter-behind prior',
+    kind: 'philosophy',
+    sourced: false,
+    label: 'Belief the Great Filter is behind us',
     setLow: (s) => {
       s.worldview.filterPriorBehind = 0;
     },
@@ -178,6 +241,8 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'r',
+    kind: 'philosophy',
+    sourced: false,
     label: 'Pure time discount',
     setLow: (s) => {
       s.worldview.timeDiscount = 0;
@@ -188,6 +253,8 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'w_α',
+    kind: 'philosophy',
+    sourced: false,
     label: 'Alien moral weight',
     setLow: (s) => {
       s.worldview.alienMoralWeight = 0;
@@ -198,7 +265,9 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'fₗ',
-    label: 'Fraction developing life (rare vs common)',
+    kind: 'nature',
+    sourced: true,
+    label: 'How often life arises (rare vs common)',
     // "Life is rare" (10⁻³⁰–10⁻¹⁵) vs "life is common" (0.5–1), both sampled log-uniform.
     // Fixed ranges rather than the user's bounds so the row means the same thing whether
     // fₗ is on SDO 2018's model (the default, which ignores the bounds) or a custom range.
@@ -213,6 +282,8 @@ export const SWEEPS: SweepDef[] = [
   },
   {
     symbol: 'R*',
+    kind: 'nature',
+    sourced: true,
     label: 'Star formation rate',
     // The ends of the sourced default range (~1–3 stars/yr).
     setLow: (s) => {
@@ -224,55 +295,11 @@ export const SWEEPS: SweepDef[] = [
   },
 ];
 
-/**
- * Signed log10 shift from reference to sweep. Positive = better than baseline. Values
- * below NEGLIGIBLE_MULTIPLIER count as zero. A sign flip adds 2 orders of magnitude so a
- * flip never looks like "no change".
- */
-export function logShift(reference: number, sweep: number): number {
-  if (!Number.isFinite(reference) || !Number.isFinite(sweep)) return 0;
-  const refZero = Math.abs(reference) < NEGLIGIBLE_MULTIPLIER;
-  const sweepZero = Math.abs(sweep) < NEGLIGIBLE_MULTIPLIER;
-  if (refZero && sweepZero) return 0;
-  const absRef = Math.max(Math.abs(reference), NEGLIGIBLE_MULTIPLIER);
-  const absSweep = Math.max(Math.abs(sweep), NEGLIGIBLE_MULTIPLIER);
-  const logRatio = Math.log10(absSweep / absRef);
-  if (refZero || sweepZero || reference * sweep > 0) {
-    // Same sign (or one side ≈ 0): growing a positive answer is better; growing a
-    // negative one is worse.
-    const sign = refZero ? Math.sign(sweep) : Math.sign(reference);
-    return sign * logRatio;
-  }
-  return Math.sign(sweep) * (Math.abs(logRatio) + 2);
-}
-
-function fmtNum(n: number): string {
-  if (n < 10) return n.toFixed(1);
-  if (n < 1000) return Math.round(n).toLocaleString();
-  if (n < 1e6) return `${(n / 1000).toFixed(1)}K`;
-  if (n < 1e9) return `${(n / 1e6).toFixed(1)}M`;
-  if (n < 1e12) return `${(n / 1e9).toFixed(1)}B`;
-  return n.toExponential(1);
-}
-
-/**
- * Format an endpoint metric as a ratio-to-baseline label. Compact form so labels
- * don't overflow the chart area: the chart header already says "RATIO TO
- * BASELINE", so we drop that suffix. Sign-flips get a short "neg" marker.
- */
-export function fmtRatio(sweep: number, baseline: number): string {
-  if (!Number.isFinite(sweep) || !Number.isFinite(baseline)) return '—';
-  if (Math.abs(baseline) < NEGLIGIBLE_MULTIPLIER) return '—';
-  if (Math.abs(sweep) < NEGLIGIBLE_MULTIPLIER) return '≈ 0';
-  const r = sweep / baseline;
-  const flip = r < 0;
-  const ar = Math.abs(r);
-  // Widened "essentially baseline" band: ratios within (0.5, 2) — i.e. less
-  // than 0.3 OoM either side of baseline — collapse to "≈ 1×" so the reader's
-  // attention stays on the inputs that actually move the verdict.
-  if (!flip && ar > 0.5 && ar < 2) return '≈ 1×';
-  const body = ar >= 1 ? `×${fmtNum(ar)}` : `÷${fmtNum(1 / ar)}`;
-  return flip ? `${body} neg` : body;
+/** A change in net worlds as a short label, e.g. "+12", "−3", "±0". */
+export function fmtNet(d: number): string {
+  const r = Math.round(d);
+  if (r === 0) return '±0';
+  return `${r > 0 ? '+' : '−'}${String(Math.abs(r))}`;
 }
 
 /**
@@ -282,22 +309,24 @@ export function fmtRatio(sweep: number, baseline: number): string {
  */
 export function runTornado(state: TornadoState): TornadoItem[] {
   const seed = 'tornado-baseline';
-  const baseline = meanMultiplier(state, seed);
+  const baseline = netWorlds(state, seed);
   const items: TornadoItem[] = [];
   for (const sweep of SWEEPS) {
     const lowState = structuredClone(state);
     sweep.setLow(lowState);
-    const lowV = meanMultiplier(lowState, seed);
+    const low = netWorlds(lowState, seed) - baseline;
     const highState = structuredClone(state);
     sweep.setHigh(highState);
-    const highV = meanMultiplier(highState, seed);
+    const high = netWorlds(highState, seed) - baseline;
     items.push({
       symbol: sweep.symbol,
       label: sweep.label,
-      low: logShift(baseline, lowV),
-      high: logShift(baseline, highV),
-      lowLabel: fmtRatio(lowV, baseline),
-      highLabel: fmtRatio(highV, baseline),
+      kind: sweep.kind,
+      sourced: sweep.sourced,
+      low,
+      high,
+      lowLabel: fmtNet(low),
+      highLabel: fmtNet(high),
     });
   }
   items.sort((a, b) => Math.abs(b.high - b.low) - Math.abs(a.high - a.low));

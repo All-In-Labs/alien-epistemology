@@ -12,22 +12,19 @@ import { useStore } from '../../store';
 /** Wait this long after the last change before re-running the sweeps. */
 const DEBOUNCE_MS = 400;
 
-/** The chart clips each bar at ±6 orders of magnitude, so a row can show at most 12. */
-const CHART_MAX_SPREAD = 12;
-
-function fmtSpread(n: number): string {
-  return n > CHART_MAX_SPREAD ? `more than ${String(CHART_MAX_SPREAD)}` : n.toFixed(1);
+function spread(it: TornadoItem): number {
+  return Math.abs(it.high - it.low);
 }
 
-function spreadOf(items: TornadoItem[], symbol: string): string {
-  const it = items.find((x) => x.symbol === symbol);
-  return it ? fmtSpread(Math.abs(it.high - it.low)) : '—';
+function worlds(n: number): string {
+  const r = Math.round(n);
+  return `${String(r)} world${r === 1 ? '' : 's'}`;
 }
 
 /** Captions computed from the sweep results, so they can't contradict the chart. */
 function captionsFor(items: TornadoItem[]): { h: string; b: string }[] {
   const top = items[0];
-  if (top?.high === 0 && top.low === 0) {
+  if (top === undefined || items.every((it) => it.high === 0 && it.low === 0)) {
     // Every row is flat: no programme is switched on, so nothing is spent or found.
     return [
       {
@@ -36,22 +33,32 @@ function captionsFor(items: TornadoItem[]): { h: string; b: string }[] {
       },
     ];
   }
-  return [
+  const biggestOf = (pred: (it: TornadoItem) => boolean): TornadoItem | undefined =>
+    items.filter(pred).sort((a, b) => spread(b) - spread(a))[0];
+  const nature = biggestOf((it) => it.kind === 'nature');
+  const judgement = biggestOf((it) => it.kind !== 'nature');
+  const top5 = items.slice(0, 5);
+  const unsourced = top5.filter((it) => !it.sourced).length;
+  const cards = [
     {
-      h: top ? `${top.label.replace(/\s*\(.*\)$/, '')} moves the answer most.` : 'Computing…',
-      b: top
-        ? `Moving it from one end of its range to the other shifts the average by ${fmtSpread(Math.abs(top.high - top.low))} orders of magnitude at your current settings. The ranking changes as you move other dials, so this caption is computed, not written in advance.`
-        : '',
-    },
-    {
-      h: 'Philosophy is a lever too.',
-      b: 'Longtermism strength, time discount and the size of the cosmic endowment are parameters of philosophy, not nature. Reasonable people set them differently.',
-    },
-    {
-      h: 'What we can measure matters least.',
-      b: `R*, the best-measured input, spans ${spreadOf(items, 'R*')} orders of magnitude; fₗ, the least-measured, spans ${spreadOf(items, 'fₗ')}. SETI’s reach spans ${spreadOf(items, 'r_seti')}, from published surveys; its sensitivity within reach spans ${spreadOf(items, 's_seti')}, and that range is still a placeholder guess, not a community estimate.`,
+      h: `${top.label.replace(/\s*\(.*\)$/, '')} moves the answer most.`,
+      b: `Across its plausible range it moves ${worlds(spread(top))} of 100 between “better than GiveWell” and “serious harm” (net), at your current settings.`,
     },
   ];
+  if (nature !== undefined && judgement !== undefined) {
+    cards.push({
+      h:
+        spread(nature) < spread(judgement)
+          ? 'Values matter more than astronomy.'
+          : 'Astronomy matters as much as values.',
+      b: `The most influential fact about nature, ${nature.label.toLowerCase()}, moves ${worlds(spread(nature))}. The most influential value or philosophical input, ${judgement.label.toLowerCase()}, moves ${worlds(spread(judgement))}. Facts about nature tend to make long shots bigger on both sides at once, so they shift the balance less than you might expect.`,
+    });
+  }
+  cards.push({
+    h: `${String(unsourced)} of the top 5 are judgement calls.`,
+    b: 'They have no published source: they are the tool’s guesses or philosophical stances, labelled as such where they appear. Change them in Ch.3 and Ch.4 if yours differ.',
+  });
+  return cards;
 }
 
 export function Ch06Tornado() {
@@ -108,23 +115,35 @@ export function Ch06Tornado() {
   return (
     <ChapterShell
       num="06"
-      eyebrow="What changes the answer most?"
-      title="The tornado plot."
-      kicker="Each row shows how the mean cost-effectiveness multiplier shifts (as a ratio to baseline) when one input is swept to the bottom or top of its plausible range. Dark bars on the left = that endpoint pushes the verdict below baseline (worse); green bars on the right = above baseline (better) — independent of whether it came from the low or high sweep, so inversely-correlated inputs (e.g. time discount) read consistently. Endpoints marked “neg” flip the sign of the verdict (each flip adds 2 to the bar length); “≈ 0” means the answer shrinks to almost nothing. Bars stop at ±6 orders of magnitude. Order is by total spread."
+      eyebrow="Sensitivity"
+      title="What changes the answer most?"
+      kicker="Each row pushes one input to the bottom, then the top, of its plausible range and counts how many of the 100 worlds move: worlds better than GiveWell minus worlds of serious harm. Green moves toward better, orange toward harm. Longest bars first."
     >
       <div className="bg-paper border border-ink px-4 sm:px-7 py-7">
         {items ? (
-          // On narrow viewports the SVG would compress to <30% scale, making
-          // every label unreadable and visually overlapping. Let it keep its
-          // designed minimum width and scroll horizontally instead.
           <div
-            className="overflow-x-auto -mx-4 sm:-mx-7 px-4 sm:px-7 lg:mx-0 lg:px-0 transition-opacity"
+            className="transition-opacity"
             style={{ opacity: busy ? 0.45 : 1 }}
             aria-busy={busy}
           >
-            <div className="min-w-[900px] lg:min-w-0">
+            <div className="hidden lg:block">
               <Tornado items={items} />
             </div>
+            {/* Phones: the chart's label column alone is wider than the screen, so show
+                the same ranking as a list. */}
+            <ol className="lg:hidden flex flex-col gap-2.5">
+              {items
+                .filter((it) => Math.round(spread(it)) > 0)
+                .map((it) => (
+                  <li key={it.symbol} className="font-serif text-[15px] text-ink">
+                    {it.label}
+                    <span className="block font-mono text-[11.5px] text-muted">
+                      low end <span className="text-ink">{it.lowLabel}</span> · high end{' '}
+                      <span className="text-ink">{it.highLabel}</span> net worlds
+                    </span>
+                  </li>
+                ))}
+            </ol>
           </div>
         ) : (
           <div className="font-mono text-[11px] text-muted py-12 text-center">

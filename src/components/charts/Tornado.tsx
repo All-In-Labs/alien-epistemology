@@ -1,4 +1,6 @@
 import type { TornadoItem } from '../../model/tornado';
+import { OUTCOME_COLORS } from '../../constants/outcomeColors';
+import { SvgSym } from '../Sym';
 
 // Tornado / sensitivity plot ported from design's A_Tornado.
 
@@ -14,11 +16,11 @@ export function Tornado({ items }: TornadoProps) {
   const h = items.length * rowH + 56;
   const innerW = w - padL - padR;
   const cx = padL + innerW / 2;
-  // Range widened from ±3 to ±6 OoM: the mean-multiplier metric swings further
-  // than the old gmean-of-positives, so a tighter range would saturate every row.
-  // Clamped so bars never render outside the drawing area (which would visually
-  // collide with the label/symbol columns).
-  const RANGE = 6;
+  // Linear scale in worlds (out of 100). The range fits the largest bar, rounded up to a
+  // multiple of 10, so the ticks stay round numbers.
+  const biggest = Math.max(1, ...items.flatMap((it) => [Math.abs(it.low), Math.abs(it.high)]));
+  const RANGE = Math.min(100, Math.max(10, Math.ceil(biggest / 10) * 10));
+  const tickStep = RANGE / 2;
   const mapDx = (v: number): number => {
     const clamped = Math.max(-RANGE, Math.min(RANGE, v));
     return (clamped / RANGE) * (innerW / 2);
@@ -32,7 +34,7 @@ export function Tornado({ items }: TornadoProps) {
       preserveAspectRatio="xMidYMid meet"
       className="block w-full h-auto"
     >
-      {[-6, -4, -2, 0, 2, 4, 6].map((l) => (
+      {[-RANGE, -tickStep, 0, tickStep, RANGE].map((l) => (
         <g key={l}>
           <line
             x1={cx + mapDx(l)}
@@ -50,7 +52,7 @@ export function Tornado({ items }: TornadoProps) {
             fill="#6e675c"
             fontFamily="IBM Plex Mono, monospace"
           >
-            {l === 0 ? 'baseline' : `${l > 0 ? '+' : ''}${String(l)} OoM`}
+            {l === 0 ? 'now' : `${l > 0 ? '+' : '−'}${String(Math.abs(l))}`}
           </text>
         </g>
       ))}
@@ -63,7 +65,7 @@ export function Tornado({ items }: TornadoProps) {
         fontFamily="IBM Plex Mono, monospace"
         letterSpacing="0.14em"
       >
-        RATIO TO BASELINE (active config)
+        NET WORLDS (BETTER − HARM) VS NOW
       </text>
       {items.map((it, i) => {
         const y = 36 + i * rowH;
@@ -150,7 +152,7 @@ export function Tornado({ items }: TornadoProps) {
               fontFamily="Playfair Display, Georgia, serif"
               fontStyle="italic"
             >
-              {it.symbol}
+              <SvgSym s={it.symbol} />
             </text>
             <text
               x={padL - 60}
@@ -162,16 +164,15 @@ export function Tornado({ items }: TornadoProps) {
             >
               {it.label}
             </text>
-            {/* Bars are coloured by direction-from-baseline, not by which sweep produced
-                them. Dark = the parameter value (whichever sweep, low or high) pushes the
-                metric BELOW baseline; orange = above. This keeps the visual story
-                consistent across inversely-correlated parameters like time discount. */}
+            {/* Bars are coloured by direction, not by which sweep produced them: orange =
+                that end of the input's range moves worlds toward harm, green = toward better.
+                This keeps inversely-correlated inputs like time discount reading right. */}
             <rect
               x={Math.min(cx, xLow)}
               y={y - 10}
               width={Math.abs(cx - xLow)}
               height={20}
-              fill={xLow < cx ? '#2a2823' : '#2e6a31'}
+              fill={xLow < cx ? OUTCOME_COLORS.worse : OUTCOME_COLORS.better}
               opacity={0.88}
             />
             <rect
@@ -179,7 +180,7 @@ export function Tornado({ items }: TornadoProps) {
               y={y - 10}
               width={Math.abs(cx - xHigh)}
               height={20}
-              fill={xHigh < cx ? '#2a2823' : '#2e6a31'}
+              fill={xHigh < cx ? OUTCOME_COLORS.worse : OUTCOME_COLORS.better}
               opacity={0.88}
             />
             {/* Value labels: each bar's label sits at its own outer endpoint.

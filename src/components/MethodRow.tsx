@@ -166,9 +166,6 @@ export function MethodRow({ method }: MethodRowProps) {
           </div>
           <Tooltip>{METHOD_TOOLTIPS[cfg.id]}</Tooltip>
         </div>
-        <div className="font-mono text-[10.5px] text-muted uppercase tracking-chip mt-0.5">
-          type · {cfg.type}
-        </div>
       </div>
       <div className="col-span-2 lg:col-span-1">
         <div className="font-mono text-[10.5px] text-muted uppercase tracking-[0.1em]">

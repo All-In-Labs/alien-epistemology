@@ -1,22 +1,15 @@
-// Five pre-baked "lightning-talk" permalink chips. Each maps to a preset that
-// loads a fully-configured worldview state — useful for live-demo navigation
-// without dragging sliders.
+// One-click worldviews at the top of the page. Names and descriptions come from the same
+// PRESETS list as the Ch.4 tiles, so a preset is called the same thing everywhere.
 
 import { useStore } from '../store';
+import { PRESETS, type PresetId } from '../presets/worldviews';
 
-interface ChipDef {
-  presetId: 'bostrom' | 'near' | 'hanson' | 'max-aliens' | 'min-aliens';
-  label: string;
-  desc: string;
-}
-
-const CHIPS: ChipDef[] = [
-  { presetId: 'bostrom', label: 'Strong longtermist', desc: 'long-term, total-view' },
-  { presetId: 'near', label: 'Neartermist view', desc: 'person-affecting, 3% disc.' },
-  { presetId: 'hanson', label: 'Filter pessimist', desc: 'filter likely ahead' },
-  { presetId: 'max-aliens', label: 'Maximum-aliens', desc: 'every dial toward "rules"' },
-  { presetId: 'min-aliens', label: 'Minimum-aliens', desc: 'every dial toward "catastrophic"' },
-];
+/** A spread of views, including the neutrality benchmark (Moderate longtermist). */
+const CHIP_IDS: PresetId[] = ['ord', 'bostrom', 'near', 'hanson', 'dark'];
+const CHIPS = CHIP_IDS.flatMap((id) => {
+  const p = PRESETS.find((x) => x.id === id);
+  return p ? [{ presetId: id, label: p.name, desc: p.short }] : [];
+});
 
 export function PermalinkChips() {
   const activePreset = useStore((s) => s.activePreset);
@@ -25,7 +18,7 @@ export function PermalinkChips() {
   return (
     <div className="flex items-center gap-2.5 flex-wrap">
       <span className="font-mono text-[10.5px] text-muted tracking-chip uppercase">
-        Jump to →
+        Start from a worldview →
       </span>
       {CHIPS.map((c) => {
         const active = activePreset === c.presetId;

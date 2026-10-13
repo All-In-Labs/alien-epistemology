@@ -54,7 +54,7 @@ export function Ch03Value() {
       num="03"
       eyebrow="What detection is worth"
       title="Four channels: one good, two bad, one either way."
-      kicker="Detection is not unambiguously good. Channel A (Hanson's Filter), Channel D (Dark Forest) and the lightcone-claim side of Channel B can all drive expected value negative. The tool refuses to hide that."
+      kicker="Detection is not unambiguously good. Channel D (hostile contact) and the cosmos-already-claimed side of channel B can make it bad news, and channel A (Hanson's Filter) always counts against it, though at its default size it is small. Values are in DALYs: disability-adjusted life years, the unit GiveWell-style comparisons use."
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ChannelCard

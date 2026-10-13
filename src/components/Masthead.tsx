@@ -102,9 +102,7 @@ export function Masthead({ presenter, onTogglePresenter }: MastheadProps) {
       <div className="mt-5 pt-5" style={{ borderTop: '1px dashed #d8d3c8' }}>
         <PermalinkChips />
         <p className="font-serif italic text-[13px] text-muted mt-2.5 max-w-[780px]">
-          Pre-loaded permalinks: each loads a fully-configured worldview (Drake bounds, channels,
-          dials) and updates the URL hash. For walking an audience between configurations without
-          dragging sliders.
+          Each sets every dial in one click; the short answer above updates. Ch.4 has more.
         </p>
       </div>
       <AssumptionsModal

@@ -1,8 +1,8 @@
 // A compact, always-visible copy of the 100-world split, for readers working through the
 // controls in Ch.1–4 while the verdict is thousands of pixels away. After each change it
 // shows what moved ("+3 better"), so a reader can see the effect of a dial without
-// remembering the previous numbers. Hidden whenever the short answer or the Ch.5 verdict
-// is itself on screen.
+// remembering the previous numbers. Hidden whenever the short answer, the Ch.5 verdict or
+// the Ch.6 sensitivity chart is on screen.
 
 import { useEffect, useRef, useState } from 'react';
 import { useStore, configurationLabel } from '../store';
@@ -30,7 +30,7 @@ function useAnyVisible(ids: string[]): boolean {
   return visible;
 }
 
-const WATCH = ['masthead', 'ch-05'];
+const WATCH = ['masthead', 'ch-05', 'ch-06'];
 
 function deltaText(prev: OutcomeSplit, next: OutcomeSplit): string | null {
   const parts: string[] = [];
