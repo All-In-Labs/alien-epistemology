@@ -261,7 +261,9 @@ export function applySerializedState(state: SerializedState): void {
     valueUncertainty: state.valueUncertainty,
     flDistribution: state.flDistribution,
     astroLocked: state.astroLocked,
-    activePreset: state.preset ?? null,
+    // Links can name a preset that has since been removed (e.g. 'hanson', the old Filter
+    // pessimist); their dials still load, labelled as "Your settings".
+    activePreset: PRESETS.some((p) => p.id === state.preset) ? (state.preset ?? null) : null,
   });
 }
 

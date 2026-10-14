@@ -88,4 +88,16 @@ describe('store: configuration label', () => {
     applySerializedState(serialized);
     expect(configurationLabel(useStore.getState())).toBe('Neartermist preset');
   });
+
+  it('a link naming a removed preset loads its dials, labelled as the reader\'s own settings', () => {
+    useStore.getState().resetAll();
+    useStore.getState().patchWorldview({ filterPriorBehind: 0.2 });
+    // 'hanson' was the Filter pessimist preset; links shared before it was removed carry it.
+    const old = { ...getSerializedState(), preset: 'hanson' as PresetId };
+    useStore.getState().resetAll();
+    applySerializedState(old);
+    expect(useStore.getState().worldview.filterPriorBehind).toBe(0.2);
+    expect(useStore.getState().activePreset).toBeNull();
+    expect(configurationLabel(useStore.getState())).toBe('Your settings');
+  });
 });

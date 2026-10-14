@@ -29,7 +29,7 @@ A React SPA that evaluates "searching for alien civilisations" as an EA cause ar
 - **Value uncertainty**: channel magnitudes (±1 OOM) and Channel B shifts (±0.1) are sampled per world, so P(EV < 0) is a real probability.
 - **Probes** (§5.2) cannot detect anything within a decade (travel time ≈ 20 years at 0.2c), so they have zero in-decade detection probability.
 - **RETINA is off by default.** Only SETI is on, as §5.2 originally said.
-- **Presets** use descriptive names (Strong longtermist, Filter pessimist, Moderate longtermist), not people's names. Their dial values aren't sourced from those people (e.g. Ord argues against pure time discounting).
+- **Presets** use descriptive names (Strong longtermist, Moderate longtermist), not people's names. Their dial values aren't sourced from those people (e.g. Ord argues against pure time discounting).
 - **Detection has survey reach** (§5.2). Each method's per-target detection probability is `p_m = r_m × (1 − exp(−s_m × c_m_$B))`: reach `r_m` (share of the galaxy its instruments can cover this decade, log-uniform) times the old Poisson term, with `s_m` now per target *in reach*. Spend never raises reach. Defaults, built from published surveys ÷ ~2×10¹¹ stars at both ends, no rounding up: radio 1.5e-8–3e-4 (low: a Deep-Space-Network-strength transmitter, visible to ~65 ly with SKA-class receivers; Earth's everyday leakage reaches only ~4 ly, i.e. no other star — Sheikh 2025; high: Gajjar 2021), optical/IR 3e-8–1.5e-3 (Tellis & Marcy 2017; Suazo 2022), biosignatures 5e-12–5e-11 (STScI 2025: 9 planets, ranked by cosmic shoreline, not habitable zone), RETINA 1e-12–1e-6 (a guess; no source). In-reach sensitivities are still placeholders: 0.1–100 per $1B-decade (radio, optical, RETINA), 0.001–1 (biosignatures).
 - **Biosignature searches count life-bearing planets**, R* × f_p × n_e × f_l × 3×10⁹ yr × f_d, not detectable civilisations.
 - **Comparator bars** (§7.2) are published figures with named sources, drawn as points where the source gives a point: GiveWell top charities 1× and the CCM's GiveDirectly 0.2×; cage-free campaigns 1.7–200× (titotal 2024, replicating RP; dot = RP CCM default 71×); biosecurity 0.06–800× (Millett & Snyder-Beattie 2017, future generations counted, undiscounted). AI safety and the CCM/Founders Pledge biosecurity bars are dropped: no published figure their authors stand behind. Negative values go in a labelled "below 0" zone, never clamped to a tiny positive.
@@ -40,7 +40,7 @@ A React SPA that evaluates "searching for alien civilisations" as an EA cause ar
 - **Verdict framing** (§7): the 100-world split is of expected values, so it says "on average" and states how many worlds actually find something. The default "In GiveWell terms" number is the typical world (median), not the average. A one-paragraph verdict sits under the headline stats.
 - **Channel B** needs a technosignature-type detection; a biosignature alone doesn't fire it.
 - **Detection floor** value uses the funded methods' types, so it still counts when only probes are funded.
-- **Filter pessimist** differs from the defaults only in ϕ = 0.2; it no longer carries unannounced longtermism/hingeyness/discount changes.
+- **Filter pessimist** was removed: once its unannounced longtermism/hingeyness/discount changes were stripped it differed from the defaults only in ϕ = 0.2, which (channel A being tiny at default values) gave exactly the defaults' split.
 - **fₗ model** is an explicit choice (SDO 2018 / your own range); the slider is off in SDO mode.
 
 ## 1. Goal

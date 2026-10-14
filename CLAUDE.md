@@ -68,7 +68,7 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
 - The Moderate longtermist preset (id `ord`) must NOT produce "obviously a top EA cause" with default settings.
   If it does, defaults are biased. Fix.
 - RETINA is in the same UI list as everything else; it doesn't get special billing.
-- Presets have descriptive names ("Strong longtermist", "Filter pessimist", "Moderate
+- Presets have descriptive names ("Strong longtermist", "Moderate
   longtermist"), not people's names: their dial values aren't sourced from anyone's stated
   views (e.g. Ord argues against pure time discounting). Keep it that way.
 - There is no Grabby Aliens mode. It was removed because it modelled "we are inside a grabby
@@ -132,7 +132,8 @@ For permalink testing, navigate to a URL with a `#s=...` hash and verify hydrati
 - Channel A is always ≤ 0: −Δ × ϕ × V_xrisk_info (Hanson: finding life is bad news). It is
   not a sign flip around ϕ = 0.5.
   At its default V (10¹⁰) it is ~10⁴–10⁵× smaller than B and D and changes no preset's split
-  (so the Filter pessimist preset matches the defaults). The copy says so; don't let it claim
+  (a "Filter pessimist" preset, changing only ϕ, was dropped for matching the defaults
+  exactly; old links naming it load as "Your settings"). Don't let the copy claim
   A "can make the result negative".
 - `tests/integration/copy-claims.test.ts` pins what the copy says drives the verdict (A has
   no effect at defaults; with no B-shift spread no world beats GiveWell; harm comes mostly

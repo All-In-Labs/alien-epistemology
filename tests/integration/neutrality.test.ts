@@ -43,7 +43,7 @@ function runAllPresets(): PresetResult[] {
 }
 
 describe('epistemic-neutrality calibration — spec §10 #5', () => {
-  it('headline EV magnitudes span ≥ 1 order of magnitude across the six presets', () => {
+  it('headline EV magnitudes span ≥ 1 order of magnitude across the presets', () => {
     const results = runAllPresets();
     const absEVs = results.map((r) => Math.abs(r.out.evDALYs)).filter((v) => v > 0);
     expect(absEVs.length).toBeGreaterThanOrEqual(2);
@@ -51,7 +51,7 @@ describe('epistemic-neutrality calibration — spec §10 #5', () => {
     expect(spread).toBeGreaterThan(10);
   });
 
-  it('the six presets do not all agree on whether alien-finding clears the GiveWell bar', () => {
+  it('the presets do not all agree on whether alien-finding clears the GiveWell bar', () => {
     const results = runAllPresets();
     const ps = results.map((r) => r.out.pAboveGiveWell);
     // If every preset agreed (all near 0 or all near 1) the tool would be a
@@ -82,7 +82,8 @@ describe('epistemic-neutrality calibration — spec §10 #5', () => {
 // what a visitor actually sees, not just the bare model.
 describe('epistemic neutrality at the site defaults', () => {
   function runSiteDefaults(): PresetResult[] {
-    return PRESETS.slice(0, 6).map((p) => {
+    // Worldview presets only: the demo presets (max/min aliens) replace the Drake bounds.
+    return PRESETS.filter((p) => p.drakeRanges === undefined).map((p) => {
       const { worldview, channels } = applyPreset(p);
       const out = runDrakeMC({
         ranges: defaultDrakeRanges(),

@@ -364,7 +364,7 @@ const CATEGORIES: Category[] = [
             preset</strong>. V_xrisk_info is six orders of magnitude below V_cosmic_endowment,
             so even after channel B&rsquo;s small net shift and the hingeyness discount, A is
             tens of thousands of times smaller than B or D: ϕ = 0 and ϕ = 1 give the same split,
-            and the Filter pessimist preset gives the same split as the defaults. A starts to
+            which is why there is no &ldquo;Filter pessimist&rdquo; preset. A starts to
             matter only near the top of its Ch.6 range (V_xrisk_info ≈ 10¹⁴). The four-channel
             framing is kept so the Filter argument is visible and adjustable, but the
             verdict under longtermism is driven by the cosmic endowment, which enters through

@@ -5,7 +5,7 @@ import { useStore } from '../store';
 import { PRESETS, type PresetId } from '../presets/worldviews';
 
 /** A spread of views, including the neutrality benchmark (Moderate longtermist). */
-const CHIP_IDS: PresetId[] = ['ord', 'bostrom', 'near', 'hanson', 'dark'];
+const CHIP_IDS: PresetId[] = ['ord', 'bostrom', 'near', 'dark'];
 const CHIPS = CHIP_IDS.flatMap((id) => {
   const p = PRESETS.find((x) => x.id === id);
   return p ? [{ presetId: id, label: p.name, desc: p.short }] : [];
